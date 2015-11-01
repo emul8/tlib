@@ -1,0 +1,3 @@
+[submodule "tcg"]
+	path = tcg
+	url = https://github.com/emul8/tcg.git
