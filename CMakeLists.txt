@@ -4,7 +4,7 @@ include (ExternalProject)
 ExternalProject_Add (tcglib
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/tcg
     PREFIX tcg
-    CMAKE_ARGS -DBIG_ENDIAN:BOOL=${TARGET_BIG_ENDIAN} -DWORD_SIZE:INT=${HOST_WORD_SIZE}
+    CMAKE_ARGS -DBIG_ENDIAN:BOOL=${TARGET_BIG_ENDIAN}
     INSTALL_COMMAND "")
 
 project (tlib)
