@@ -748,6 +748,7 @@ CPUX86State *cpu_x86_init(const char *cpu_model)
         return NULL;
     }
     mce_init(env);
+    cpu_reset(env);
 
     return env;
 }

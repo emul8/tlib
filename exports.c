@@ -54,9 +54,7 @@ int32_t tlib_init(char *cpu_name)
   {
     return -1;
   }
-#ifndef TARGET_PPC
-  cpu_reset(env);
-#endif
+
   return 0;
 }
 
