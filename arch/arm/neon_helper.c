@@ -1233,7 +1233,7 @@ uint32_t HELPER(neon_shl_u32)(uint32_t a, uint32_t b)
     return shl_u32(a, b);
 }
 
-static int64_t shl_s64(int64_t a, int64_t b)
+static int64_t shl_s64(int64_t a, int8_t b)
 {
     const uint64_t au = a;
 
@@ -1258,7 +1258,7 @@ uint64_t HELPER(neon_shl_s64)(uint64_t a, uint64_t b)
     return shl_s64(a, b);
 }
 
-static uint64_t shl_u64(uint64_t a, int64_t b)
+static uint64_t shl_u64(uint64_t a, int8_t b)
 {
     // Shifting by the word size or more is undefined in C.
     if(abs(b) >= 8 * sizeof a) {
