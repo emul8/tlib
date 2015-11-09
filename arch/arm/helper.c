@@ -2204,26 +2204,34 @@ void cpu_arm_set_cp_io(CPUARMState *env, int cpnum,
 /* Signed saturating arithmetic.  */
 
 /* Perform 16-bit signed saturating addition.  */
-#define PFX q
+#define PFX_Q
 #include "op_addsub.h"
+#undef PFX_Q
 
-#define PFX uq
+#define PFX_UQ
 #include "op_addsub.h"
+#undef PFX_UQ
 
 /* Signed modulo arithmetic.  */
-#define PFX s
+#define PFX_S
 #define ARITH_GE
 #include "op_addsub.h"
+#undef ARITH_GE
+#undef PFX_S
 
-#define PFX u
+#define PFX_U
 #define ARITH_GE
 #include "op_addsub.h"
+#undef ARITH_GE
+#undef PFX_U
 
-#define PFX sh
+#define PFX_SH
 #include "op_addsub.h"
+#undef PFX_SH
 
-#define PFX uh
+#define PFX_UH
 #include "op_addsub.h"
+#undef PFX_UH
 
 static inline uint8_t do_usad(uint8_t a, uint8_t b)
 {
