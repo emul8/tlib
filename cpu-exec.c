@@ -24,6 +24,10 @@
 #include "arch/sparc/arch_callbacks.h"
 #endif
 
+#if !(defined(TARGET_I386) || defined(TARGET_SPARC) || defined(TARGET_PPC) || defined(TARGET_ARM))
+#error Unsupported target CPU.
+#endif
+
 target_ulong virt_to_phys(target_ulong virt) {
         #define MASK2 (0xFFFFFFFF - MASK1)
         #define MASK1 (0xFFFFFFFF >> (32-TARGET_PAGE_BITS))
@@ -212,12 +216,8 @@ int cpu_exec(CPUState *env)
     DF = 1 - (2 * ((env->eflags >> 10) & 1));
     CC_OP = CC_OP_EFLAGS;
     env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-#elif defined(TARGET_SPARC)
-#elif defined(TARGET_ARM)
 #elif defined(TARGET_PPC)
     env->reserve_addr = -1;
-#else
-#error unsupported target CPU
 #endif
     env->exception_index = -1;
 
@@ -452,17 +452,10 @@ int cpu_exec(CPUState *env)
         }
     } /* for(;;) */
 
-
 #if defined(TARGET_I386)
     /* restore flags in standard format */
     env->eflags = env->eflags | cpu_cc_compute_all(env, CC_OP)
         | (DF & DF_MASK);
-#elif defined(TARGET_ARM)
-    /* XXX: Save/restore host fpu exception state?.  */
-#elif defined(TARGET_SPARC)
-#elif defined(TARGET_PPC)
-#else
-#error unsupported target CPU
 #endif
 
     return ret;
