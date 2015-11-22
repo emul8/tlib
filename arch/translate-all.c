@@ -41,13 +41,10 @@ void cpu_gen_init(void)
     tcg_context_init(&GLOBAL_tcg_ctx);
 }
 
-/* return non zero if the very first instruction is invalid so that
-   the virtual CPU can trigger an exception.
-
-   '*gen_code_size_ptr' contains the size of the generated code (host
+/* '*gen_code_size_ptr' contains the size of the generated code (host
    code).
 */
-int cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
+void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 {
     TCGContext *s = &GLOBAL_tcg_ctx;
     uint8_t *gen_code_buf;
@@ -67,8 +64,6 @@ int cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 
     gen_code_size = tcg_gen_code(s, gen_code_buf);
     *gen_code_size_ptr = gen_code_size;
-
-    return 0;
 }
 
 /* The cpu state corresponding to 'searched_pc' is restored.
