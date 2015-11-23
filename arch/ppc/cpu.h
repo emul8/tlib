@@ -1108,30 +1108,6 @@ int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def);
 
 /* Time-base and decrementer management */
 #ifndef NO_CPU_IO_DEFS
-uint64_t cpu_ppc_load_tbl (CPUPPCState *env);
-uint32_t cpu_ppc_load_tbu (CPUPPCState *env);
-void cpu_ppc_store_tbu (CPUPPCState *env, uint32_t value);
-void cpu_ppc_store_tbl (CPUPPCState *env, uint32_t value);
-uint64_t cpu_ppc_load_atbl (CPUPPCState *env);
-uint32_t cpu_ppc_load_atbu (CPUPPCState *env);
-void cpu_ppc_store_atbl (CPUPPCState *env, uint32_t value);
-void cpu_ppc_store_atbu (CPUPPCState *env, uint32_t value);
-uint32_t cpu_ppc_load_decr (CPUPPCState *env);
-void cpu_ppc_store_decr (CPUPPCState *env, uint32_t value);
-uint32_t cpu_ppc_load_hdecr (CPUPPCState *env);
-void cpu_ppc_store_hdecr (CPUPPCState *env, uint32_t value);
-uint64_t cpu_ppc_load_purr (CPUPPCState *env);
-void cpu_ppc_store_purr (CPUPPCState *env, uint64_t value);
-uint32_t cpu_ppc601_load_rtcl (CPUPPCState *env);
-uint32_t cpu_ppc601_load_rtcu (CPUPPCState *env);
-void cpu_ppc601_store_rtcl (CPUPPCState *env, uint32_t value);
-void cpu_ppc601_store_rtcu (CPUPPCState *env, uint32_t value);
-target_ulong load_40x_pit (CPUPPCState *env);
-void store_40x_pit (CPUPPCState *env, target_ulong val);
-void store_40x_dbcr0 (CPUPPCState *env, uint32_t val);
-void store_40x_sler (CPUPPCState *env, uint32_t val);
-void store_booke_tcr (CPUPPCState *env, target_ulong val);
-void store_booke_tsr (CPUPPCState *env, target_ulong val);
 void booke206_flush_tlb(CPUState *env, int flags, const int check_iprot);
 target_phys_addr_t booke206_tlb_to_page_size(CPUState *env, ppcmas_tlb_t *tlb);
 int ppcemb_tlb_check(CPUState *env, ppcemb_tlb_t *tlb,
