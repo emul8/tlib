@@ -473,7 +473,6 @@ typedef struct CPUSPARCState {
     uint32_t cache_control;
 } CPUSPARCState;
 
-#ifndef NO_CPU_IO_DEFS
 /* helper.c */
 CPUSPARCState *cpu_sparc_init(const char *cpu_model);
 void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu);
@@ -518,7 +517,6 @@ static inline int tlb_compare_context(const SparcTLBEntry *tlb,
     return compare_masked(context, tlb->tag, MMU_CONTEXT_MASK);
 }
 
-#endif
 #endif
 
 /* cpu-exec.c */

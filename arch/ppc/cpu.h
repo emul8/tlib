@@ -1107,7 +1107,6 @@ const ppc_def_t *cpu_ppc_find_by_name (const char *name);
 int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def);
 
 /* Time-base and decrementer management */
-#ifndef NO_CPU_IO_DEFS
 void booke206_flush_tlb(CPUState *env, int flags, const int check_iprot);
 target_phys_addr_t booke206_tlb_to_page_size(CPUState *env, ppcmas_tlb_t *tlb);
 int ppcemb_tlb_check(CPUState *env, ppcemb_tlb_t *tlb,
@@ -1123,7 +1122,6 @@ void ppc_slb_invalidate_all (CPUPPCState *env);
 void ppc_slb_invalidate_one (CPUPPCState *env, uint64_t T0);
 #endif
 int ppcemb_tlb_search (CPUPPCState *env, target_ulong address, uint32_t pid);
-#endif
 
 /* Device control registers */
 int ppc_dcr_read (ppc_dcr_t *dcr_env, int dcrn, uint32_t *valp);

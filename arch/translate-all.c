@@ -22,7 +22,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#define NO_CPU_IO_DEFS
 #include "cpu.h"
 #include "tcg.h"
 
