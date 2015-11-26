@@ -246,7 +246,7 @@ void tlib_restore_context()
 
   pc = (unsigned long)global_retaddr;
   tb = tb_find_pc(pc);
-  cpu_restore_state(tb, cpu, pc);
+  cpu_restore_state(cpu, tb, pc);
 }
 
 void* tlib_export_state()
