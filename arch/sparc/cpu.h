@@ -3,6 +3,10 @@
 
 #include "tlib-common.h"
 
+#if TARGET_LONG_BITS == 64
+#define TARGET_SPARC64 1
+#endif
+
 #if !defined(TARGET_SPARC64)
 #define TARGET_LONG_BITS 32
 #define TARGET_FPREGS 32
