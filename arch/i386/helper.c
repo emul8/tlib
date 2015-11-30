@@ -99,7 +99,7 @@ void cpu_reset(CPUX86State *env)
     cpu_watchpoint_remove_all(env, BP_CPU);
 }
 
-void cpu_x86_close(CPUX86State *env)
+void cpu_close(CPUX86State *env)
 {
     tlib_free(env);
 }
@@ -729,7 +729,7 @@ static void mce_init(CPUX86State *cenv)
     }
 }
 
-CPUX86State *cpu_x86_init(const char *cpu_model)
+CPUX86State *cpu_init(const char *cpu_model)
 {
     CPUX86State *env;
     static int inited;
@@ -744,7 +744,7 @@ CPUX86State *cpu_x86_init(const char *cpu_model)
             cpu_set_debug_excp_handler(breakpoint_handler);
     }
     if (cpu_x86_register(env, cpu_model) < 0) {
-        cpu_x86_close(env);
+        cpu_close(env);
         return NULL;
     }
     mce_init(env);

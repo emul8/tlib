@@ -2712,7 +2712,7 @@ void cpu_reset(CPUPPCState *env)
     tlb_flush(env, 1);
 }
 
-CPUPPCState *cpu_ppc_init (const char *cpu_model)
+CPUPPCState *cpu_init (const char *cpu_model)
 {
     CPUPPCState *env;
     const ppc_def_t *def;
@@ -2730,7 +2730,7 @@ CPUPPCState *cpu_ppc_init (const char *cpu_model)
     return env;
 }
 
-void cpu_ppc_close (CPUPPCState *env)
+void cpu_close (CPUPPCState *env)
 {
     /* Should also remove all opcode tables... */
     tlib_free(env);

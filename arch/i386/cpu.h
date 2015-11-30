@@ -764,9 +764,9 @@ typedef struct CPUX86State {
     uint64_t xcr0;
 } CPUX86State;
 
-CPUX86State *cpu_x86_init(const char *cpu_model);
-int cpu_x86_exec(CPUX86State *s);
-void cpu_x86_close(CPUX86State *s);
+CPUX86State *cpu_init(const char *cpu_model);
+int cpu_exec(CPUX86State *s);
+void cpu_close(CPUX86State *s);
 void x86_cpudef_setup(void);
 int cpu_x86_support_mca_broadcast(CPUState *env);
 
@@ -856,7 +856,7 @@ void cpu_x86_load_seg(CPUX86State *s, int seg_reg, int selector);
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */
-int cpu_x86_signal_handler(int host_signum, void *pinfo,
+int cpu_signal_handler(int host_signum, void *pinfo,
                            void *puc);
 
 /* cpuid.c */
@@ -923,10 +923,6 @@ uint64_t cpu_get_tsc(CPUX86State *env);
 #define TARGET_VIRT_ADDR_SPACE_BITS 32
 #endif
 
-#define cpu_init cpu_x86_init
-#define cpu_exec cpu_x86_exec
-#define cpu_gen_code cpu_x86_gen_code
-#define cpu_signal_handler cpu_x86_signal_handler
 #define cpudef_setup	x86_cpudef_setup
 
 #define CPU_SAVE_VERSION 12

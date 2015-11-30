@@ -760,13 +760,13 @@ static int cpu_sparc_register(CPUSPARCState *env, const char *cpu_model)
     return 0;
 }
 
-static void cpu_sparc_close(CPUSPARCState *env)
+static void cpu_close(CPUSPARCState *env)
 {
     free(env->def);
     free(env);
 }
 
-CPUSPARCState *cpu_sparc_init(const char *cpu_model)
+CPUSPARCState *cpu_init(const char *cpu_model)
 {
     CPUSPARCState *env;
 
@@ -776,7 +776,7 @@ CPUSPARCState *cpu_sparc_init(const char *cpu_model)
     gen_intermediate_code_init(env);
 
     if (cpu_sparc_register(env, cpu_model) < 0) {
-        cpu_sparc_close(env);
+        cpu_close(env);
         return NULL;
     }
     cpu_reset(env);

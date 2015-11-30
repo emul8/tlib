@@ -1065,14 +1065,14 @@ struct mmu_ctx_t {
 };
 
 /*****************************************************************************/
-CPUPPCState *cpu_ppc_init (const char *cpu_model);
+CPUPPCState *cpu_init (const char *cpu_model);
 void ppc_translate_init(void);
-int cpu_ppc_exec (CPUPPCState *s);
-void cpu_ppc_close (CPUPPCState *s);
+int cpu_exec (CPUPPCState *s);
+void cpu_close (CPUPPCState *s);
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */
-int cpu_ppc_signal_handler (int host_signum, void *pinfo,
+int cpu_signal_handler (int host_signum, void *pinfo,
                             void *puc);
 int cpu_ppc_handle_mmu_fault (CPUPPCState *env, target_ulong address, int rw,
                               int mmu_idx);
@@ -1126,11 +1126,6 @@ int ppcemb_tlb_search (CPUPPCState *env, target_ulong address, uint32_t pid);
 /* Device control registers */
 int ppc_dcr_read (ppc_dcr_t *dcr_env, int dcrn, uint32_t *valp);
 int ppc_dcr_write (ppc_dcr_t *dcr_env, int dcrn, uint32_t val);
-
-#define cpu_init cpu_ppc_init
-#define cpu_exec cpu_ppc_exec
-#define cpu_gen_code cpu_ppc_gen_code
-#define cpu_signal_handler cpu_ppc_signal_handler
 
 #define CPU_SAVE_VERSION 4
 

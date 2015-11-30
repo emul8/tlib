@@ -349,7 +349,7 @@ void cpu_reset(CPUARMState *env)
     tb_flush(env);
 }
 
-CPUARMState *cpu_arm_init(const char *cpu_model)
+CPUARMState *cpu_init(const char *cpu_model)
 {
     CPUARMState *env;
     uint32_t id;
@@ -428,7 +428,7 @@ static uint32_t cpu_arm_find_by_name(const char *name)
     return id;
 }
 
-void cpu_arm_close(CPUARMState *env)
+void cpu_close(CPUARMState *env)
 {
     tlib_free(env);
 }
