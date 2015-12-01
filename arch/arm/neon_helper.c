@@ -360,25 +360,21 @@ uint32_t HELPER(neon_abd_u8)(uint32_t a, uint32_t b)
     return  out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static uint8_t abd_s8(uint8_t a, uint8_t b)
+static uint8_t abd_s8(int8_t a, int8_t b)
 {
-    const int8_t as = a;
-    const int8_t bs = b;
-
-    if(as > 0 && bs < 0) {
-	const int overflow = as > INT8_MAX + bs;
-	if(overflow) {
-	    return a - b;
-	}
+    if(a > 0 && b < 0) {
+        const int overflow = a > INT8_MAX + b;
+        if(overflow) {
+            return a - b;
+        }
     }
-    else if(as < 0 && bs > 0) {
-	const int overflow = as < INT8_MIN + bs;
-	if(overflow) {
-	    return b - a;
-	}
+    else if(a < 0 && b > 0) {
+        const int overflow = a < INT8_MIN + b;
+        if(overflow) {
+            return b - a;
+        }
     }
 
-    // unsigned arithmetic
     return a > b ? a - b : b - a;
 }
 
@@ -415,25 +411,21 @@ uint32_t HELPER(neon_abd_u16)(uint32_t a, uint32_t b)
     return outHi << 16 | outLo;
 }
 
-static uint16_t abd_s16(uint16_t a, uint16_t b)
+static uint16_t abd_s16(int16_t a, int16_t b)
 {
-    const int16_t as = a;
-    const int16_t bs = b;
-
-    if(as > 0 && bs < 0) {
-	const int overflow = as > INT16_MAX + bs;
-	if(overflow) {
-	    return a - b;
-	}
+    if(a > 0 && b < 0) {
+        const int overflow = a > INT16_MAX + b;
+        if(overflow) {
+            return a - b;
+        }
     }
-    else if(as < 0 && bs > 0) {
-	const int overflow = as < INT16_MIN + bs;
-	if(overflow) {
-	    return b - a;
-	}
+    else if(a < 0 && b > 0) {
+        const int overflow = a < INT16_MIN + b;
+        if(overflow) {
+            return b - a;
+        }
     }
 
-    // unsigned arithmetic
     return a > b ? a - b : b - a;
 }
 
@@ -453,25 +445,21 @@ uint32_t HELPER(neon_abd_u32)(uint32_t a, uint32_t b)
 	return a > b ? a - b : b - a;
 }
 
-uint32_t HELPER(neon_abd_s32)(uint32_t a, uint32_t b)
+uint32_t HELPER(neon_abd_s32)(int32_t a, int32_t b)
 {
-    const int32_t as = a;
-    const int32_t bs = b;
-
-    if(as > 0 && bs < 0) {
-	const int overflow = as > INT32_MAX + bs;
-	if(overflow) {
-		return a - b;
-	}
+    if(a > 0 && b < 0) {
+        const int overflow = a > INT32_MAX + b;
+        if(overflow) {
+            return a - b;
+        }
     }
-    else if(as < 0 && bs > 0) {
-	const int overflow = as < INT32_MIN + bs;
-	if(overflow) {
-		return b - a;
-	}
+    else if(a < 0 && b > 0) {
+        const int overflow = a < INT32_MIN + b;
+        if(overflow) {
+            return b - a;
+        }
     }
 
-    // unsigned arithmetic
     return a > b ? a - b : b - a;
 }
 
@@ -941,9 +929,9 @@ uint32_t HELPER(neon_min_u16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-uint32_t HELPER(neon_min_s32)(uint32_t a, uint32_t b)
+uint32_t HELPER(neon_min_s32)(int32_t a, int32_t b)
 {
-    return (int32_t)a < (int32_t)b ? a : b;
+    return a < b ? a : b;
 }
 
 uint32_t HELPER(neon_min_u32)(uint32_t a, uint32_t b)
@@ -1005,7 +993,7 @@ uint32_t HELPER(neon_max_u16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-uint32_t HELPER(neon_max_s32)(uint32_t a, uint32_t b)
+uint32_t HELPER(neon_max_s32)(int32_t a, int32_t b)
 {
     return a > b ? a : b;
 }
@@ -1100,24 +1088,26 @@ uint32_t HELPER(neon_padd_u16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static int8_t shl_s8(int8_t a, int8_t b)
+static int32_t shl_s8(int8_t a, int8_t b)
 {
-    const uint8_t au = a;
+    const int32_t a32 = a;
     const uint8_t bu = b;
 
-    // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
-	return b < 0 && a < 0 ? 0xffu : 0;
+    if(b >= ((int)sizeof(a)) * 8) {
+        return 0;
+    }
+    else if(b <= -((int)sizeof(a)) * 8) {
+        return a >> (sizeof(a) * 8 - 1);
     }
 
     if(b >= 0) {
-	return au << bu;
+	return a32 << bu;
     }
     else if(a >= 0) {
-	return au >> -b;
+	return a32 >> -b;
     }
     else { // sign extend when right-shifting negative
-	return (au >> -b) | (0xffu << ((8 * sizeof a) + b));
+	return (a32 >> -b) | (0xffffffffu << ((8 * sizeof a) + b));
     }
 }
 
@@ -1131,13 +1121,10 @@ uint32_t HELPER(neon_shl_s8)(uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static uint8_t shl_u8(uint8_t a, int8_t b)
+static uint32_t shl_u8(uint8_t a, int8_t b)
 {
-    // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
-	return 0;
-    }
-    return b >= 0 ? a << b : a >> -b;
+    uint32_t au = a;
+    return b >= 0 ? au << b : au >> -b;
 }
 
 uint32_t HELPER(neon_shl_u8)(uint32_t a, uint32_t b)
@@ -1150,24 +1137,26 @@ uint32_t HELPER(neon_shl_u8)(uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t shl_s16(int16_t a, int16_t b)
+static int32_t shl_s16(int16_t a, int8_t b)
 {
-    const uint16_t au = a;
+    const int32_t a32 = a;
     const uint16_t bu = b;
 
-    // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
-	return b < 0 && a < 0 ? 0xffffu : 0;
+    if(b >= ((int)sizeof(a)) * 8) {
+        return 0;
+    }
+    else if(b <= -((int)sizeof(a)) * 8) {
+        return a >> (((int)sizeof(a)) * 8 - 1);
     }
 
     if(b >= 0) {
-	return au << bu;
+	return a32 << bu;
     }
     else if(a >= 0) {
-	return au >> -b;
+	return a32 >> -b;
     }
     else { // sign extend when right-shifting negative
-	return (au >> -b) | (0xffffu << ((8 * sizeof a) + b));
+	return (a32 >> -b) | (0xffffffffu << ((8 * ((int)sizeof a)) + b));
     }
 }
 
@@ -1178,13 +1167,10 @@ uint32_t HELPER(neon_shl_s16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static uint16_t shl_u16(uint16_t a, int16_t b)
+static uint32_t shl_u16(uint16_t a, int8_t b)
 {
-    // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
-	return 0;
-    }
-    return b >= 0 ? a << b : a >> -b;
+    uint32_t au = a;
+    return b >= 0 ? au << b : au >> -b;
 }
 
 uint32_t HELPER(neon_shl_u16)(uint32_t a, uint32_t b)
@@ -1194,13 +1180,15 @@ uint32_t HELPER(neon_shl_u16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static int32_t shl_s32(int32_t a, int32_t b)
+static int32_t shl_s32(int32_t a, int8_t b)
 {
     const uint32_t au = a;
 
-    // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
-	return b < 0 && a < 0 ? 0xffffffffu : 0;
+    if(b >= ((int)sizeof(a)) * 8) {
+        return 0;
+    }
+    else if(b <= -((int)sizeof(a)) * 8) {
+        return a >> (((int)sizeof(a)) * 8 - 1);
     }
 
     if(b >= 0) {
@@ -1210,7 +1198,7 @@ static int32_t shl_s32(int32_t a, int32_t b)
 	return au >> -b;
     }
     else { // sign extend when right-shifting negative
-	return (au >> -b) | (0xffffffffu << ((8 * sizeof a) + b));
+	return (au >> -b) | (0xffffffffu << ((8 * ((int)sizeof a)) + b));
     }
 }
 
@@ -1219,11 +1207,11 @@ uint32_t HELPER(neon_shl_s32)(uint32_t a, uint32_t b)
     return shl_s32(a, b);
 }
 
-static uint32_t shl_u32(uint32_t a, int32_t b)
+static uint32_t shl_u32(uint32_t a, int8_t b)
 {
     // Shifting by the word size or more is undefined in C.
     if(abs(b) >= 8 * sizeof a) {
-	return 0;
+    return 0;
     }
     return b >= 0 ? a << b : a >> -b;
 }
@@ -1238,7 +1226,7 @@ static int64_t shl_s64(int64_t a, int8_t b)
     const uint64_t au = a;
 
     // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
+    if(abs(b) >= 8 * ((int)sizeof a)) {
 	return b < 0 && a < 0 ? 0xffffffffffffffffu : 0;
     }
 
@@ -1249,7 +1237,7 @@ static int64_t shl_s64(int64_t a, int8_t b)
 	return au >> -b;
     }
     else { // sign extend when right-shifting negative
-	return (au >> -b) | (0xffffffffffffffffu << ((8 * sizeof a) + b));
+	return (au >> -b) | (0xffffffffffffffffu << ((8 * ((int)sizeof a)) + b));
     }
 }
 
@@ -1261,7 +1249,7 @@ uint64_t HELPER(neon_shl_s64)(uint64_t a, uint64_t b)
 static uint64_t shl_u64(uint64_t a, int8_t b)
 {
     // Shifting by the word size or more is undefined in C.
-    if(abs(b) >= 8 * sizeof a) {
+    if(abs(b) >= 8 * ((int)sizeof a)) {
 	return 0;
     }
     return b >= 0 ? a << b : a >> -b;
@@ -1277,7 +1265,7 @@ static int8_t rshl_s8(int8_t a, int8_t b)
     const uint8_t au = a;
     uint8_t ret = shl_s8(a, b);
 
-    if(b < 0 && -b <= 8 * sizeof a) {
+    if(b < 0 && -b <= 8 * ((int)sizeof a)) {
 	ret += au >> (-b - 1) & 1;
     }
 
@@ -1298,7 +1286,7 @@ static uint8_t rshl_u8(uint8_t a, int8_t b)
 {
     uint8_t ret = shl_u8(a, b);
 
-    if(b < 0 && -b <= 8 * sizeof a) {
+    if(b < 0 && -b <= 8 * ((int)sizeof a)) {
 	ret += a >> (-b - 1) & 1;
     }
 
@@ -1315,7 +1303,7 @@ uint32_t HELPER(neon_rshl_u8)(uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t rshl_s16(int16_t a, int16_t b)
+static int16_t rshl_s16(int16_t a, int8_t b)
 {
     const uint16_t au = a;
     uint16_t ret = shl_s16(a, b);
@@ -1334,7 +1322,7 @@ uint32_t HELPER(neon_rshl_s16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static uint16_t rshl_u16(uint16_t a, int16_t b)
+static uint16_t rshl_u16(uint16_t a, int8_t b)
 {
     uint16_t ret = shl_u16(a, b);
 
@@ -1354,7 +1342,7 @@ uint32_t HELPER(neon_rshl_u16)(uint32_t a, uint32_t b)
 
 uint32_t HELPER(neon_rshl_s32)(uint32_t a, uint32_t b)
 {
-    const int32_t bs = b;
+    const int8_t bs = b;
     uint32_t ret = shl_s32(a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1366,7 +1354,7 @@ uint32_t HELPER(neon_rshl_s32)(uint32_t a, uint32_t b)
 
 uint32_t HELPER(neon_rshl_u32)(uint32_t a, uint32_t b)
 {
-    const int32_t bs = b;
+    const int8_t bs = b;
     uint32_t ret = shl_u32(a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1378,7 +1366,7 @@ uint32_t HELPER(neon_rshl_u32)(uint32_t a, uint32_t b)
 
 uint64_t HELPER(neon_rshl_s64)(uint64_t a, uint64_t b)
 {
-    const int64_t bs = b;
+    const int8_t bs = b;
     uint64_t ret = shl_s64(a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1390,7 +1378,7 @@ uint64_t HELPER(neon_rshl_s64)(uint64_t a, uint64_t b)
 
 uint64_t HELPER(neon_rshl_u64)(uint64_t a, uint64_t b)
 {
-    const int64_t bs = b;
+    const int8_t bs = b;
     uint64_t ret = shl_u64(a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1402,23 +1390,30 @@ uint64_t HELPER(neon_rshl_u64)(uint64_t a, uint64_t b)
 
 static int8_t qshl_s8(CPUState *env, int8_t a, int8_t b)
 {
-    if(b > 0) {
-	const uint8_t mask = (INT8_MAX << (8 * sizeof a - b - 1)) & INT8_MAX;
-	if(a >= 0) {
-	    if((b >= 8 * sizeof a) || (a & mask)) {
-		env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
-		return INT8_MAX;
-	    }
-	}
-	else { // a < 0
-	    if((b >= 8 * sizeof a) || (~a & mask)) {
-		env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
-		return INT8_MIN;
-	    }
-	}
+    int32_t result;
+
+    if(b >= ((int)sizeof(a)) * 8) {
+        if(a > 0) {
+            env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+            return INT8_MAX;
+        }
+        else if(a < 0) {
+            env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+            return INT8_MIN;
+        }
     }
 
-    return shl_s8(a, b);
+    result = shl_s8(a, b);
+
+    if(result < INT8_MIN) {
+        result = INT8_MIN;
+        env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+    }
+    else if(result > INT8_MAX) {
+        result = INT8_MAX;
+        env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+    }
+    return (int8_t) result;
 }
 
 uint32_t HELPER(neon_qshl_s8)(CPUState *env, uint32_t a, uint32_t b)
@@ -1433,16 +1428,14 @@ uint32_t HELPER(neon_qshl_s8)(CPUState *env, uint32_t a, uint32_t b)
 
 static uint8_t qshl_u8(CPUState *env, uint8_t a, int8_t b)
 {
-    if(b > 0) {
-	// Saturated?
-	const uint8_t mask = UINT8_MAX << (8 * sizeof a - b);
-	if((b >= 8 * sizeof a) || (a & mask)) {
-	    env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
-	    return UINT8_MAX;
-	}
+    uint32_t result = shl_u8(a, b);
+    if(result > UINT8_MAX) {
+    // Saturated?
+        env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+        return UINT8_MAX;
     }
 
-    return shl_u8(a, b);
+    return result;
 }
 
 uint32_t HELPER(neon_qshl_u8)(CPUState *env, uint32_t a, uint32_t b)
@@ -1455,25 +1448,33 @@ uint32_t HELPER(neon_qshl_u8)(CPUState *env, uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t qshl_s16(CPUState *env, int16_t a, int16_t b)
+static int16_t qshl_s16(CPUState *env, int16_t a, int8_t b)
 {
-    if(b > 0) {
-	const uint16_t mask = (INT16_MAX << (8 * sizeof a - b - 1)) & INT16_MAX;
-	if(a >= 0) {
-	    if((b >= 8 * sizeof a) || (a & mask)) {
-		env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
-		return INT16_MAX;
-	    }
-	}
-	else { // a < 0
-	    if((b >= 8 * sizeof a) || (~a & mask)) {
-		env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
-		return INT16_MIN;
-	    }
-	}
+    int32_t result;
+
+    if(b >= ((int)sizeof(a)) * 8) {
+        if(a > 0) {
+            env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+            return INT16_MAX;
+        }
+        else if(a < 0) {
+            env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+            return INT16_MIN;
+        }
     }
 
-    return shl_s16(a, b);
+    result = shl_s16(a, b);
+
+    if(result < INT16_MIN) {
+        env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+        result = INT16_MIN;
+    }
+    else if(result > INT16_MAX) {
+        result = INT16_MAX;
+        env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+    }
+
+    return (int16_t) result;
 }
 
 uint32_t HELPER(neon_qshl_s16)(CPUState *env, uint32_t a, uint32_t b)
@@ -1483,18 +1484,17 @@ uint32_t HELPER(neon_qshl_s16)(CPUState *env, uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static uint16_t qshl_u16(CPUState *env, uint16_t a, int16_t b)
+
+static uint16_t qshl_u16(CPUState *env, uint16_t a, int8_t b)
 {
-    if(b > 0) {
+    uint32_t result = shl_u16(a, b);
+    if(result > UINT16_MAX) {
 	// Saturated?
-	const uint16_t mask = UINT16_MAX << (8 * sizeof a - b);
-	if((b >= 8 * sizeof a) || (a & mask)) {
-	    env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
-	    return UINT16_MAX;
-	}
+	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
+	return UINT16_MAX;
     }
 
-    return shl_u16(a, b);
+    return result;
 }
 
 uint32_t HELPER(neon_qshl_u16)(CPUState *env, uint32_t a, uint32_t b)
@@ -1504,7 +1504,7 @@ uint32_t HELPER(neon_qshl_u16)(CPUState *env, uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static int32_t qshl_s32(CPUState *env, int32_t a, int32_t b)
+static int32_t qshl_s32(CPUState *env, int32_t a, int8_t b)
 {
     if(b > 0) {
 	const uint32_t mask = (INT32_MAX << (8 * sizeof a - b - 1)) & INT32_MAX;
@@ -1530,7 +1530,7 @@ uint32_t HELPER(neon_qshl_s32)(CPUState *env, uint32_t a, uint32_t b)
     return qshl_s32(env, a, b);
 }
 
-static uint32_t qshl_u32(CPUState *env, uint32_t a, int32_t b)
+static uint32_t qshl_u32(CPUState *env, uint32_t a, int8_t b)
 {
     if(b > 0) {
 	// Saturated?
@@ -1549,7 +1549,7 @@ uint32_t HELPER(neon_qshl_u32)(CPUState *env, uint32_t a, uint32_t b)
     return qshl_u32(env, a, b);
 }
 
-static int64_t qshl_s64(CPUState *env, int64_t a, int64_t b)
+static int64_t qshl_s64(CPUState *env, int64_t a, int8_t b)
 {
     if(b > 0) {
 	const uint64_t mask = (INT64_MAX << (8 * sizeof a - b - 1)) & INT64_MAX;
@@ -1575,7 +1575,7 @@ uint64_t HELPER(neon_qshl_s64)(CPUState *env, uint64_t a, uint64_t b)
     return qshl_s64(env, a, b);
 }
 
-static uint64_t qshl_u64(CPUState *env, uint64_t a, int64_t b)
+static uint64_t qshl_u64(CPUState *env, uint64_t a, int8_t b)
 {
     if(b > 0) {
 	// Saturated?
@@ -1615,7 +1615,7 @@ uint32_t HELPER(neon_qshlu_s8)(CPUState *env, uint32_t a, uint32_t b)
 }
 
 
-static int16_t qshlu_s16(CPUState *env, int16_t a, int16_t b)
+static int16_t qshlu_s16(CPUState *env, int16_t a, int8_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1632,7 +1632,7 @@ uint32_t HELPER(neon_qshlu_s16)(CPUState *env, uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static int32_t qshlu_s32(CPUState *env, int32_t a, int32_t b)
+static int32_t qshlu_s32(CPUState *env, int32_t a, int8_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1647,7 +1647,7 @@ uint32_t HELPER(neon_qshlu_s32)(CPUState *env, uint32_t a, uint32_t b)
     return qshlu_s32(env, a, b);
 }
 
-static int64_t qshlu_s64(CPUState *env, int64_t a, int64_t b)
+static int64_t qshlu_s64(CPUState *env, int64_t a, int8_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1664,7 +1664,7 @@ uint64_t HELPER(neon_qshlu_s64)(CPUState *env, uint64_t a, uint64_t b)
 
 static int8_t qrshl_s8(CPUState *env, int8_t a, int8_t b)
 {
-    const uint8_t au = a;
+    const uint16_t au = a;
     uint8_t ret = qshl_s8(env, a, b);
 
     if(b < 0 && -b <= 8 * sizeof a) {
@@ -1705,7 +1705,7 @@ uint32_t HELPER(neon_qrshl_u8)(CPUState *env, uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t qrshl_s16(CPUState *env, int16_t a, int16_t b)
+static int16_t qrshl_s16(CPUState *env, int16_t a, int8_t b)
 {
     const uint16_t au = a;
     uint16_t ret = qshl_s16(env, a, b);
@@ -1724,7 +1724,7 @@ uint32_t HELPER(neon_qrshl_s16)(CPUState *env, uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static uint16_t qrshl_u16(CPUState *env, uint16_t a, int16_t b)
+static uint16_t qrshl_u16(CPUState *env, uint16_t a, int8_t b)
 {
     uint16_t ret = qshl_u16(env, a, b);
 
@@ -1744,7 +1744,7 @@ uint32_t HELPER(neon_qrshl_u16)(CPUState *env, uint32_t a, uint32_t b)
 
 uint32_t HELPER(neon_qrshl_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
-    const int32_t bs = b;
+    const int8_t bs = b;
     uint32_t ret = qshl_s32(env, a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1756,7 +1756,7 @@ uint32_t HELPER(neon_qrshl_s32)(CPUState *env, uint32_t a, uint32_t b)
 
 uint32_t HELPER(neon_qrshl_u32)(CPUState *env, uint32_t a, uint32_t b)
 {
-    const int32_t bs = b;
+    const int8_t bs = b;
     uint32_t ret = qshl_u32(env, a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1768,7 +1768,7 @@ uint32_t HELPER(neon_qrshl_u32)(CPUState *env, uint32_t a, uint32_t b)
 
 uint64_t HELPER(neon_qrshl_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
-    const int64_t bs = b;
+    const int8_t bs = b;
     uint64_t ret = qshl_s64(env, a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -1780,7 +1780,7 @@ uint64_t HELPER(neon_qrshl_s64)(CPUState *env, uint64_t a, uint64_t b)
 
 uint64_t HELPER(neon_qrshl_u64)(CPUState *env, uint64_t a, uint64_t b)
 {
-    const int64_t bs = b;
+    const int8_t bs = b;
     uint64_t ret = qshl_u64(env, a, b);
 
     if(bs < 0 && -bs <= 8 * sizeof a) {
@@ -2358,10 +2358,10 @@ uint64_t HELPER(neon_widen_u8)(uint32_t a)
 
 uint64_t HELPER(neon_widen_s8)(uint32_t a)
 {
-    const int16_t out0 = S8_3(a);
-    const int16_t out1 = S8_2(a);
-    const int16_t out2 = S8_1(a);
-    const int16_t out3 = S8_0(a);
+    const uint16_t out0 = S8_3(a);
+    const uint16_t out1 = S8_2(a);
+    const uint16_t out2 = S8_1(a);
+    const uint16_t out3 = S8_0(a);
 
     return (uint64_t)out0 << 48 | (uint64_t)out1 << 32 | (uint64_t)out2 << 16 | (uint64_t)out3;
 }
