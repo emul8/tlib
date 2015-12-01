@@ -777,9 +777,9 @@ void tb_invalidate_phys_page_range_inner(tb_page_addr_t start, tb_page_addr_t en
         /* we generate a block containing just the instruction
            modifying the memory. It will ensure that it cannot modify
            itself */
-        env->current_tb = NULL;
         tb_gen_code(env, current_pc, current_cs_base, current_flags, 1);
-        cpu_resume_from_signal(env, NULL);
+        env->exception_index = -1;
+        cpu_loop_exit(env);
     }
 #endif
 }
