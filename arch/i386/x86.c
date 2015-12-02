@@ -22,35 +22,6 @@
 
 #ifdef TARGET_I386
 
-#define pio_addr_t uint32_t
-
-// TODO: this is a big hack
-#define IO_ADDR 0xE0000000
-
-void cpu_outb(pio_addr_t addr, uint8_t val) {
-	tlib_write_byte(IO_ADDR+addr,val);
-}
-
-void cpu_outw(pio_addr_t addr, uint16_t val) {
-	tlib_write_word(IO_ADDR + addr, val);
-}
-
-void cpu_outl(pio_addr_t addr, uint32_t val) {
-	tlib_write_double_word(IO_ADDR + addr, val);
-}
-
-uint8_t cpu_inb(pio_addr_t addr) {
-	return tlib_read_byte(IO_ADDR + addr);
-}
-
-uint16_t cpu_inw(pio_addr_t addr) {
-	return tlib_read_word(IO_ADDR + addr);
-}
-
-uint32_t cpu_inl(pio_addr_t addr) {
-	return tlib_read_double_word(IO_ADDR + addr);
-}
-
 void run_on_cpu(void *env, void (*func)(void *data), void *data) {
 	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
 }

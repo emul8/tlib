@@ -27,6 +27,7 @@
 #include "helper.h"
 
 #include "softmmu_exec.h"
+#include "arch_callbacks.h"
 
 /* n must be a constant to be efficient */
 static inline target_long lshift(target_long x, int n)
@@ -611,32 +612,32 @@ void helper_check_iol(uint32_t t0)
 
 void helper_outb(uint32_t port, uint32_t data)
 {
-    cpu_outb(port, data & 0xff);
+    tlib_write_byte_to_port(port, data);
 }
 
 target_ulong helper_inb(uint32_t port)
 {
-    return cpu_inb(port);
+    return tlib_read_byte_from_port(port);
 }
 
 void helper_outw(uint32_t port, uint32_t data)
 {
-    cpu_outw(port, data & 0xffff);
+    tlib_write_word_to_port(port, data);
 }
 
 target_ulong helper_inw(uint32_t port)
 {
-    return cpu_inw(port);
+    return tlib_read_word_from_port(port);
 }
 
 void helper_outl(uint32_t port, uint32_t data)
 {
-    cpu_outl(port, data);
+    tlib_write_double_word_to_port(port, data);
 }
 
 target_ulong helper_inl(uint32_t port)
 {
-    return cpu_inl(port);
+    return tlib_read_double_word_from_port(port);
 }
 
 static inline unsigned int get_sp_mask(unsigned int e2)
