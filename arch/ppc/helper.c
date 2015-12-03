@@ -28,9 +28,6 @@
 #include "infrastructure.h"
 #include "arch_callbacks.h"
 
-//#define FLUSH_ALL_TLBS
-
-
 /*****************************************************************************/
 /* PowerPC Hypercall emulation */
 
@@ -262,7 +259,6 @@ static inline void __ppc6xx_tlb_invalidate_virt(CPUState *env,
                                                 target_ulong eaddr,
                                                 int is_code, int match_epn)
 {
-#if !defined(FLUSH_ALL_TLBS)
     ppc6xx_tlb_t *tlb;
     int way, nr;
 
@@ -275,10 +271,6 @@ static inline void __ppc6xx_tlb_invalidate_virt(CPUState *env,
             tlb_flush_page(env, tlb->EPN);
         }
     }
-#else
-    /* XXX: PowerPC specification say this is valid as well */
-    ppc6xx_tlb_invalidate_all(env);
-#endif
 }
 
 static inline void ppc6xx_tlb_invalidate_virt(CPUState *env,
@@ -895,7 +887,6 @@ static inline void ppc4xx_tlb_invalidate_all(CPUState *env)
 static inline void ppc4xx_tlb_invalidate_virt(CPUState *env,
                                               target_ulong eaddr, uint32_t pid)
 {
-#if !defined(FLUSH_ALL_TLBS)
     ppcemb_tlb_t *tlb;
     target_phys_addr_t raddr;
     target_ulong page, end;
@@ -911,9 +902,6 @@ static inline void ppc4xx_tlb_invalidate_virt(CPUState *env,
             break;
         }
     }
-#else
-    ppc4xx_tlb_invalidate_all(env);
-#endif
 }
 
 static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
@@ -1727,7 +1715,6 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
 
 /*****************************************************************************/
 /* BATs management */
-#if !defined(FLUSH_ALL_TLBS)
 static inline void do_invalidate_BAT(CPUPPCState *env, target_ulong BATu,
                                      target_ulong mask)
 {
@@ -1738,7 +1725,6 @@ static inline void do_invalidate_BAT(CPUPPCState *env, target_ulong BATu,
     for (page = base; page != end; page += TARGET_PAGE_SIZE)
         tlb_flush_page(env, page);
 }
-#endif
 
 void ppc_store_ibatu (CPUPPCState *env, int nr, target_ulong value)
 {
@@ -1746,9 +1732,7 @@ void ppc_store_ibatu (CPUPPCState *env, int nr, target_ulong value)
 
     if (env->IBAT[0][nr] != value) {
         mask = (value << 15) & 0x0FFE0000UL;
-#if !defined(FLUSH_ALL_TLBS)
         do_invalidate_BAT(env, env->IBAT[0][nr], mask);
-#endif
         /* When storing valid upper BAT, mask BEPI and BRPN
          * and invalidate all TLBs covered by this BAT
          */
@@ -1757,11 +1741,7 @@ void ppc_store_ibatu (CPUPPCState *env, int nr, target_ulong value)
             (value & ~0x0001FFFFUL & ~mask);
         env->IBAT[1][nr] = (env->IBAT[1][nr] & 0x0000007B) |
             (env->IBAT[1][nr] & ~0x0001FFFF & ~mask);
-#if !defined(FLUSH_ALL_TLBS)
         do_invalidate_BAT(env, env->IBAT[0][nr], mask);
-#else
-        tlb_flush(env, 1);
-#endif
     }
 }
 
@@ -1779,19 +1759,13 @@ void ppc_store_dbatu (CPUPPCState *env, int nr, target_ulong value)
          * and invalidate all TLBs covered by this BAT
          */
         mask = (value << 15) & 0x0FFE0000UL;
-#if !defined(FLUSH_ALL_TLBS)
         do_invalidate_BAT(env, env->DBAT[0][nr], mask);
-#endif
         mask = (value << 15) & 0x0FFE0000UL;
         env->DBAT[0][nr] = (value & 0x00001FFFUL) |
             (value & ~0x0001FFFFUL & ~mask);
         env->DBAT[1][nr] = (env->DBAT[1][nr] & 0x0000007B) |
             (env->DBAT[1][nr] & ~0x0001FFFF & ~mask);
-#if !defined(FLUSH_ALL_TLBS)
         do_invalidate_BAT(env, env->DBAT[0][nr], mask);
-#else
-        tlb_flush(env, 1);
-#endif
     }
 }
 
@@ -1803,22 +1777,12 @@ void ppc_store_dbatl (CPUPPCState *env, int nr, target_ulong value)
 void ppc_store_ibatu_601 (CPUPPCState *env, int nr, target_ulong value)
 {
     target_ulong mask;
-#if defined(FLUSH_ALL_TLBS)
-    int do_inval;
-#endif
 
     if (env->IBAT[0][nr] != value) {
-#if defined(FLUSH_ALL_TLBS)
-        do_inval = 0;
-#endif
         mask = (env->IBAT[1][nr] << 17) & 0x0FFE0000UL;
         if (env->IBAT[1][nr] & 0x40) {
             /* Invalidate BAT only if it is valid */
-#if !defined(FLUSH_ALL_TLBS)
             do_invalidate_BAT(env, env->IBAT[0][nr], mask);
-#else
-            do_inval = 1;
-#endif
         }
         /* When storing valid upper BAT, mask BEPI and BRPN
          * and invalidate all TLBs covered by this BAT
@@ -1827,52 +1791,26 @@ void ppc_store_ibatu_601 (CPUPPCState *env, int nr, target_ulong value)
             (value & ~0x0001FFFFUL & ~mask);
         env->DBAT[0][nr] = env->IBAT[0][nr];
         if (env->IBAT[1][nr] & 0x40) {
-#if !defined(FLUSH_ALL_TLBS)
             do_invalidate_BAT(env, env->IBAT[0][nr], mask);
-#else
-            do_inval = 1;
-#endif
         }
-#if defined(FLUSH_ALL_TLBS)
-        if (do_inval)
-            tlb_flush(env, 1);
-#endif
     }
 }
 
 void ppc_store_ibatl_601 (CPUPPCState *env, int nr, target_ulong value)
 {
     target_ulong mask;
-#if defined(FLUSH_ALL_TLBS)
-    int do_inval;
-#endif
 
     if (env->IBAT[1][nr] != value) {
-#if defined(FLUSH_ALL_TLBS)
-        do_inval = 0;
-#endif
         if (env->IBAT[1][nr] & 0x40) {
-#if !defined(FLUSH_ALL_TLBS)
             mask = (env->IBAT[1][nr] << 17) & 0x0FFE0000UL;
             do_invalidate_BAT(env, env->IBAT[0][nr], mask);
-#else
-            do_inval = 1;
-#endif
         }
         if (value & 0x40) {
-#if !defined(FLUSH_ALL_TLBS)
             mask = (value << 17) & 0x0FFE0000UL;
             do_invalidate_BAT(env, env->IBAT[0][nr], mask);
-#else
-            do_inval = 1;
-#endif
         }
         env->IBAT[1][nr] = value;
         env->DBAT[1][nr] = value;
-#if defined(FLUSH_ALL_TLBS)
-        if (do_inval)
-            tlb_flush(env, 1);
-#endif
     }
 }
 
@@ -1920,7 +1858,6 @@ void ppc_tlb_invalidate_all (CPUPPCState *env)
 
 void ppc_tlb_invalidate_one (CPUPPCState *env, target_ulong addr)
 {
-#if !defined(FLUSH_ALL_TLBS)
     addr &= TARGET_PAGE_MASK;
     switch (env->mmu_model) {
     case POWERPC_MMU_SOFT_6xx:
@@ -1989,9 +1926,6 @@ void ppc_tlb_invalidate_one (CPUPPCState *env, target_ulong addr)
         cpu_abort(env, "Unknown MMU model\n");
         break;
     }
-#else
-    ppc_tlb_invalidate_all(env);
-#endif
 }
 
 /*****************************************************************************/
@@ -2065,18 +1999,7 @@ void ppc_store_sr (CPUPPCState *env, int srnum, target_ulong value)
         env->sr[srnum] = value;
 /* Invalidating 256MB of virtual memory in 4kB pages is way longer than
    flusing the whole TLB. */
-#if !defined(FLUSH_ALL_TLBS) && 0
-        {
-            target_ulong page, end;
-            /* Invalidate 256 MB of virtual memory */
-            page = (16 << 20) * srnum;
-            end = page + (16 << 20);
-            for (; page != end; page += TARGET_PAGE_SIZE)
-                tlb_flush_page(env, page);
-        }
-#else
         tlb_flush(env, 1);
-#endif
     }
 }
 
