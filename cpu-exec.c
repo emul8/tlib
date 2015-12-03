@@ -221,20 +221,17 @@ int cpu_exec(CPUState *env)
                     }
                     break;
                 } else {
-#if defined(TARGET_SPARC)
-                    // TODO:
-                    int abort = 0;
-                    if (env->psret == 0) {
-                        abort = 1;
-                    }
-#endif
                     do_interrupt(env);
-                    env->exception_index = -1;
+                    if(env->exception_index != -1) {
+                        env->exception_index = -1;
 #if defined(TARGET_SPARC)
-                    if (abort) {
+                        //if exception_index is not -1, then we must have
+                        //reached cpu_abort or tlib_on_cpu_power_down.
+                        //This happens only if psret == 0.
+                        //Then we want to break the loop.
                         return 0;
-                    }
 #endif
+                    }
                 }
             }
 
