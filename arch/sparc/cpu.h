@@ -7,6 +7,11 @@
 #define TARGET_SPARC64 1
 #endif
 
+#ifdef TARGET_PHYS_ADDR_BITS
+#undef TARGET_PHYS_ADDR_BITS
+#define TARGET_PHYS_ADDR_BITS 36
+#endif
+
 #if !defined(TARGET_SPARC64)
 #define TARGET_LONG_BITS 32
 #define TARGET_FPREGS 32
