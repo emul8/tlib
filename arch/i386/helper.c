@@ -26,11 +26,6 @@
 #include "tlib-common.h"
 #include "infrastructure.h"
 
-void cpu_synchronize_state(void *env)
-{
-
-}
-
 /* NOTE: must be called outside the CPU execute loop */
 void cpu_reset(CPUX86State *env)
 {
