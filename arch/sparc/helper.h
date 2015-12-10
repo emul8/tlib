@@ -162,5 +162,4 @@ VIS_CMPHELPER(cmpne);
 #undef VIS_CMPHELPER
 DEF_HELPER_0(compute_psr, void);
 DEF_HELPER_0(compute_C_icc, i32);
-DEF_HELPER_1(update_insn_count, void, int)
 #include "def-helper.h"

@@ -3887,8 +3887,3 @@ void cpu_unassigned_access(CPUState *env1, target_phys_addr_t addr,
     env = env1;
     do_unassigned_access(addr, is_write, is_exec, is_asi, size);
 }
-
-void HELPER(update_insn_count)(int inst_count)
-{
-  tlib_update_instruction_counter(inst_count);
-}
