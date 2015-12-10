@@ -21,7 +21,10 @@ static inline void gen_block_header(void)
     if(tlib_is_instruction_count_enabled())
     {
         icount_arg = gen_opparam_ptr + 1;
-        TCGv_i32 instruction_count = tcg_const_i32(88888); // bogus value
+        // at this moment this const contains magic value 88888
+        // which is replaced at gen_block_footer near the end of
+        // the block
+        TCGv_i32 instruction_count = tcg_const_i32(88888);
         gen_helper_update_insn_count(instruction_count);
         tcg_temp_free_i32(instruction_count);
     }
