@@ -483,7 +483,7 @@ typedef struct CPUSPARCState {
 } CPUSPARCState;
 
 /* helper.c */
-CPUSPARCState *cpu_sparc_init(const char *cpu_model);
+CPUSPARCState *cpu_init(const char *cpu_model);
 void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu);
 int cpu_sparc_handle_mmu_fault(CPUSPARCState *env1, target_ulong address, int rw,
                                int mmu_idx, int is_softmmu);
@@ -494,7 +494,7 @@ target_ulong mmu_probe(CPUSPARCState *env, target_ulong address, int mmulev);
 void gen_intermediate_code_init(CPUSPARCState *env);
 
 /* cpu-exec.c */
-int cpu_sparc_exec(CPUSPARCState *s);
+int cpu_exec(CPUSPARCState *s);
 
 /* op_helper.c */
 target_ulong cpu_get_psr(CPUState *env1);
@@ -536,12 +536,7 @@ target_phys_addr_t cpu_get_phys_page_nofault(CPUState *env, target_ulong addr,
                                            int mmu_idx);
 
 #endif
-int cpu_sparc_signal_handler(int host_signum, void *pinfo, void *puc);
-
-#define cpu_init cpu_sparc_init
-#define cpu_exec cpu_sparc_exec
-#define cpu_gen_code cpu_sparc_gen_code
-#define cpu_signal_handler cpu_sparc_signal_handler
+int cpu_signal_handler(int host_signum, void *pinfo, void *puc);
 
 #define CPU_SAVE_VERSION 7
 

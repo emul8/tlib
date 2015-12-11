@@ -1,4 +1,5 @@
-#include "exec.h"
+#include "dyngen-exec.h"
+#include "softmmu_exec.h"
 #include "host-utils.h"
 #include "helper.h"
 #include "arch_callbacks.h"

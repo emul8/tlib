@@ -24,6 +24,10 @@
 #include "arch/sparc/arch_callbacks.h"
 #endif
 
+#if !(defined(TARGET_I386) || defined(TARGET_SPARC) || defined(TARGET_PPC) || defined(TARGET_ARM))
+#error Unsupported target CPU.
+#endif
+
 target_ulong virt_to_phys(target_ulong virt) {
         #define MASK2 (0xFFFFFFFF - MASK1)
         #define MASK1 (0xFFFFFFFF >> (32-TARGET_PAGE_BITS))
@@ -65,19 +69,6 @@ void cpu_loop_exit(CPUState *env)
     env->current_tb = NULL;
     longjmp(env->jmp_env, 1);
 }
-
-/* exit the current TB from a signal handler. The host registers are
-   restored in a state compatible with the CPU emulator
- */
-void cpu_resume_from_signal(CPUState *env, void *puc)
-{
-    /* XXX: restore cpu registers saved in host registers */
-
-    env->exception_index = -1;
-    longjmp(env->jmp_env, 1);
-}
-
-
 
 static TranslationBlock *tb_find_slow(CPUState *env,
                                       target_ulong pc,
@@ -212,12 +203,8 @@ int cpu_exec(CPUState *env)
     DF = 1 - (2 * ((env->eflags >> 10) & 1));
     CC_OP = CC_OP_EFLAGS;
     env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-#elif defined(TARGET_SPARC)
-#elif defined(TARGET_ARM)
 #elif defined(TARGET_PPC)
     env->reserve_addr = -1;
-#else
-#error unsupported target CPU
 #endif
     env->exception_index = -1;
 
@@ -234,20 +221,17 @@ int cpu_exec(CPUState *env)
                     }
                     break;
                 } else {
-#if defined(TARGET_SPARC)
-                    // TODO:
-                    int abort = 0;
-                    if (env->psret == 0) {
-                        abort = 1;
-                    }
-#endif
                     do_interrupt(env);
-                    env->exception_index = -1;
+                    if(env->exception_index != -1) {
+                        env->exception_index = -1;
 #if defined(TARGET_SPARC)
-                    if (abort) {
+                        //if exception_index is not -1, then we must have
+                        //reached cpu_abort or tlib_on_cpu_power_down.
+                        //This happens only if psret == 0.
+                        //Then we want to break the loop.
                         return 0;
-                    }
 #endif
+                    }
                 }
             }
 
@@ -452,17 +436,10 @@ int cpu_exec(CPUState *env)
         }
     } /* for(;;) */
 
-
 #if defined(TARGET_I386)
     /* restore flags in standard format */
     env->eflags = env->eflags | cpu_cc_compute_all(env, CC_OP)
         | (DF & DF_MASK);
-#elif defined(TARGET_ARM)
-    /* XXX: Save/restore host fpu exception state?.  */
-#elif defined(TARGET_SPARC)
-#elif defined(TARGET_PPC)
-#else
-#error unsupported target CPU
 #endif
 
     return ret;

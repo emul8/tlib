@@ -26,11 +26,6 @@
 #include "tlib-common.h"
 #include "infrastructure.h"
 
-void cpu_synchronize_state(void *env)
-{
-
-}
-
 /* NOTE: must be called outside the CPU execute loop */
 void cpu_reset(CPUX86State *env)
 {
@@ -99,7 +94,7 @@ void cpu_reset(CPUX86State *env)
     cpu_watchpoint_remove_all(env, BP_CPU);
 }
 
-void cpu_x86_close(CPUX86State *env)
+void cpu_close(CPUX86State *env)
 {
     tlib_free(env);
 }
@@ -687,8 +682,10 @@ static void breakpoint_handler(CPUState *env)
             env->watchpoint_hit = NULL;
             if (check_hw_breakpoints(env, 0))
                 raise_exception_env(EXCP01_DB, env);
-            else
-                cpu_resume_from_signal(env, NULL);
+            else {
+                env->exception_index = -1;
+                longjmp(env->jmp_env, 1);
+            }
         }
     } else {
         QTAILQ_FOREACH(bp, &env->breakpoints, entry)
@@ -729,7 +726,7 @@ static void mce_init(CPUX86State *cenv)
     }
 }
 
-CPUX86State *cpu_x86_init(const char *cpu_model)
+CPUX86State *cpu_init(const char *cpu_model)
 {
     CPUX86State *env;
     static int inited;
@@ -744,7 +741,7 @@ CPUX86State *cpu_x86_init(const char *cpu_model)
             cpu_set_debug_excp_handler(breakpoint_handler);
     }
     if (cpu_x86_register(env, cpu_model) < 0) {
-        cpu_x86_close(env);
+        cpu_close(env);
         return NULL;
     }
     mce_init(env);

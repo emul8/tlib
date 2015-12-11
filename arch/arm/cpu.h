@@ -217,17 +217,17 @@ typedef struct CPUARMState {
     } cp[15];
 } CPUARMState;
 
-CPUARMState *cpu_arm_init(const char *cpu_model);
+CPUARMState *cpu_init(const char *cpu_model);
 void arm_translate_init(void);
-int cpu_arm_exec(CPUARMState *s);
-void cpu_arm_close(CPUARMState *s);
+int cpu_exec(CPUARMState *s);
+void cpu_close(CPUARMState *s);
 void do_interrupt(CPUARMState *);
 void switch_mode(CPUARMState *, int);
 
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */
-int cpu_arm_signal_handler(int host_signum, void *pinfo,
+int cpu_signal_handler(int host_signum, void *pinfo,
                            void *puc);
 int cpu_arm_handle_mmu_fault (CPUARMState *env, target_ulong address, int rw,
                               int mmu_idx);
@@ -417,11 +417,6 @@ void cpu_arm_set_cp_io(CPUARMState *env, int cpnum,
 
 #define TARGET_PHYS_ADDR_SPACE_BITS 32
 #define TARGET_VIRT_ADDR_SPACE_BITS 32
-
-#define cpu_init cpu_arm_init
-#define cpu_exec cpu_arm_exec
-#define cpu_gen_code cpu_arm_gen_code
-#define cpu_signal_handler cpu_arm_signal_handler
 
 #define CPU_SAVE_VERSION 4
 
