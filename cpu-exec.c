@@ -24,10 +24,6 @@
 #include "arch/sparc/arch_callbacks.h"
 #endif
 
-#if !(defined(TARGET_I386) || defined(TARGET_SPARC) || defined(TARGET_PPC) || defined(TARGET_ARM))
-#error Unsupported target CPU.
-#endif
-
 target_ulong virt_to_phys(target_ulong virt) {
         #define MASK2 (0xFFFFFFFF - MASK1)
         #define MASK1 (0xFFFFFFFF >> (32-TARGET_PAGE_BITS))
