@@ -21,8 +21,6 @@
 
 #define TARGET_LONG_BITS 32
 
-#define ELF_MACHINE	EM_ARM
-
 #define CPUState struct CPUARMState
 
 #include "tlib-common.h"

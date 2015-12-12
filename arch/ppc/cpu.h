@@ -69,12 +69,6 @@
 
 #include "softfloat.h"
 
-#if defined (TARGET_PPC64)
-#define ELF_MACHINE     EM_PPC64
-#else
-#define ELF_MACHINE     EM_PPC
-#endif
-
 /*****************************************************************************/
 /* MMU model                                                                 */
 typedef enum powerpc_mmu_t powerpc_mmu_t;

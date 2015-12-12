@@ -33,12 +33,6 @@
    close to the modifying instruction */
 #define TARGET_HAS_PRECISE_SMC
 
-#ifdef TARGET_X86_64
-#define ELF_MACHINE	EM_X86_64
-#else
-#define ELF_MACHINE	EM_386
-#endif
-
 #define CPUState struct CPUX86State
 
 #include "cpu-defs.h"
