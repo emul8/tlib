@@ -52,12 +52,12 @@ static uint32_t arm1176_cp15_c0_c2[8] =
 
 static uint32_t cpu_arm_find_by_name(const char *name);
 
-static inline void set_feature(CPUARMState *env, int feature)
+static inline void set_feature(CPUState *env, int feature)
 {
     env->features |= 1u << feature;
 }
 
-static void cpu_reset_model_id(CPUARMState *env, uint32_t id)
+static void cpu_reset_model_id(CPUState *env, uint32_t id)
 {
     env->cp15.c0_cpuid = id;
     switch (id) {
@@ -309,12 +309,12 @@ static void cpu_reset_model_id(CPUARMState *env, uint32_t id)
     }
 }
 
-void cpu_reset(CPUARMState *env)
+void cpu_reset(CPUState *env)
 {
     uint32_t id;
 
     id = env->cp15.c0_cpuid;
-    memset(env, 0, offsetof(CPUARMState, breakpoints));
+    memset(env, 0, offsetof(CPUState, breakpoints));
     if (id)
         cpu_reset_model_id(env, id);
     /* SVC mode with interrupts disabled.  */
@@ -349,16 +349,16 @@ void cpu_reset(CPUARMState *env)
     tb_flush(env);
 }
 
-CPUARMState *cpu_init(const char *cpu_model)
+CPUState *cpu_init(const char *cpu_model)
 {
-    CPUARMState *env;
+    CPUState *env;
     uint32_t id;
     static int inited = 0;
 
     id = cpu_arm_find_by_name(cpu_model);
     if (id == 0)
         return NULL;
-    env = tlib_mallocz(sizeof(CPUARMState));
+    env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
     if (!inited) {
         inited = 1;
@@ -428,12 +428,12 @@ static uint32_t cpu_arm_find_by_name(const char *name)
     return id;
 }
 
-void cpu_close(CPUARMState *env)
+void cpu_close(CPUState *env)
 {
     tlib_free(env);
 }
 
-uint32_t cpsr_read(CPUARMState *env)
+uint32_t cpsr_read(CPUState *env)
 {
     int ZF;
     ZF = (env->ZF == 0);
@@ -444,7 +444,7 @@ uint32_t cpsr_read(CPUARMState *env)
         | (env->GE << 16);
 }
 
-void cpsr_write(CPUARMState *env, uint32_t val, uint32_t mask)
+void cpsr_write(CPUState *env, uint32_t val, uint32_t mask)
 {
     if (mask & CPSR_NZCV) {
         env->ZF = (~val) & CPSR_Z;
@@ -589,13 +589,13 @@ void switch_mode(CPUState *env, int mode)
 }
 
 #ifdef TARGET_PROTO_ARM_M
-static void v7m_push(CPUARMState *env, uint32_t val)
+static void v7m_push(CPUState *env, uint32_t val)
 {
     env->regs[13] -= 4;
     stl_phys(env->regs[13], val);
 }
 
-static uint32_t v7m_pop(CPUARMState *env)
+static uint32_t v7m_pop(CPUState *env)
 {
     uint32_t val;
     val = ldl_phys(env->regs[13]);
@@ -604,7 +604,7 @@ static uint32_t v7m_pop(CPUARMState *env)
 }
 
 /* Switch to V7M main or process stack pointer.  */
-static void switch_v7m_sp(CPUARMState *env, int process)
+static void switch_v7m_sp(CPUState *env, int process)
 {
     uint32_t tmp;
     if (env->v7m.current_sp != process) {
@@ -615,7 +615,7 @@ static void switch_v7m_sp(CPUARMState *env, int process)
     }
 }
 
-void do_v7m_exception_exit(CPUARMState *env)
+void do_v7m_exception_exit(CPUState *env)
 {
     uint32_t type;
     uint32_t xpsr;
@@ -646,7 +646,7 @@ void do_v7m_exception_exit(CPUARMState *env)
        pointer.  */
 }
 
-static void do_interrupt_v7m(CPUARMState *env)
+static void do_interrupt_v7m(CPUState *env)
 {
     uint32_t xpsr = xpsr_read(env);
     uint32_t lr;
@@ -721,7 +721,7 @@ static void do_interrupt_v7m(CPUARMState *env)
 #endif
 
 /* Handle a CPU exception.  */
-void do_interrupt(CPUARMState *env)
+void do_interrupt(CPUState *env)
 {
     uint32_t addr;
     uint32_t mask;
@@ -2183,7 +2183,7 @@ void HELPER(v7m_msr)(CPUState *env, uint32_t reg, uint32_t val)
 }
 #endif
 
-void cpu_arm_set_cp_io(CPUARMState *env, int cpnum,
+void cpu_arm_set_cp_io(CPUState *env, int cpnum,
                 ARMReadCPFunc *cp_read, ARMWriteCPFunc *cp_write,
                 void *opaque)
 {

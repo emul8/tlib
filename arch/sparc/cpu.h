@@ -30,8 +30,6 @@
 # endif
 #endif
 
-#define CPUState struct CPUSPARCState
-
 #include "cpu-defs.h"
 
 #include "softfloat.h"
@@ -344,9 +342,9 @@ typedef struct SparcTLBEntry {
     uint64_t tte;
 } SparcTLBEntry;
 
-#define CPU_STATE_SIZE ((size_t) &((CPUSPARCState *) 0)->current_tb)
+#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
 
-typedef struct CPUSPARCState {
+typedef struct CPUState {
     target_ulong gregs[8]; /* general registers */
     target_ulong *regwptr; /* pointer to current register window */
     target_ulong pc;       /* program counter */
@@ -474,21 +472,21 @@ typedef struct CPUSPARCState {
 
     /* Leon3 cache control */
     uint32_t cache_control;
-} CPUSPARCState;
+} CPUState;
 
 /* helper.c */
-CPUSPARCState *cpu_init(const char *cpu_model);
-void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu);
-int cpu_sparc_handle_mmu_fault(CPUSPARCState *env1, target_ulong address, int rw,
+CPUState *cpu_init(const char *cpu_model);
+void cpu_sparc_set_id(CPUState *env, unsigned int cpu);
+int cpu_sparc_handle_mmu_fault(CPUState *env1, target_ulong address, int rw,
                                int mmu_idx, int is_softmmu);
 #define cpu_handle_mmu_fault cpu_sparc_handle_mmu_fault
-target_ulong mmu_probe(CPUSPARCState *env, target_ulong address, int mmulev);
+target_ulong mmu_probe(CPUState *env, target_ulong address, int mmulev);
 
 /* translate.c */
-void gen_intermediate_code_init(CPUSPARCState *env);
+void gen_intermediate_code_init(CPUState *env);
 
 /* cpu-exec.c */
-int cpu_exec(CPUSPARCState *s);
+int cpu_exec(CPUState *s);
 
 /* op_helper.c */
 target_ulong cpu_get_psr(CPUState *env1);

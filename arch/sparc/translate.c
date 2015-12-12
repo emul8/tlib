@@ -113,61 +113,61 @@ static int sign_extend(int x, int len)
 /* floating point registers moves */
 static void gen_op_load_fpr_DT0(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.lower));
 }
 
 static void gen_op_load_fpr_DT1(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, dt1) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, dt1) +
                    offsetof(CPU_DoubleU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, dt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, dt1) +
                    offsetof(CPU_DoubleU, l.lower));
 }
 
 static void gen_op_store_DT0_fpr(unsigned int dst)
 {
-    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.upper));
-    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.lower));
 }
 
 static void gen_op_load_fpr_QT0(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upmost));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lower));
-    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lowest));
 }
 
 static void gen_op_load_fpr_QT1(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.upmost));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.lower));
-    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.lowest));
 }
 
 static void gen_op_store_QT0_fpr(unsigned int dst)
 {
-    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upmost));
-    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upper));
-    tcg_gen_ld_i32(cpu_fpr[dst + 2], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 2], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lower));
-    tcg_gen_ld_i32(cpu_fpr[dst + 3], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 3], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lowest));
 }
 
@@ -1824,7 +1824,7 @@ static inline void gen_load_trap_state_at_tl(TCGv_ptr r_tsptr, TCGv_ptr cpu_env)
     TCGv_i32 r_tl = tcg_temp_new_i32();
 
     /* load env->tl into r_tl */
-    tcg_gen_ld_i32(r_tl, cpu_env, offsetof(CPUSPARCState, tl));
+    tcg_gen_ld_i32(r_tl, cpu_env, offsetof(CPUState, tl));
 
     /* tl = [0 ... MAXTL_MASK] where MAXTL_MASK must be power of 2 */
     tcg_gen_andi_i32(r_tl, r_tl, MAXTL_MASK);
@@ -2252,17 +2252,17 @@ static void disas_sparc_insn(DisasContext * dc)
                     break;
                 case 6: // pstate
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, pstate));
+                                   offsetof(CPUState, pstate));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 7: // tl
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, tl));
+                                   offsetof(CPUState, tl));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 8: // pil
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, psrpil));
+                                   offsetof(CPUState, psrpil));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 9: // cwp
@@ -2270,33 +2270,33 @@ static void disas_sparc_insn(DisasContext * dc)
                     break;
                 case 10: // cansave
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, cansave));
+                                   offsetof(CPUState, cansave));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 11: // canrestore
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, canrestore));
+                                   offsetof(CPUState, canrestore));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 12: // cleanwin
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, cleanwin));
+                                   offsetof(CPUState, cleanwin));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 13: // otherwin
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, otherwin));
+                                   offsetof(CPUState, otherwin));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 14: // wstate
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, wstate));
+                                   offsetof(CPUState, wstate));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 16: // UA2005 gl
                     CHECK_IU_FEATURE(dc, GL);
                     tcg_gen_ld_i32(cpu_tmp32, cpu_env,
-                                   offsetof(CPUSPARCState, gl));
+                                   offsetof(CPUState, gl));
                     tcg_gen_ext_i32_tl(cpu_tmp0, cpu_tmp32);
                     break;
                 case 26: // UA2005 strand status
@@ -3534,7 +3534,7 @@ static void disas_sparc_insn(DisasContext * dc)
                                     tcg_gen_trunc_tl_i32(cpu_tmp32, r_tmp);
                                     tcg_temp_free(r_tmp);
                                     tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                                   offsetof(CPUSPARCState, tl));
+                                                   offsetof(CPUState, tl));
                                     dc->npc = DYNAMIC_PC;
                                 }
                                 break;
@@ -3547,38 +3547,38 @@ static void disas_sparc_insn(DisasContext * dc)
                             case 10: // cansave
                                 tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_tmp0);
                                 tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                               offsetof(CPUSPARCState,
+                                               offsetof(CPUState,
                                                         cansave));
                                 break;
                             case 11: // canrestore
                                 tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_tmp0);
                                 tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                               offsetof(CPUSPARCState,
+                                               offsetof(CPUState,
                                                         canrestore));
                                 break;
                             case 12: // cleanwin
                                 tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_tmp0);
                                 tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                               offsetof(CPUSPARCState,
+                                               offsetof(CPUState,
                                                         cleanwin));
                                 break;
                             case 13: // otherwin
                                 tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_tmp0);
                                 tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                               offsetof(CPUSPARCState,
+                                               offsetof(CPUState,
                                                         otherwin));
                                 break;
                             case 14: // wstate
                                 tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_tmp0);
                                 tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                               offsetof(CPUSPARCState,
+                                               offsetof(CPUState,
                                                         wstate));
                                 break;
                             case 16: // UA2005 gl
                                 CHECK_IU_FEATURE(dc, GL);
                                 tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_tmp0);
                                 tcg_gen_st_i32(cpu_tmp32, cpu_env,
-                                               offsetof(CPUSPARCState, gl));
+                                               offsetof(CPUState, gl));
                                 break;
                             case 26: // UA2005 strand status
                                 CHECK_IU_FEATURE(dc, HYPV);
@@ -4858,7 +4858,7 @@ static void disas_sparc_insn(DisasContext * dc)
 }
 
 static inline void gen_intermediate_code_internal(TranslationBlock * tb,
-                                                  int spc, CPUSPARCState *env)
+                                                  int spc, CPUState *env)
 {
     target_ulong pc_start, last_pc;
     uint16_t *gen_opc_end;
@@ -4981,17 +4981,17 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
     }
 }
 
-void gen_intermediate_code(CPUSPARCState * env, TranslationBlock * tb)
+void gen_intermediate_code(CPUState * env, TranslationBlock * tb)
 {
     gen_intermediate_code_internal(tb, 0, env);
 }
 
-void gen_intermediate_code_pc(CPUSPARCState * env, TranslationBlock * tb)
+void gen_intermediate_code_pc(CPUState * env, TranslationBlock * tb)
 {
     gen_intermediate_code_internal(tb, 1, env);
 }
 
-void gen_intermediate_code_init(CPUSPARCState *env)
+void gen_intermediate_code_init(CPUState *env)
 {
     unsigned int i;
     static int inited;

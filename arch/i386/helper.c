@@ -27,11 +27,11 @@
 #include "infrastructure.h"
 
 /* NOTE: must be called outside the CPU execute loop */
-void cpu_reset(CPUX86State *env)
+void cpu_reset(CPUState *env)
 {
     int i;
 
-    memset(env, 0, offsetof(CPUX86State, breakpoints));
+    memset(env, 0, offsetof(CPUState, breakpoints));
 
     tlb_flush(env, 1);
 
@@ -94,7 +94,7 @@ void cpu_reset(CPUX86State *env)
     cpu_watchpoint_remove_all(env, BP_CPU);
 }
 
-void cpu_close(CPUX86State *env)
+void cpu_close(CPUState *env)
 {
     tlib_free(env);
 }
@@ -129,7 +129,7 @@ int cpu_x86_support_mca_broadcast(CPUState *env)
 /* x86 mmu */
 /* XXX: add PGE support */
 
-void cpu_x86_set_a20(CPUX86State *env, int a20_state)
+void cpu_x86_set_a20(CPUState *env, int a20_state)
 {
     a20_state = (a20_state != 0);
     if (a20_state != ((env->a20_mask >> 20) & 1)) {
@@ -144,7 +144,7 @@ void cpu_x86_set_a20(CPUX86State *env, int a20_state)
     }
 }
 
-void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0)
+void cpu_x86_update_cr0(CPUState *env, uint32_t new_cr0)
 {
     int pe_state;
 
@@ -184,7 +184,7 @@ void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0)
 
 /* XXX: in legacy PAE mode, generate a GPF if reserved bits are set in
    the PDPT */
-void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3)
+void cpu_x86_update_cr3(CPUState *env, target_ulong new_cr3)
 {
     env->cr[3] = new_cr3;
     if (env->cr[0] & CR0_PG_MASK) {
@@ -192,7 +192,7 @@ void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3)
     }
 }
 
-void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4)
+void cpu_x86_update_cr4(CPUState *env, uint32_t new_cr4)
 {
     if ((new_cr4 & (CR4_PGE_MASK | CR4_PAE_MASK | CR4_PSE_MASK)) !=
         (env->cr[4] & (CR4_PGE_MASK | CR4_PAE_MASK | CR4_PSE_MASK))) {
@@ -222,7 +222,7 @@ void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4)
    0  = nothing more to do
    1  = generate PF fault
 */
-int cpu_x86_handle_mmu_fault(CPUX86State *env, target_ulong addr,
+int cpu_x86_handle_mmu_fault(CPUState *env, target_ulong addr,
                              int is_write1, int mmu_idx)
 {
     uint64_t ptep, pte;
@@ -711,7 +711,7 @@ typedef struct MCEInjectionParams {
     int flags;
 } MCEInjectionParams;
 
-static void mce_init(CPUX86State *cenv)
+static void mce_init(CPUState *cenv)
 {
     unsigned int bank;
 
@@ -726,11 +726,11 @@ static void mce_init(CPUX86State *cenv)
     }
 }
 
-CPUX86State *cpu_init(const char *cpu_model)
+CPUState *cpu_init(const char *cpu_model)
 {
-    CPUX86State *env;
+    CPUState *env;
     static int inited;
-    env = tlib_mallocz(sizeof(CPUX86State));
+    env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
 
     /* init various static tables used in TCG mode */

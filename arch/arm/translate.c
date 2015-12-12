@@ -1061,12 +1061,12 @@ static inline long
 vfp_reg_offset (int dp, int reg)
 {
     if (dp)
-        return offsetof(CPUARMState, vfp.regs[reg]);
+        return offsetof(CPUState, vfp.regs[reg]);
     else if (reg & 1) {
-        return offsetof(CPUARMState, vfp.regs[reg >> 1])
+        return offsetof(CPUState, vfp.regs[reg >> 1])
           + offsetof(CPU_DoubleU, l.upper);
     } else {
-        return offsetof(CPUARMState, vfp.regs[reg >> 1])
+        return offsetof(CPUState, vfp.regs[reg >> 1])
           + offsetof(CPU_DoubleU, l.lower);
     }
 }
@@ -3834,13 +3834,13 @@ static inline void gen_neon_rsb(int size, TCGv t0, TCGv t1)
 static TCGv neon_load_scratch(int scratch)
 {
     TCGv tmp = tcg_temp_new_i32();
-    tcg_gen_ld_i32(tmp, cpu_env, offsetof(CPUARMState, vfp.scratch[scratch]));
+    tcg_gen_ld_i32(tmp, cpu_env, offsetof(CPUState, vfp.scratch[scratch]));
     return tmp;
 }
 
 static void neon_store_scratch(int scratch, TCGv var)
 {
-    tcg_gen_st_i32(var, cpu_env, offsetof(CPUARMState, vfp.scratch[scratch]));
+    tcg_gen_st_i32(var, cpu_env, offsetof(CPUState, vfp.scratch[scratch]));
     tcg_temp_free_i32(var);
 }
 

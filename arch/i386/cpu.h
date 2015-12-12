@@ -33,8 +33,6 @@
    close to the modifying instruction */
 #define TARGET_HAS_PRECISE_SMC
 
-#define CPUState struct CPUX86State
-
 #include "cpu-defs.h"
 
 #include "softfloat.h"
@@ -604,7 +602,7 @@ typedef struct {
 
 #define NB_MMU_MODES 2
 
-typedef struct CPUX86State {
+typedef struct CPUState {
     /* standard registers */
     target_ulong regs[CPU_NB_REGS];
     target_ulong eip;
@@ -756,21 +754,21 @@ typedef struct CPUX86State {
     XMMReg ymmh_regs[CPU_NB_REGS];
 
     uint64_t xcr0;
-} CPUX86State;
+} CPUState;
 
-CPUX86State *cpu_init(const char *cpu_model);
-int cpu_exec(CPUX86State *s);
-void cpu_close(CPUX86State *s);
+CPUState *cpu_init(const char *cpu_model);
+int cpu_exec(CPUState *s);
+void cpu_close(CPUState *s);
 void x86_cpudef_setup(void);
 int cpu_x86_support_mca_broadcast(CPUState *env);
 
-int cpu_get_pic_interrupt(CPUX86State *s);
+int cpu_get_pic_interrupt(CPUState *s);
 /* MSDOS compatibility mode FPU exception support */
-void cpu_set_ferr(CPUX86State *s);
+void cpu_set_ferr(CPUState *s);
 
 /* this function must always be used to load data in the segment
    cache: it synchronizes the hflags with the segment cache values */
-static inline void cpu_x86_load_seg_cache(CPUX86State *env,
+static inline void cpu_x86_load_seg_cache(CPUState *env,
                                           int seg_reg, unsigned int selector,
                                           target_ulong base,
                                           unsigned int limit,
@@ -828,7 +826,7 @@ static inline void cpu_x86_load_seg_cache(CPUX86State *env,
 }
 
 /* wrapper, just in case memory mappings must be changed */
-static inline void cpu_x86_set_cpl(CPUX86State *s, int cpl)
+static inline void cpu_x86_set_cpl(CPUState *s, int cpl)
 {
 #if HF_CPL_MASK == 3
     s->hflags = (s->hflags & ~HF_CPL_MASK) | cpl;
@@ -845,7 +843,7 @@ floatx80 cpu_set_fp80(uint64_t mant, uint16_t upper);
 /* cpu-exec.c */
 /* the following helpers are only usable in user mode simulation as
    they can trigger unexpected exceptions */
-void cpu_x86_load_seg(CPUX86State *s, int seg_reg, int selector);
+void cpu_x86_load_seg(CPUState *s, int seg_reg, int selector);
 
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
@@ -854,17 +852,17 @@ int cpu_signal_handler(int host_signum, void *pinfo,
                            void *puc);
 
 /* cpuid.c */
-void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
+void cpu_x86_cpuid(CPUState *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx,
                    uint32_t *ecx, uint32_t *edx);
-int cpu_x86_register (CPUX86State *env, const char *cpu_model);
-void cpu_clear_apic_feature(CPUX86State *env);
+int cpu_x86_register (CPUState *env, const char *cpu_model);
+void cpu_clear_apic_feature(CPUState *env);
 
 /* helper.c */
-int cpu_x86_handle_mmu_fault(CPUX86State *env, target_ulong addr,
+int cpu_x86_handle_mmu_fault(CPUState *env, target_ulong addr,
                              int is_write, int mmu_idx);
 #define cpu_handle_mmu_fault cpu_x86_handle_mmu_fault
-void cpu_x86_set_a20(CPUX86State *env, int a20_state);
+void cpu_x86_set_a20(CPUState *env, int a20_state);
 
 static inline int hw_breakpoint_enabled(unsigned long dr7, int index)
 {
@@ -882,23 +880,23 @@ static inline int hw_breakpoint_len(unsigned long dr7, int index)
     return (len == 2) ? 8 : len + 1;
 }
 
-void hw_breakpoint_insert(CPUX86State *env, int index);
-void hw_breakpoint_remove(CPUX86State *env, int index);
-int check_hw_breakpoints(CPUX86State *env, int force_dr6_update);
+void hw_breakpoint_insert(CPUState *env, int index);
+void hw_breakpoint_remove(CPUState *env, int index);
+int check_hw_breakpoints(CPUState *env, int force_dr6_update);
 
 /* will be suppressed */
-void cpu_x86_update_cr0(CPUX86State *env, uint32_t new_cr0);
-void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3);
-void cpu_x86_update_cr4(CPUX86State *env, uint32_t new_cr4);
+void cpu_x86_update_cr0(CPUState *env, uint32_t new_cr0);
+void cpu_x86_update_cr3(CPUState *env, target_ulong new_cr3);
+void cpu_x86_update_cr4(CPUState *env, uint32_t new_cr4);
 
-void cpu_set_apic_base(CPUX86State *env, uint64_t val);
-uint64_t cpu_get_apic_base(CPUX86State *env);
-void cpu_set_apic_tpr(CPUX86State *env, uint8_t val);
-uint8_t cpu_get_apic_tpr(CPUX86State *env);
+void cpu_set_apic_base(CPUState *env, uint64_t val);
+uint64_t cpu_get_apic_base(CPUState *env);
+void cpu_set_apic_tpr(CPUState *env, uint8_t val);
+uint8_t cpu_get_apic_tpr(CPUState *env);
 
 /* hw/pc.c */
-void cpu_smm_update(CPUX86State *env);
-uint64_t cpu_get_tsc(CPUX86State *env);
+void cpu_smm_update(CPUState *env);
+uint64_t cpu_get_tsc(CPUState *env);
 
 /* used to debug */
 #define X86_DUMP_FPU  0x0001 /* dump FPU state too */
