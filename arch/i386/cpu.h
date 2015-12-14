@@ -602,6 +602,7 @@ typedef struct {
 
 #define NB_MMU_MODES 2
 
+#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
 typedef struct CPUState {
     /* standard registers */
     target_ulong regs[CPU_NB_REGS];
@@ -687,18 +688,12 @@ typedef struct CPUState {
     int exception_is_int;
     target_ulong exception_next_eip;
     target_ulong dr[8]; /* debug registers */
-    union {
-        CPUBreakpoint *cpu_breakpoint[4];
-        CPUWatchpoint *cpu_watchpoint[4];
-    }; /* break/watchpoints for dr[0..3] */
     uint32_t smbase;
     int old_exception;  /* exception in flight */
 
     /* KVM states, automatically cleared on reset */
     uint8_t nmi_injected;
     uint8_t nmi_pending;
-
-    CPU_COMMON
 
     uint64_t pat;
 
@@ -734,10 +729,6 @@ typedef struct CPUState {
     uint32_t cpuid_svm_features;
     bool tsc_valid;
     int tsc_khz;
-    
-    /* in order to simplify APIC support, we leave this pointer to the
-       user */
-    void *apic_state;
 
     uint64_t mcg_cap;
     uint64_t mcg_ctl;
@@ -754,6 +745,18 @@ typedef struct CPUState {
     XMMReg ymmh_regs[CPU_NB_REGS];
 
     uint64_t xcr0;
+
+    CPU_COMMON
+
+    union {
+        CPUBreakpoint *cpu_breakpoint[4];
+        CPUWatchpoint *cpu_watchpoint[4];
+    }; /* break/watchpoints for dr[0..3] */
+
+    /* in order to simplify APIC support, we leave this pointer to the
+       user */
+    void *apic_state;
+
 } CPUState;
 
 CPUState *cpu_init(const char *cpu_model);
