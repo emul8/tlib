@@ -254,10 +254,16 @@ void* tlib_export_state()
   return cpu;
 }
 
-#ifndef CPU_STATE_SIZE
-#define CPU_STATE_SIZE 0
-#endif
 int32_t tlib_get_state_size()
 {
-  return CPU_STATE_SIZE;
+  // Cpu state size is reported as
+  // an offset of `current_tb` field
+  // provided by CPU_COMMON definition.
+  // It is a convention that all
+  // architecture-specific, non-pointer
+  // fields should be located in this
+  // range. As a result this size can
+  // be interpreted as an amount of bytes
+  // to store during serialization.
+  return (ssize_t)(&((CPUState *) 0)->current_tb);
 }

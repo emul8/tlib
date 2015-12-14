@@ -67,7 +67,11 @@ typedef uint32_t ARMReadCPFunc(void *opaque, int cp_info,
    s<2n+1> maps to the most significant half of d<n>
  */
 
-#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
+// +---------------------------------------+
+// | ALL FIELDS WHICH STATE MUST BE STORED |
+// | DURING SERIALIZATION SHOULD BE PLACED |
+// | BEFORE >CPU_COMMON< SECTION.          |
+// +---------------------------------------+
 typedef struct CPUState {
     /* Regs for current mode.  */
     uint32_t regs[16];

@@ -602,7 +602,11 @@ typedef struct {
 
 #define NB_MMU_MODES 2
 
-#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
+// +---------------------------------------+
+// | ALL FIELDS WHICH STATE MUST BE STORED |
+// | DURING SERIALIZATION SHOULD BE PLACED |
+// | BEFORE >CPU_COMMON< SECTION.          |
+// +---------------------------------------+
 typedef struct CPUState {
     /* standard registers */
     target_ulong regs[CPU_NB_REGS];
