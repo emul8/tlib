@@ -1,5 +1,9 @@
 #include <infrastructure.h>
 
+#include <global_helper.h>
+#define GEN_HELPER 1
+#include <global_helper.h>
+
 /* Helpers for instruction counting code generation.  */
 
 static TCGArg *icount_arg;
@@ -14,16 +18,16 @@ static inline void gen_block_header(void)
     tcg_gen_brcondi_i32(TCG_COND_NE, flag, 0, stopflag_label);
     tcg_temp_free_i32(flag);
 
-#if defined(TARGET_SPARC) || defined(TARGET_ARM) || defined(TARGET_PPC)
     if(tlib_is_instruction_count_enabled())
     {
         icount_arg = gen_opparam_ptr + 1;
-        TCGv_i32 instruction_count = tcg_const_i32(88888); // bogus value
+        // at this moment this const contains magic value 88888
+        // which is replaced at gen_block_footer near the end of
+        // the block
+        TCGv_i32 instruction_count = tcg_const_i32(88888);
         gen_helper_update_insn_count(instruction_count);
         tcg_temp_free_i32(instruction_count);
     }
-
-#endif
 }
 
 static void gen_block_footer(TranslationBlock *tb, int num_insns)

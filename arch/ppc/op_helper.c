@@ -4334,8 +4334,3 @@ void helper_block_begin_event(uint32_t address, uint32_t size)
   tlib_on_block_begin(address, size);
 }
 
-void HELPER(update_insn_count)(int inst_count)
-{
-    tlib_update_instruction_counter(inst_count);
-}
-

@@ -425,11 +425,6 @@ uint32_t HELPER(ror_cc)(uint32_t x, uint32_t i)
     }
 }
 
-void HELPER(update_insn_count)(int inst_count)
-{
-  tlib_update_instruction_counter(inst_count);
-}
-
 void HELPER(block_begin_event)(uint32_t address, uint32_t size)
 {
   tlib_on_block_begin(address, size);
