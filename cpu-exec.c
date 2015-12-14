@@ -34,7 +34,7 @@ target_ulong virt_to_phys(target_ulong virt) {
           target_ulong addr = (cpu->tlb_table[i][index].addr_code & MASK2) | (virt & (MASK1));
           if ((virt == addr)) {
             void *p = (void *)(unsigned long)((cpu->tlb_table[i][index].addr_code & TARGET_PAGE_MASK) + cpu->tlb_table[i][index].addend);
-            phys_addr = tlib_host_ptr_to_guest_offset_nofail(p);
+            phys_addr = tlib_host_ptr_to_guest_offset(p);
             if (phys_addr != 0xFFFFFFFF)
               phys_addr += (virt & MASK1);
             break;
