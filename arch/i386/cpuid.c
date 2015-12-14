@@ -681,7 +681,7 @@ error:
     return -1;
 }
 
-int cpu_x86_register (CPUX86State *env, const char *cpu_model)
+int cpu_x86_register (CPUState *env, const char *cpu_model)
 {
     x86_def_t def1, *def = &def1;
 
@@ -744,7 +744,7 @@ int cpu_x86_register (CPUX86State *env, const char *cpu_model)
     *str && !*pend ? (*pval = ul) : (*perr = 1);        \
 }
 
-void cpu_clear_apic_feature(CPUX86State *env)
+void cpu_clear_apic_feature(CPUState *env)
 {
     env->cpuid_features &= ~CPUID_APIC;
 }
@@ -763,7 +763,7 @@ void x86_cpudef_setup(void)
     }
 }
 
-static void get_cpuid_vendor(CPUX86State *env, uint32_t *ebx,
+static void get_cpuid_vendor(CPUState *env, uint32_t *ebx,
                              uint32_t *ecx, uint32_t *edx)
 {
     *ebx = env->cpuid_vendor1;
@@ -771,7 +771,7 @@ static void get_cpuid_vendor(CPUX86State *env, uint32_t *ebx,
     *ecx = env->cpuid_vendor3;
 }
 
-void cpu_x86_cpuid(CPUX86State *env, uint32_t index, uint32_t count,
+void cpu_x86_cpuid(CPUState *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx,
                    uint32_t *ecx, uint32_t *edx)
 {

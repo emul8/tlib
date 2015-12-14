@@ -446,7 +446,7 @@ static void spr_write_excp_vector (void *opaque, int sprn, int gprn)
     tcg_temp_free(t0);
 }
 
-static inline void vscr_init (CPUPPCState *env, uint32_t val)
+static inline void vscr_init (CPUState *env, uint32_t val)
 {
     env->vscr = val;
     /* Altivec always uses round-to-nearest */
@@ -454,7 +454,7 @@ static inline void vscr_init (CPUPPCState *env, uint32_t val)
     set_flush_to_zero(vscr_nj, &env->vec_status);
 }
 
-static inline void spr_register (CPUPPCState *env, int num,
+static inline void spr_register (CPUState *env, int num,
                                  const char *name,
                                  void (*uea_read)(void *opaque, int gprn, int sprn),
                                  void (*uea_write)(void *opaque, int sprn, int gprn),
@@ -479,7 +479,7 @@ static inline void spr_register (CPUPPCState *env, int num,
 }
 
 /* Generic PowerPC SPRs */
-static void gen_spr_generic (CPUPPCState *env)
+static void gen_spr_generic (CPUState *env)
 {
     /* Integer processing */
     spr_register(env, SPR_XER, "XER",
@@ -524,7 +524,7 @@ static void gen_spr_generic (CPUPPCState *env)
 }
 
 /* SPR common to all non-embedded PowerPC, including 601 */
-static void gen_spr_ne_601 (CPUPPCState *env)
+static void gen_spr_ne_601 (CPUState *env)
 {
     /* Exception processing */
     spr_register(env, SPR_DSISR, "DSISR",
@@ -548,7 +548,7 @@ static void gen_spr_ne_601 (CPUPPCState *env)
 }
 
 /* BATs 0-3 */
-static void gen_low_BATs (CPUPPCState *env)
+static void gen_low_BATs (CPUState *env)
 {
     spr_register(env, SPR_IBAT0U, "IBAT0U",
                  SPR_NOACCESS, SPR_NOACCESS,
@@ -618,7 +618,7 @@ static void gen_low_BATs (CPUPPCState *env)
 }
 
 /* BATs 4-7 */
-static void gen_high_BATs (CPUPPCState *env)
+static void gen_high_BATs (CPUState *env)
 {
     spr_register(env, SPR_IBAT4U, "IBAT4U",
                  SPR_NOACCESS, SPR_NOACCESS,
@@ -688,7 +688,7 @@ static void gen_high_BATs (CPUPPCState *env)
 }
 
 /* Generic PowerPC time base */
-static void gen_tbl (CPUPPCState *env)
+static void gen_tbl (CPUState *env)
 {
     spr_register(env, SPR_VTBL,  "TBL",
                  &spr_read_tbl, SPR_NOACCESS,
@@ -709,7 +709,7 @@ static void gen_tbl (CPUPPCState *env)
 }
 
 /* Softare table search registers */
-static void gen_6xx_7xx_soft_tlb (CPUPPCState *env, int nb_tlbs, int nb_ways)
+static void gen_6xx_7xx_soft_tlb (CPUState *env, int nb_tlbs, int nb_ways)
 {
     env->nb_tlb = nb_tlbs;
     env->nb_ways = nb_ways;
@@ -746,7 +746,7 @@ static void gen_6xx_7xx_soft_tlb (CPUPPCState *env, int nb_tlbs, int nb_ways)
 }
 
 /* SPR common to MPC755 and G2 */
-static void gen_spr_G2_755 (CPUPPCState *env)
+static void gen_spr_G2_755 (CPUState *env)
 {
     /* SGPRs */
     spr_register(env, SPR_SPRG4, "SPRG4",
@@ -768,7 +768,7 @@ static void gen_spr_G2_755 (CPUPPCState *env)
 }
 
 /* SPR common to all 7xx PowerPC implementations */
-static void gen_spr_7xx (CPUPPCState *env)
+static void gen_spr_7xx (CPUState *env)
 {
     /* Breakpoints */
     /* XXX : not implemented */
@@ -866,7 +866,7 @@ static void gen_spr_7xx (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_spr_thrm (CPUPPCState *env)
+static void gen_spr_thrm (CPUState *env)
 {
     /* Thermal management */
     /* XXX : not implemented */
@@ -887,7 +887,7 @@ static void gen_spr_thrm (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 604 implementation */
-static void gen_spr_604 (CPUPPCState *env)
+static void gen_spr_604 (CPUState *env)
 {
     /* Processor identification */
     spr_register(env, SPR_PIR, "PIR",
@@ -940,7 +940,7 @@ static void gen_spr_604 (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 603 implementation */
-static void gen_spr_603 (CPUPPCState *env)
+static void gen_spr_603 (CPUState *env)
 {
     /* External access control */
     /* XXX : not implemented */
@@ -951,7 +951,7 @@ static void gen_spr_603 (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC G2 implementation */
-static void gen_spr_G2 (CPUPPCState *env)
+static void gen_spr_G2 (CPUState *env)
 {
     /* Memory base address */
     /* MBAR */
@@ -1003,7 +1003,7 @@ static void gen_spr_G2 (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 602 implementation */
-static void gen_spr_602 (CPUPPCState *env)
+static void gen_spr_602 (CPUState *env)
 {
     /* ESA registers */
     /* XXX : not implemented */
@@ -1051,7 +1051,7 @@ static void gen_spr_602 (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 601 implementation */
-static void gen_spr_601 (CPUPPCState *env)
+static void gen_spr_601 (CPUState *env)
 {
     /* Multiplication/division register */
     /* MQ */
@@ -1119,7 +1119,7 @@ static void gen_spr_601 (CPUPPCState *env)
     env->nb_BATs = 4;
 }
 
-static void gen_spr_74xx (CPUPPCState *env)
+static void gen_spr_74xx (CPUState *env)
 {
     /* Processor identification */
     spr_register(env, SPR_PIR, "PIR",
@@ -1171,7 +1171,7 @@ static void gen_spr_74xx (CPUPPCState *env)
     vscr_init(env, 0x00010000);
 }
 
-static void gen_l3_ctrl (CPUPPCState *env)
+static void gen_l3_ctrl (CPUState *env)
 {
     /* L3CR */
     /* XXX : not implemented */
@@ -1193,7 +1193,7 @@ static void gen_l3_ctrl (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_74xx_soft_tlb (CPUPPCState *env, int nb_tlbs, int nb_ways)
+static void gen_74xx_soft_tlb (CPUState *env, int nb_tlbs, int nb_ways)
 {
     env->nb_tlb = nb_tlbs;
     env->nb_ways = nb_ways;
@@ -1239,7 +1239,7 @@ static void spr_write_booke_pid (void *opaque, int sprn, int gprn)
     tcg_temp_free_i32(t0);
 }
 
-static void gen_spr_usprgh (CPUPPCState *env)
+static void gen_spr_usprgh (CPUState *env)
 {
     spr_register(env, SPR_USPRG4, "USPRG4",
                  &spr_read_ureg, SPR_NOACCESS,
@@ -1260,7 +1260,7 @@ static void gen_spr_usprgh (CPUPPCState *env)
 }
 
 /* PowerPC BookE SPR */
-static void gen_spr_BookE (CPUPPCState *env, uint64_t ivor_mask)
+static void gen_spr_BookE (CPUState *env, uint64_t ivor_mask)
 {
     const char *ivor_names[64] = {
         "IVOR0",  "IVOR1",  "IVOR2",  "IVOR3",
@@ -1429,7 +1429,7 @@ static inline uint32_t gen_tlbncfg(uint32_t assoc, uint32_t minsize,
 }
 
 /* BookE 2.06 storage control registers */
-static void gen_spr_BookE206(CPUPPCState *env, uint32_t mas_mask,
+static void gen_spr_BookE206(CPUState *env, uint32_t mas_mask,
                               uint32_t *tlbncfg)
 {
     const char *mas_names[9] = {
@@ -1505,7 +1505,7 @@ static void gen_spr_BookE206(CPUPPCState *env, uint32_t mas_mask,
 }
 
 /* SPR specific to PowerPC 440 implementation */
-static void gen_spr_440 (CPUPPCState *env)
+static void gen_spr_440 (CPUState *env)
 {
     /* Cache control */
     /* XXX : not implemented */
@@ -1646,7 +1646,7 @@ static void gen_spr_440 (CPUPPCState *env)
 }
 
 /* SPR shared between PowerPC 40x implementations */
-static void gen_spr_40x (CPUPPCState *env)
+static void gen_spr_40x (CPUState *env)
 {
     /* Cache */
     /* not emulated, as Qemu do not emulate caches */
@@ -1701,7 +1701,7 @@ static void gen_spr_40x (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 405 implementation */
-static void gen_spr_405 (CPUPPCState *env)
+static void gen_spr_405 (CPUState *env)
 {
     /* MMU */
     spr_register(env, SPR_40x_PID, "PID",
@@ -1807,7 +1807,7 @@ static void gen_spr_405 (CPUPPCState *env)
 }
 
 /* SPR shared between PowerPC 401 & 403 implementations */
-static void gen_spr_401_403 (CPUPPCState *env)
+static void gen_spr_401_403 (CPUState *env)
 {
     /* Time base */
     spr_register(env, SPR_403_VTBL,  "TBL",
@@ -1835,7 +1835,7 @@ static void gen_spr_401_403 (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 401 implementation */
-static void gen_spr_401 (CPUPPCState *env)
+static void gen_spr_401 (CPUState *env)
 {
     /* Debug interface */
     /* XXX : not implemented */
@@ -1877,7 +1877,7 @@ static void gen_spr_401 (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_spr_401x2 (CPUPPCState *env)
+static void gen_spr_401x2 (CPUState *env)
 {
     gen_spr_401(env);
     spr_register(env, SPR_40x_PID, "PID",
@@ -1891,7 +1891,7 @@ static void gen_spr_401x2 (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC 403 implementation */
-static void gen_spr_403 (CPUPPCState *env)
+static void gen_spr_403 (CPUState *env)
 {
     /* Debug interface */
     /* XXX : not implemented */
@@ -1927,7 +1927,7 @@ static void gen_spr_403 (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_spr_403_real (CPUPPCState *env)
+static void gen_spr_403_real (CPUState *env)
 {
     spr_register(env, SPR_403_PBL1,  "PBL1",
                  SPR_NOACCESS, SPR_NOACCESS,
@@ -1947,7 +1947,7 @@ static void gen_spr_403_real (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_spr_403_mmu (CPUPPCState *env)
+static void gen_spr_403_mmu (CPUState *env)
 {
     /* MMU */
     spr_register(env, SPR_40x_PID, "PID",
@@ -1961,7 +1961,7 @@ static void gen_spr_403_mmu (CPUPPCState *env)
 }
 
 /* SPR specific to PowerPC compression coprocessor extension */
-static void gen_spr_compress (CPUPPCState *env)
+static void gen_spr_compress (CPUState *env)
 {
     /* XXX : not implemented */
     spr_register(env, SPR_401_SKR, "SKR",
@@ -1972,7 +1972,7 @@ static void gen_spr_compress (CPUPPCState *env)
 
 #if defined (TARGET_PPC64)
 /* SPR specific to PowerPC 620 */
-static void gen_spr_620 (CPUPPCState *env)
+static void gen_spr_620 (CPUState *env)
 {
     /* Processor identification */
     spr_register(env, SPR_PIR, "PIR",
@@ -2055,7 +2055,7 @@ static void gen_spr_620 (CPUPPCState *env)
 }
 #endif /* defined (TARGET_PPC64) */
 
-static void gen_spr_5xx_8xx (CPUPPCState *env)
+static void gen_spr_5xx_8xx (CPUState *env)
 {
     /* Exception processing */
     spr_register(env, SPR_DSISR, "DSISR",
@@ -2173,7 +2173,7 @@ static void gen_spr_5xx_8xx (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_spr_5xx (CPUPPCState *env)
+static void gen_spr_5xx (CPUState *env)
 {
     /* XXX : not implemented */
     spr_register(env, SPR_RCPU_MI_GRA, "MI_GRA",
@@ -2282,7 +2282,7 @@ static void gen_spr_5xx (CPUPPCState *env)
                  0x00000000);
 }
 
-static void gen_spr_8xx (CPUPPCState *env)
+static void gen_spr_8xx (CPUState *env)
 {
     /* XXX : not implemented */
     spr_register(env, SPR_MPC_IC_CST, "IC_CST",
@@ -2445,7 +2445,7 @@ static void gen_spr_8xx (CPUPPCState *env)
 
 /*****************************************************************************/
 /* Exception vectors models                                                  */
-static void init_excp_4xx_real (CPUPPCState *env)
+static void init_excp_4xx_real (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_CRITICAL] = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2464,7 +2464,7 @@ static void init_excp_4xx_real (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_4xx_softmmu (CPUPPCState *env)
+static void init_excp_4xx_softmmu (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_CRITICAL] = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2487,7 +2487,7 @@ static void init_excp_4xx_softmmu (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_MPC5xx (CPUPPCState *env)
+static void init_excp_MPC5xx (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2511,7 +2511,7 @@ static void init_excp_MPC5xx (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_MPC8xx (CPUPPCState *env)
+static void init_excp_MPC8xx (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2541,7 +2541,7 @@ static void init_excp_MPC8xx (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_G2 (CPUPPCState *env)
+static void init_excp_G2 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2565,7 +2565,7 @@ static void init_excp_G2 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_e200 (CPUPPCState *env)
+static void init_excp_e200 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000FFC;
     env->excp_vectors[POWERPC_EXCP_CRITICAL] = 0x00000000;
@@ -2594,7 +2594,7 @@ static void init_excp_e200 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_BookE (CPUPPCState *env)
+static void init_excp_BookE (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_CRITICAL] = 0x00000000;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000000;
@@ -2619,7 +2619,7 @@ static void init_excp_BookE (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_601 (CPUPPCState *env)
+static void init_excp_601 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2638,7 +2638,7 @@ static void init_excp_601 (CPUPPCState *env)
     env->hreset_vector = 0x00000100UL;
 }
 
-static void init_excp_602 (CPUPPCState *env)
+static void init_excp_602 (CPUState *env)
 {
     /* XXX: exception prefix has a special behavior on 602 */
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
@@ -2664,7 +2664,7 @@ static void init_excp_602 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_603 (CPUPPCState *env)
+static void init_excp_603 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2687,7 +2687,7 @@ static void init_excp_603 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_604 (CPUPPCState *env)
+static void init_excp_604 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2709,7 +2709,7 @@ static void init_excp_604 (CPUPPCState *env)
 }
 
 #if defined(TARGET_PPC64)
-static void init_excp_620 (CPUPPCState *env)
+static void init_excp_620 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2731,7 +2731,7 @@ static void init_excp_620 (CPUPPCState *env)
 }
 #endif /* defined(TARGET_PPC64) */
 
-static void init_excp_7x0 (CPUPPCState *env)
+static void init_excp_7x0 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2753,7 +2753,7 @@ static void init_excp_7x0 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_750cl (CPUPPCState *env)
+static void init_excp_750cl (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2774,7 +2774,7 @@ static void init_excp_750cl (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_750cx (CPUPPCState *env)
+static void init_excp_750cx (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2796,7 +2796,7 @@ static void init_excp_750cx (CPUPPCState *env)
 }
 
 /* XXX: Check if this is correct */
-static void init_excp_7x5 (CPUPPCState *env)
+static void init_excp_7x5 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2821,7 +2821,7 @@ static void init_excp_7x5 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_7400 (CPUPPCState *env)
+static void init_excp_7400 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2845,7 +2845,7 @@ static void init_excp_7400 (CPUPPCState *env)
     env->hreset_vector = 0xFFFFFFFCUL;
 }
 
-static void init_excp_7450 (CPUPPCState *env)
+static void init_excp_7450 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2872,7 +2872,7 @@ static void init_excp_7450 (CPUPPCState *env)
 }
 
 #if defined (TARGET_PPC64)
-static void init_excp_970 (CPUPPCState *env)
+static void init_excp_970 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2899,7 +2899,7 @@ static void init_excp_970 (CPUPPCState *env)
     env->hreset_vector = 0x0000000000000100ULL;
 }
 
-static void init_excp_POWER7 (CPUPPCState *env)
+static void init_excp_POWER7 (CPUState *env)
 {
     env->excp_vectors[POWERPC_EXCP_RESET]    = 0x00000100;
     env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000200;
@@ -2929,17 +2929,17 @@ static void init_excp_POWER7 (CPUPPCState *env)
 
 /*****************************************************************************/
 /* Power management enable checks                                            */
-static int check_pow_none (CPUPPCState *env)
+static int check_pow_none (CPUState *env)
 {
     return 0;
 }
 
-static int check_pow_nocheck (CPUPPCState *env)
+static int check_pow_nocheck (CPUState *env)
 {
     return 1;
 }
 
-static int check_pow_hid0 (CPUPPCState *env)
+static int check_pow_hid0 (CPUState *env)
 {
     if (env->spr[SPR_HID0] & 0x00E00000)
         return 1;
@@ -2947,7 +2947,7 @@ static int check_pow_hid0 (CPUPPCState *env)
     return 0;
 }
 
-static int check_pow_hid0_74xx (CPUPPCState *env)
+static int check_pow_hid0_74xx (CPUState *env)
 {
     if (env->spr[SPR_HID0] & 0x00600000)
         return 1;
@@ -2975,7 +2975,7 @@ static int check_pow_hid0_74xx (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_401        check_pow_nocheck
 
-static void init_proc_401 (CPUPPCState *env)
+static void init_proc_401 (CPUState *env)
 {
     gen_spr_40x(env);
     gen_spr_401_403(env);
@@ -3006,7 +3006,7 @@ static void init_proc_401 (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_401x2      check_pow_nocheck
 
-static void init_proc_401x2 (CPUPPCState *env)
+static void init_proc_401x2 (CPUState *env)
 {
     gen_spr_40x(env);
     gen_spr_401_403(env);
@@ -3044,7 +3044,7 @@ static void init_proc_401x2 (CPUPPCState *env)
 #define check_pow_401x3      check_pow_nocheck
 
 __attribute__ (( unused ))
-static void init_proc_401x3 (CPUPPCState *env)
+static void init_proc_401x3 (CPUState *env)
 {
     gen_spr_40x(env);
     gen_spr_401_403(env);
@@ -3077,7 +3077,7 @@ static void init_proc_401x3 (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_IOP480     check_pow_nocheck
 
-static void init_proc_IOP480 (CPUPPCState *env)
+static void init_proc_IOP480 (CPUState *env)
 {
     gen_spr_40x(env);
     gen_spr_401_403(env);
@@ -3113,7 +3113,7 @@ static void init_proc_IOP480 (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_403        check_pow_nocheck
 
-static void init_proc_403 (CPUPPCState *env)
+static void init_proc_403 (CPUState *env)
 {
     gen_spr_40x(env);
     gen_spr_401_403(env);
@@ -3145,7 +3145,7 @@ static void init_proc_403 (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_403GCX     check_pow_nocheck
 
-static void init_proc_403GCX (CPUPPCState *env)
+static void init_proc_403GCX (CPUState *env)
 {
     gen_spr_40x(env);
     gen_spr_401_403(env);
@@ -3194,7 +3194,7 @@ static void init_proc_403GCX (CPUPPCState *env)
                               POWERPC_FLAG_DE | POWERPC_FLAG_BUS_CLK)
 #define check_pow_405        check_pow_nocheck
 
-static void init_proc_405 (CPUPPCState *env)
+static void init_proc_405 (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3243,7 +3243,7 @@ static void init_proc_405 (CPUPPCState *env)
 #define check_pow_440EP      check_pow_nocheck
 
 __attribute__ (( unused ))
-static void init_proc_440EP (CPUPPCState *env)
+static void init_proc_440EP (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3326,7 +3326,7 @@ static void init_proc_440EP (CPUPPCState *env)
 #define check_pow_440GP      check_pow_nocheck
 
 __attribute__ (( unused ))
-static void init_proc_440GP (CPUPPCState *env)
+static void init_proc_440GP (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3391,7 +3391,7 @@ static void init_proc_440GP (CPUPPCState *env)
 #define check_pow_440x4      check_pow_nocheck
 
 __attribute__ (( unused ))
-static void init_proc_440x4 (CPUPPCState *env)
+static void init_proc_440x4 (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3475,7 +3475,7 @@ static void init_proc_440x4 (CPUPPCState *env)
 #define check_pow_460        check_pow_nocheck
 
 __attribute__ (( unused ))
-static void init_proc_460 (CPUPPCState *env)
+static void init_proc_460 (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3567,7 +3567,7 @@ static void init_proc_460 (CPUPPCState *env)
 #define check_pow_460F       check_pow_nocheck
 
 __attribute__ (( unused ))
-static void init_proc_460F (CPUPPCState *env)
+static void init_proc_460F (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3652,7 +3652,7 @@ static void init_proc_460F (CPUPPCState *env)
 #define check_pow_MPC5xx     check_pow_none
 
 __attribute__ (( unused ))
-static void init_proc_MPC5xx (CPUPPCState *env)
+static void init_proc_MPC5xx (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3679,7 +3679,7 @@ static void init_proc_MPC5xx (CPUPPCState *env)
 #define check_pow_MPC8xx     check_pow_none
 
 __attribute__ (( unused ))
-static void init_proc_MPC8xx (CPUPPCState *env)
+static void init_proc_MPC8xx (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3710,7 +3710,7 @@ static void init_proc_MPC8xx (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_BUS_CLK)
 #define check_pow_G2         check_pow_hid0
 
-static void init_proc_G2 (CPUPPCState *env)
+static void init_proc_G2 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_G2_755(env);
@@ -3766,7 +3766,7 @@ static void init_proc_G2 (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_BUS_CLK)
 #define check_pow_G2LE       check_pow_hid0
 
-static void init_proc_G2LE (CPUPPCState *env)
+static void init_proc_G2LE (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_G2_755(env);
@@ -3833,7 +3833,7 @@ static void init_proc_G2LE (CPUPPCState *env)
 #define check_pow_e200       check_pow_hid0
 
 __attribute__ (( unused ))
-static void init_proc_e200 (CPUPPCState *env)
+static void init_proc_e200 (CPUState *env)
 {
     /* Time base */
     gen_tbl(env);
@@ -3957,7 +3957,7 @@ static void init_proc_e200 (CPUPPCState *env)
 #define check_pow_e300       check_pow_hid0
 
 __attribute__ (( unused ))
-static void init_proc_e300 (CPUPPCState *env)
+static void init_proc_e300 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_603(env);
@@ -4053,7 +4053,7 @@ enum fsl_e500_version {
     fsl_e500mc,
 };
 
-static void init_proc_e500 (CPUPPCState *env, int version)
+static void init_proc_e500 (CPUState *env, int version)
 {
     uint32_t tlbncfg[2];
     uint64_t ivor_mask = 0x0000000F0000FFFFULL;
@@ -4192,17 +4192,17 @@ static void init_proc_e500 (CPUPPCState *env, int version)
     init_excp_e200(env);
 }
 
-static void init_proc_e500v1(CPUPPCState *env)
+static void init_proc_e500v1(CPUState *env)
 {
     init_proc_e500(env, fsl_e500v1);
 }
 
-static void init_proc_e500v2(CPUPPCState *env)
+static void init_proc_e500v2(CPUState *env)
 {
     init_proc_e500(env, fsl_e500v2);
 }
 
-static void init_proc_e500mc(CPUPPCState *env)
+static void init_proc_e500mc(CPUState *env)
 {
     init_proc_e500(env, fsl_e500mc);
 }
@@ -4225,7 +4225,7 @@ static void init_proc_e500mc(CPUPPCState *env)
 #define POWERPC_FLAG_601     (POWERPC_FLAG_SE | POWERPC_FLAG_RTC_CLK)
 #define check_pow_601        check_pow_none
 
-static void init_proc_601 (CPUPPCState *env)
+static void init_proc_601 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_601(env);
@@ -4276,7 +4276,7 @@ static void init_proc_601 (CPUPPCState *env)
 #define POWERPC_FLAG_601v    (POWERPC_FLAG_SE | POWERPC_FLAG_RTC_CLK)
 #define check_pow_601v       check_pow_none
 
-static void init_proc_601v (CPUPPCState *env)
+static void init_proc_601v (CPUState *env)
 {
     init_proc_601(env);
     /* XXX : not implemented */
@@ -4305,7 +4305,7 @@ static void init_proc_601v (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_BUS_CLK)
 #define check_pow_602        check_pow_hid0
 
-static void init_proc_602 (CPUPPCState *env)
+static void init_proc_602 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_602(env);
@@ -4348,7 +4348,7 @@ static void init_proc_602 (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_BUS_CLK)
 #define check_pow_603        check_pow_hid0
 
-static void init_proc_603 (CPUPPCState *env)
+static void init_proc_603 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_603(env);
@@ -4391,7 +4391,7 @@ static void init_proc_603 (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_BUS_CLK)
 #define check_pow_603E       check_pow_hid0
 
-static void init_proc_603E (CPUPPCState *env)
+static void init_proc_603E (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_603(env);
@@ -4439,7 +4439,7 @@ static void init_proc_603E (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_604        check_pow_nocheck
 
-static void init_proc_604 (CPUPPCState *env)
+static void init_proc_604 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_604(env);
@@ -4476,7 +4476,7 @@ static void init_proc_604 (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_604E       check_pow_nocheck
 
-static void init_proc_604E (CPUPPCState *env)
+static void init_proc_604E (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_604(env);
@@ -4533,7 +4533,7 @@ static void init_proc_604E (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_740        check_pow_hid0
 
-static void init_proc_740 (CPUPPCState *env)
+static void init_proc_740 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -4577,7 +4577,7 @@ static void init_proc_740 (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_750        check_pow_hid0
 
-static void init_proc_750 (CPUPPCState *env)
+static void init_proc_750 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -4667,7 +4667,7 @@ static void init_proc_750 (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_750cl      check_pow_hid0
 
-static void init_proc_750cl (CPUPPCState *env)
+static void init_proc_750cl (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -4804,7 +4804,7 @@ static void init_proc_750cl (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_750cx      check_pow_hid0
 
-static void init_proc_750cx (CPUPPCState *env)
+static void init_proc_750cx (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -4860,7 +4860,7 @@ static void init_proc_750cx (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_750fx      check_pow_hid0
 
-static void init_proc_750fx (CPUPPCState *env)
+static void init_proc_750fx (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -4921,7 +4921,7 @@ static void init_proc_750fx (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_750gx      check_pow_hid0
 
-static void init_proc_750gx (CPUPPCState *env)
+static void init_proc_750gx (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -4982,7 +4982,7 @@ static void init_proc_750gx (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_745        check_pow_hid0
 
-static void init_proc_745 (CPUPPCState *env)
+static void init_proc_745 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5034,7 +5034,7 @@ static void init_proc_745 (CPUPPCState *env)
                               POWERPC_FLAG_PMM | POWERPC_FLAG_BUS_CLK)
 #define check_pow_755        check_pow_hid0
 
-static void init_proc_755 (CPUPPCState *env)
+static void init_proc_755 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5102,7 +5102,7 @@ static void init_proc_755 (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_7400       check_pow_hid0
 
-static void init_proc_7400 (CPUPPCState *env)
+static void init_proc_7400 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5153,7 +5153,7 @@ static void init_proc_7400 (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK)
 #define check_pow_7410       check_pow_hid0
 
-static void init_proc_7410 (CPUPPCState *env)
+static void init_proc_7410 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5211,7 +5211,7 @@ static void init_proc_7410 (CPUPPCState *env)
 #define check_pow_7440       check_pow_hid0_74xx
 
 __attribute__ (( unused ))
-static void init_proc_7440 (CPUPPCState *env)
+static void init_proc_7440 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5295,7 +5295,7 @@ static void init_proc_7440 (CPUPPCState *env)
 #define check_pow_7450       check_pow_hid0_74xx
 
 __attribute__ (( unused ))
-static void init_proc_7450 (CPUPPCState *env)
+static void init_proc_7450 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5405,7 +5405,7 @@ static void init_proc_7450 (CPUPPCState *env)
 #define check_pow_7445       check_pow_hid0_74xx
 
 __attribute__ (( unused ))
-static void init_proc_7445 (CPUPPCState *env)
+static void init_proc_7445 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5518,7 +5518,7 @@ static void init_proc_7445 (CPUPPCState *env)
 #define check_pow_7455       check_pow_hid0_74xx
 
 __attribute__ (( unused ))
-static void init_proc_7455 (CPUPPCState *env)
+static void init_proc_7455 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5633,7 +5633,7 @@ static void init_proc_7455 (CPUPPCState *env)
 #define check_pow_7457       check_pow_hid0_74xx
 
 __attribute__ (( unused ))
-static void init_proc_7457 (CPUPPCState *env)
+static void init_proc_7457 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5771,7 +5771,7 @@ static void init_proc_7457 (CPUPPCState *env)
 
 #define POWERPC970_HID5_INIT 0x00000000
 
-static int check_pow_970 (CPUPPCState *env)
+static int check_pow_970 (CPUState *env)
 {
     if (env->spr[SPR_HID0] & 0x00600000)
         return 1;
@@ -5779,7 +5779,7 @@ static int check_pow_970 (CPUPPCState *env)
     return 0;
 }
 
-static void init_proc_970 (CPUPPCState *env)
+static void init_proc_970 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5857,7 +5857,7 @@ static void init_proc_970 (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_PMM |            \
                               POWERPC_FLAG_BUS_CLK)
 
-static int check_pow_970FX (CPUPPCState *env)
+static int check_pow_970FX (CPUState *env)
 {
     if (env->spr[SPR_HID0] & 0x00600000)
         return 1;
@@ -5865,7 +5865,7 @@ static int check_pow_970FX (CPUPPCState *env)
     return 0;
 }
 
-static void init_proc_970FX (CPUPPCState *env)
+static void init_proc_970FX (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -5955,7 +5955,7 @@ static void init_proc_970FX (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_PMM |            \
                               POWERPC_FLAG_BUS_CLK)
 
-static int check_pow_970GX (CPUPPCState *env)
+static int check_pow_970GX (CPUState *env)
 {
     if (env->spr[SPR_HID0] & 0x00600000)
         return 1;
@@ -5963,7 +5963,7 @@ static int check_pow_970GX (CPUPPCState *env)
     return 0;
 }
 
-static void init_proc_970GX (CPUPPCState *env)
+static void init_proc_970GX (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -6041,7 +6041,7 @@ static void init_proc_970GX (CPUPPCState *env)
                               POWERPC_FLAG_BE | POWERPC_FLAG_PMM |            \
                               POWERPC_FLAG_BUS_CLK)
 
-static int check_pow_970MP (CPUPPCState *env)
+static int check_pow_970MP (CPUState *env)
 {
     if (env->spr[SPR_HID0] & 0x01C00000)
         return 1;
@@ -6049,7 +6049,7 @@ static int check_pow_970MP (CPUPPCState *env)
     return 0;
 }
 
-static void init_proc_970MP (CPUPPCState *env)
+static void init_proc_970MP (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -6130,7 +6130,7 @@ static void init_proc_970MP (CPUPPCState *env)
                               POWERPC_FLAG_BUS_CLK | POWERPC_FLAG_CFAR)
 #define check_pow_POWER7    check_pow_nocheck
 
-static void init_proc_POWER7 (CPUPPCState *env)
+static void init_proc_POWER7 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_7xx(env);
@@ -6203,7 +6203,7 @@ static void init_proc_POWER7 (CPUPPCState *env)
 #define check_pow_620        check_pow_nocheck /* Check this */
 
 __attribute__ (( unused ))
-static void init_proc_620 (CPUPPCState *env)
+static void init_proc_620 (CPUState *env)
 {
     gen_spr_ne_601(env);
     gen_spr_620(env);
@@ -7840,7 +7840,7 @@ static const ppc_def_t ppc_defs[] = {
 
 /*****************************************************************************/
 /* Generic CPU instantiation routine                                         */
-static void init_ppc_proc (CPUPPCState *env, const ppc_def_t *def)
+static void init_ppc_proc (CPUState *env, const ppc_def_t *def)
 {
 
     int i;
@@ -8175,7 +8175,7 @@ static void fix_opcode_tables (opc_handler_t **ppc_opcodes)
 }
 
 /*****************************************************************************/
-static int create_ppc_opcodes (CPUPPCState *env, const ppc_def_t *def)
+static int create_ppc_opcodes (CPUState *env, const ppc_def_t *def)
 {
     opcode_t *opc;
 
@@ -8198,7 +8198,7 @@ static int create_ppc_opcodes (CPUPPCState *env, const ppc_def_t *def)
     return 0;
 }
 
-int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def)
+int cpu_ppc_register_internal (CPUState *env, const ppc_def_t *def)
 {
     env->msr_mask = def->msr_mask;
     env->mmu_model = def->mmu_model;

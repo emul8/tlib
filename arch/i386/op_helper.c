@@ -4703,7 +4703,7 @@ void tlb_fill(CPUState *env1, target_ulong addr, int is_write, int mmu_idx,
     TranslationBlock *tb;
     int ret;
     unsigned long pc;
-    CPUX86State *saved_env;
+    CPUState *saved_env;
 
     saved_env = env;
     env = env1;

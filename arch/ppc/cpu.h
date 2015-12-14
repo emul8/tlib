@@ -63,8 +63,6 @@
 
 #endif /* defined (TARGET_PPC64) */
 
-#define CPUState struct CPUPPCState
-
 #include "cpu-defs.h"
 
 #include "softfloat.h"
@@ -291,7 +289,7 @@ typedef struct opc_handler_t opc_handler_t;
 
 /*****************************************************************************/
 /* Types used to describe some PowerPC registers */
-typedef struct CPUPPCState CPUPPCState;
+typedef struct CPUState CPUState;
 typedef struct ppc_tb_t ppc_tb_t;
 typedef struct ppc_spr_t ppc_spr_t;
 typedef struct ppc_dcr_t ppc_dcr_t;
@@ -850,13 +848,13 @@ struct ppc_def_t {
     powerpc_input_t bus_model;
     uint32_t flags;
     int bfd_mach;
-    void (*init_proc)(CPUPPCState *env);
-    int  (*check_pow)(CPUPPCState *env);
+    void (*init_proc)(CPUState *env);
+    int  (*check_pow)(CPUState *env);
 };
 
-#define CPU_STATE_SIZE ((size_t) &((CPUPPCState *) 0)->current_tb)
+#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
 
-struct CPUPPCState {
+struct CPUState {
     /* First are the most commonly used resources
      * during translated code execution
      */
@@ -1016,7 +1014,7 @@ struct CPUPPCState {
     /* opcode handlers */
     opc_handler_t *opcodes[0x40];
 
-    int (*check_pow)(CPUPPCState *env);
+    int (*check_pow)(CPUState *env);
 
     /* booke timers */
 
@@ -1059,46 +1057,46 @@ struct mmu_ctx_t {
 };
 
 /*****************************************************************************/
-CPUPPCState *cpu_init (const char *cpu_model);
+CPUState *cpu_init (const char *cpu_model);
 void ppc_translate_init(void);
-int cpu_exec (CPUPPCState *s);
-void cpu_close (CPUPPCState *s);
+int cpu_exec (CPUState *s);
+void cpu_close (CPUState *s);
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */
 int cpu_signal_handler (int host_signum, void *pinfo,
                             void *puc);
-int cpu_ppc_handle_mmu_fault (CPUPPCState *env, target_ulong address, int rw,
+int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx);
 #define cpu_handle_mmu_fault cpu_ppc_handle_mmu_fault
-int get_physical_address (CPUPPCState *env, mmu_ctx_t *ctx, target_ulong vaddr,
+int get_physical_address (CPUState *env, mmu_ctx_t *ctx, target_ulong vaddr,
                           int rw, int access_type);
-void do_interrupt (CPUPPCState *env);
-void ppc_hw_interrupt (CPUPPCState *env);
+void do_interrupt (CPUState *env);
+void ppc_hw_interrupt (CPUState *env);
 
-void ppc6xx_tlb_store (CPUPPCState *env, target_ulong EPN, int way, int is_code,
+void ppc6xx_tlb_store (CPUState *env, target_ulong EPN, int way, int is_code,
                        target_ulong pte0, target_ulong pte1);
-void ppc_store_ibatu (CPUPPCState *env, int nr, target_ulong value);
-void ppc_store_ibatl (CPUPPCState *env, int nr, target_ulong value);
-void ppc_store_dbatu (CPUPPCState *env, int nr, target_ulong value);
-void ppc_store_dbatl (CPUPPCState *env, int nr, target_ulong value);
-void ppc_store_ibatu_601 (CPUPPCState *env, int nr, target_ulong value);
-void ppc_store_ibatl_601 (CPUPPCState *env, int nr, target_ulong value);
-void ppc_store_sdr1 (CPUPPCState *env, target_ulong value);
+void ppc_store_ibatu (CPUState *env, int nr, target_ulong value);
+void ppc_store_ibatl (CPUState *env, int nr, target_ulong value);
+void ppc_store_dbatu (CPUState *env, int nr, target_ulong value);
+void ppc_store_dbatl (CPUState *env, int nr, target_ulong value);
+void ppc_store_ibatu_601 (CPUState *env, int nr, target_ulong value);
+void ppc_store_ibatl_601 (CPUState *env, int nr, target_ulong value);
+void ppc_store_sdr1 (CPUState *env, target_ulong value);
 #if defined(TARGET_PPC64)
-void ppc_store_asr (CPUPPCState *env, target_ulong value);
-target_ulong ppc_load_slb (CPUPPCState *env, int slb_nr);
-target_ulong ppc_load_sr (CPUPPCState *env, int sr_nr);
-int ppc_store_slb (CPUPPCState *env, target_ulong rb, target_ulong rs);
-int ppc_load_slb_esid (CPUPPCState *env, target_ulong rb, target_ulong *rt);
-int ppc_load_slb_vsid (CPUPPCState *env, target_ulong rb, target_ulong *rt);
+void ppc_store_asr (CPUState *env, target_ulong value);
+target_ulong ppc_load_slb (CPUState *env, int slb_nr);
+target_ulong ppc_load_sr (CPUState *env, int sr_nr);
+int ppc_store_slb (CPUState *env, target_ulong rb, target_ulong rs);
+int ppc_load_slb_esid (CPUState *env, target_ulong rb, target_ulong *rt);
+int ppc_load_slb_vsid (CPUState *env, target_ulong rb, target_ulong *rt);
 #endif /* defined(TARGET_PPC64) */
-void ppc_store_sr (CPUPPCState *env, int srnum, target_ulong value);
-void ppc_store_msr (CPUPPCState *env, target_ulong value);
+void ppc_store_sr (CPUState *env, int srnum, target_ulong value);
+void ppc_store_msr (CPUState *env, target_ulong value);
 
 const ppc_def_t *ppc_find_by_pvr(uint32_t pvr);
 const ppc_def_t *cpu_ppc_find_by_name (const char *name);
-int cpu_ppc_register_internal (CPUPPCState *env, const ppc_def_t *def);
+int cpu_ppc_register_internal (CPUState *env, const ppc_def_t *def);
 
 /* Time-base and decrementer management */
 void booke206_flush_tlb(CPUState *env, int flags, const int check_iprot);
@@ -1109,13 +1107,13 @@ int ppcemb_tlb_check(CPUState *env, ppcemb_tlb_t *tlb,
 int ppcmas_tlb_check(CPUState *env, ppcmas_tlb_t *tlb,
                      target_phys_addr_t *raddrp, target_ulong address,
                      uint32_t pid);
-void ppc_tlb_invalidate_all (CPUPPCState *env);
-void ppc_tlb_invalidate_one (CPUPPCState *env, target_ulong addr);
+void ppc_tlb_invalidate_all (CPUState *env);
+void ppc_tlb_invalidate_one (CPUState *env, target_ulong addr);
 #if defined(TARGET_PPC64)
-void ppc_slb_invalidate_all (CPUPPCState *env);
-void ppc_slb_invalidate_one (CPUPPCState *env, uint64_t T0);
+void ppc_slb_invalidate_all (CPUState *env);
+void ppc_slb_invalidate_one (CPUState *env, uint64_t T0);
 #endif
-int ppcemb_tlb_search (CPUPPCState *env, target_ulong address, uint32_t pid);
+int ppcemb_tlb_search (CPUState *env, target_ulong address, uint32_t pid);
 
 /* Device control registers */
 int ppc_dcr_read (ppc_dcr_t *dcr_env, int dcrn, uint32_t *valp);

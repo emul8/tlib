@@ -60,7 +60,7 @@ enum flags {
 	SATURATING = 1 << 1,
 };
 
-static uint32_t qaddsub_8_common(CPUARMState *env, uint32_t a, uint32_t b, enum operation op, unsigned flags)
+static uint32_t qaddsub_8_common(CPUState *env, uint32_t a, uint32_t b, enum operation op, unsigned flags)
 {
     int saturated = 0;
 
@@ -140,7 +140,7 @@ static uint32_t qaddsub_8_common(CPUARMState *env, uint32_t a, uint32_t b, enum 
     return (uint8_t) out0 << 24 | (uint8_t) out1 << 16 | (uint8_t) out2 << 8 | (uint8_t) out3;
 }
 
-static uint32_t qaddsub_16_common(CPUARMState *env, uint32_t a, uint32_t b, enum operation op, unsigned flags)
+static uint32_t qaddsub_16_common(CPUState *env, uint32_t a, uint32_t b, enum operation op, unsigned flags)
 {
     int saturated = 0;
 
@@ -228,7 +228,7 @@ uint32_t HELPER(neon_abs_s16)(uint32_t a)
     return (hi << 16) | lo;
 }
 
-static int8_t qabs_s8(CPUARMState *env, int8_t a)
+static int8_t qabs_s8(CPUState *env, int8_t a)
 {
     if(a == INT8_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -238,7 +238,7 @@ static int8_t qabs_s8(CPUARMState *env, int8_t a)
     return abs_s8(a);
 }
 
-uint32_t HELPER(neon_qabs_s8)(CPUARMState *env, uint32_t a)
+uint32_t HELPER(neon_qabs_s8)(CPUState *env, uint32_t a)
 {
     const uint8_t out0 = qabs_s8(env, S8_3(a));
     const uint8_t out1 = qabs_s8(env, S8_2(a));
@@ -248,7 +248,7 @@ uint32_t HELPER(neon_qabs_s8)(CPUARMState *env, uint32_t a)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t qabs_s16(CPUARMState *env, int16_t a)
+static int16_t qabs_s16(CPUState *env, int16_t a)
 {
     if(a == INT16_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -258,14 +258,14 @@ static int16_t qabs_s16(CPUARMState *env, int16_t a)
     return abs_s16(a);
 }
 
-uint32_t HELPER(neon_qabs_s16)(CPUARMState *env, uint32_t a)
+uint32_t HELPER(neon_qabs_s16)(CPUState *env, uint32_t a)
 {
     const uint16_t hi = qabs_s16(env, S16_1(a));
     const uint16_t lo = qabs_s16(env, S16_0(a));
     return (hi << 16) | lo;
 }
 
-uint32_t HELPER(neon_qabs_s32)(CPUARMState *env, uint32_t a)
+uint32_t HELPER(neon_qabs_s32)(CPUState *env, uint32_t a)
 {
     if(a == INT32_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -275,7 +275,7 @@ uint32_t HELPER(neon_qabs_s32)(CPUARMState *env, uint32_t a)
     return abs(a);
 }
 
-static int8_t qneg_s8(CPUARMState *env, int8_t a)
+static int8_t qneg_s8(CPUState *env, int8_t a)
 {
     if(a == INT8_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -285,7 +285,7 @@ static int8_t qneg_s8(CPUARMState *env, int8_t a)
     return -a;
 }
 
-uint32_t HELPER(neon_qneg_s8)(CPUARMState *env, uint32_t a)
+uint32_t HELPER(neon_qneg_s8)(CPUState *env, uint32_t a)
 {
     const uint8_t out0 = qneg_s8(env, S8_3(a));
     const uint8_t out1 = qneg_s8(env, S8_2(a));
@@ -295,7 +295,7 @@ uint32_t HELPER(neon_qneg_s8)(CPUARMState *env, uint32_t a)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t qneg_s16(CPUARMState *env, int16_t a)
+static int16_t qneg_s16(CPUState *env, int16_t a)
 {
     if(a == INT16_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -305,14 +305,14 @@ static int16_t qneg_s16(CPUARMState *env, int16_t a)
     return -a;
 }
 
-uint32_t HELPER(neon_qneg_s16)(CPUARMState *env, uint32_t a)
+uint32_t HELPER(neon_qneg_s16)(CPUState *env, uint32_t a)
 {
     const uint16_t hi = qneg_s16(env, S16_1(a));
     const uint16_t lo = qneg_s16(env, S16_0(a));
     return (hi << 16) | lo;
 }
 
-uint32_t HELPER(neon_qneg_s32)(CPUARMState *env, uint32_t a)
+uint32_t HELPER(neon_qneg_s32)(CPUState *env, uint32_t a)
 {
     if(a == INT32_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -495,27 +495,27 @@ uint32_t HELPER(neon_sub_u16)(uint32_t a, uint32_t b)
 	return qaddsub_16_common(NULL, a, b, SUB, UNSIGNED);
 }
 
-uint32_t HELPER(neon_qadd_s8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qadd_s8)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_8_common(env, a, b, ADD, SATURATING);
 }
 
-uint32_t HELPER(neon_qadd_u8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qadd_u8)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_8_common(env, a, b, ADD, SATURATING | UNSIGNED);
 }
 
-uint32_t HELPER(neon_qadd_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qadd_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_16_common(env, a, b, ADD, SATURATING);
 }
 
-uint32_t HELPER(neon_qadd_u16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qadd_u16)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_16_common(env, a, b, ADD, SATURATING | UNSIGNED);
 }
 
-uint32_t HELPER(neon_qadd_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qadd_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     const int32_t as = a;
     const int32_t bs = b;
@@ -538,7 +538,7 @@ uint32_t HELPER(neon_qadd_s32)(CPUARMState *env, uint32_t a, uint32_t b)
     return as + bs;
 }
 
-uint32_t HELPER(neon_qadd_u32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qadd_u32)(CPUState *env, uint32_t a, uint32_t b)
 {
     const int saturated = b > UINT32_MAX - a;
 
@@ -550,7 +550,7 @@ uint32_t HELPER(neon_qadd_u32)(CPUARMState *env, uint32_t a, uint32_t b)
     return a + b;
 }
 
-uint64_t HELPER(neon_qadd_u64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qadd_u64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int saturated = b > UINT64_MAX - a;
 
@@ -562,7 +562,7 @@ uint64_t HELPER(neon_qadd_u64)(CPUARMState *env, uint64_t a, uint64_t b)
     return a + b;
 }
 
-uint64_t HELPER(neon_qadd_s64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qadd_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int64_t as = a;
     const int64_t bs = b;
@@ -585,27 +585,27 @@ uint64_t HELPER(neon_qadd_s64)(CPUARMState *env, uint64_t a, uint64_t b)
     return as + bs;
 }
 
-uint32_t HELPER(neon_qsub_u8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qsub_u8)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_8_common(env, a, b, SUB, SATURATING | UNSIGNED);
 }
 
-uint32_t HELPER(neon_qsub_s8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qsub_s8)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_8_common(env, a, b, SUB, SATURATING);
 }
 
-uint32_t HELPER(neon_qsub_u16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qsub_u16)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_16_common(env, a, b, SUB, SATURATING | UNSIGNED);
 }
 
-uint32_t HELPER(neon_qsub_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qsub_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
 	return qaddsub_16_common(env, a, b, SUB, SATURATING);
 }
 
-uint32_t HELPER(neon_qsub_u32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qsub_u32)(CPUState *env, uint32_t a, uint32_t b)
 {
     const int saturated = b > a;
 
@@ -617,7 +617,7 @@ uint32_t HELPER(neon_qsub_u32)(CPUARMState *env, uint32_t a, uint32_t b)
     return a - b;
 }
 
-uint32_t HELPER(neon_qsub_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qsub_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     const int32_t as = a;
     const int32_t bs = b;
@@ -640,7 +640,7 @@ uint32_t HELPER(neon_qsub_s32)(CPUARMState *env, uint32_t a, uint32_t b)
     return as - bs;
 }
 
-uint64_t HELPER(neon_qsub_u64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qsub_u64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int saturated = b > a;
 
@@ -652,7 +652,7 @@ uint64_t HELPER(neon_qsub_u64)(CPUARMState *env, uint64_t a, uint64_t b)
     return a - b;
 }
 
-uint64_t HELPER(neon_qsub_s64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qsub_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int64_t as = a;
     const int64_t bs = b;
@@ -1400,7 +1400,7 @@ uint64_t HELPER(neon_rshl_u64)(uint64_t a, uint64_t b)
     return ret;
 }
 
-static int8_t qshl_s8(CPUARMState *env, int8_t a, int8_t b)
+static int8_t qshl_s8(CPUState *env, int8_t a, int8_t b)
 {
     if(b > 0) {
 	const uint8_t mask = (INT8_MAX << (8 * sizeof a - b - 1)) & INT8_MAX;
@@ -1421,7 +1421,7 @@ static int8_t qshl_s8(CPUARMState *env, int8_t a, int8_t b)
     return shl_s8(a, b);
 }
 
-uint32_t HELPER(neon_qshl_s8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshl_s8)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint8_t out0 = qshl_s8(env, S8_3(a), S8_3(b));
     const uint8_t out1 = qshl_s8(env, S8_2(a), S8_2(b));
@@ -1431,7 +1431,7 @@ uint32_t HELPER(neon_qshl_s8)(CPUARMState *env, uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static uint8_t qshl_u8(CPUARMState *env, uint8_t a, int8_t b)
+static uint8_t qshl_u8(CPUState *env, uint8_t a, int8_t b)
 {
     if(b > 0) {
 	// Saturated?
@@ -1445,7 +1445,7 @@ static uint8_t qshl_u8(CPUARMState *env, uint8_t a, int8_t b)
     return shl_u8(a, b);
 }
 
-uint32_t HELPER(neon_qshl_u8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshl_u8)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint8_t out0 = qshl_u8(env, U8_3(a), S8_3(b));
     const uint8_t out1 = qshl_u8(env, U8_2(a), S8_2(b));
@@ -1455,7 +1455,7 @@ uint32_t HELPER(neon_qshl_u8)(CPUARMState *env, uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t qshl_s16(CPUARMState *env, int16_t a, int16_t b)
+static int16_t qshl_s16(CPUState *env, int16_t a, int16_t b)
 {
     if(b > 0) {
 	const uint16_t mask = (INT16_MAX << (8 * sizeof a - b - 1)) & INT16_MAX;
@@ -1476,14 +1476,14 @@ static int16_t qshl_s16(CPUARMState *env, int16_t a, int16_t b)
     return shl_s16(a, b);
 }
 
-uint32_t HELPER(neon_qshl_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshl_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qshl_s16(env, S16_1(a), S16_1(b));
     const uint16_t lo = qshl_s16(env, S16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-static uint16_t qshl_u16(CPUARMState *env, uint16_t a, int16_t b)
+static uint16_t qshl_u16(CPUState *env, uint16_t a, int16_t b)
 {
     if(b > 0) {
 	// Saturated?
@@ -1497,14 +1497,14 @@ static uint16_t qshl_u16(CPUARMState *env, uint16_t a, int16_t b)
     return shl_u16(a, b);
 }
 
-uint32_t HELPER(neon_qshl_u16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshl_u16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qshl_u16(env, U16_1(a), S16_1(b));
     const uint16_t lo = qshl_u16(env, U16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-static int32_t qshl_s32(CPUARMState *env, int32_t a, int32_t b)
+static int32_t qshl_s32(CPUState *env, int32_t a, int32_t b)
 {
     if(b > 0) {
 	const uint32_t mask = (INT32_MAX << (8 * sizeof a - b - 1)) & INT32_MAX;
@@ -1525,12 +1525,12 @@ static int32_t qshl_s32(CPUARMState *env, int32_t a, int32_t b)
     return shl_s32(a, b);
 }
 
-uint32_t HELPER(neon_qshl_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshl_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     return qshl_s32(env, a, b);
 }
 
-static uint32_t qshl_u32(CPUARMState *env, uint32_t a, int32_t b)
+static uint32_t qshl_u32(CPUState *env, uint32_t a, int32_t b)
 {
     if(b > 0) {
 	// Saturated?
@@ -1544,12 +1544,12 @@ static uint32_t qshl_u32(CPUARMState *env, uint32_t a, int32_t b)
     return shl_u32(a, b);
 }
 
-uint32_t HELPER(neon_qshl_u32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshl_u32)(CPUState *env, uint32_t a, uint32_t b)
 {
     return qshl_u32(env, a, b);
 }
 
-static int64_t qshl_s64(CPUARMState *env, int64_t a, int64_t b)
+static int64_t qshl_s64(CPUState *env, int64_t a, int64_t b)
 {
     if(b > 0) {
 	const uint64_t mask = (INT64_MAX << (8 * sizeof a - b - 1)) & INT64_MAX;
@@ -1570,12 +1570,12 @@ static int64_t qshl_s64(CPUARMState *env, int64_t a, int64_t b)
     return shl_s64(a, b);
 }
 
-uint64_t HELPER(neon_qshl_s64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qshl_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
     return qshl_s64(env, a, b);
 }
 
-static uint64_t qshl_u64(CPUARMState *env, uint64_t a, int64_t b)
+static uint64_t qshl_u64(CPUState *env, uint64_t a, int64_t b)
 {
     if(b > 0) {
 	// Saturated?
@@ -1589,12 +1589,12 @@ static uint64_t qshl_u64(CPUARMState *env, uint64_t a, int64_t b)
     return shl_u64(a, b);
 }
 
-uint64_t HELPER(neon_qshl_u64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qshl_u64)(CPUState *env, uint64_t a, uint64_t b)
 {
     return qshl_u64(env, a, b);
 }
 
-static uint8_t qshlu_s8(CPUARMState *env, int8_t a, uint8_t b)
+static uint8_t qshlu_s8(CPUState *env, int8_t a, uint8_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1604,7 +1604,7 @@ static uint8_t qshlu_s8(CPUARMState *env, int8_t a, uint8_t b)
     return qshl_u8(env, a, b);
 }
 
-uint32_t HELPER(neon_qshlu_s8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshlu_s8)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint8_t out0 = qshlu_s8(env, S8_3(a), U8_3(b));
     const uint8_t out1 = qshlu_s8(env, S8_2(a), U8_2(b));
@@ -1615,7 +1615,7 @@ uint32_t HELPER(neon_qshlu_s8)(CPUARMState *env, uint32_t a, uint32_t b)
 }
 
 
-static int16_t qshlu_s16(CPUARMState *env, int16_t a, int16_t b)
+static int16_t qshlu_s16(CPUState *env, int16_t a, int16_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1625,14 +1625,14 @@ static int16_t qshlu_s16(CPUARMState *env, int16_t a, int16_t b)
     return qshl_u16(env, a, b);
 }
 
-uint32_t HELPER(neon_qshlu_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshlu_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qshlu_s16(env, S16_1(a), S16_1(b));
     const uint16_t lo = qshlu_s16(env, S16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-static int32_t qshlu_s32(CPUARMState *env, int32_t a, int32_t b)
+static int32_t qshlu_s32(CPUState *env, int32_t a, int32_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1642,12 +1642,12 @@ static int32_t qshlu_s32(CPUARMState *env, int32_t a, int32_t b)
     return qshl_u32(env, a, b);
 }
 
-uint32_t HELPER(neon_qshlu_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qshlu_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     return qshlu_s32(env, a, b);
 }
 
-static int64_t qshlu_s64(CPUARMState *env, int64_t a, int64_t b)
+static int64_t qshlu_s64(CPUState *env, int64_t a, int64_t b)
 {
     if(a < 0) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -1657,12 +1657,12 @@ static int64_t qshlu_s64(CPUARMState *env, int64_t a, int64_t b)
     return qshl_u64(env, a, b);
 }
 
-uint64_t HELPER(neon_qshlu_s64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qshlu_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
     return qshlu_s64(env, a, b);
 }
 
-static int8_t qrshl_s8(CPUARMState *env, int8_t a, int8_t b)
+static int8_t qrshl_s8(CPUState *env, int8_t a, int8_t b)
 {
     const uint8_t au = a;
     uint8_t ret = qshl_s8(env, a, b);
@@ -1674,7 +1674,7 @@ static int8_t qrshl_s8(CPUARMState *env, int8_t a, int8_t b)
     return ret;
 }
 
-uint32_t HELPER(neon_qrshl_s8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrshl_s8)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint8_t out0 = qrshl_s8(env, S8_3(a), S8_3(b));
     const uint8_t out1 = qrshl_s8(env, S8_2(a), S8_2(b));
@@ -1684,7 +1684,7 @@ uint32_t HELPER(neon_qrshl_s8)(CPUARMState *env, uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static uint8_t qrshl_u8(CPUARMState *env, uint8_t a, int8_t b)
+static uint8_t qrshl_u8(CPUState *env, uint8_t a, int8_t b)
 {
     uint8_t ret = qshl_u8(env, a, b);
 
@@ -1695,7 +1695,7 @@ static uint8_t qrshl_u8(CPUARMState *env, uint8_t a, int8_t b)
     return ret;
 }
 
-uint32_t HELPER(neon_qrshl_u8)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrshl_u8)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint8_t out0 = qrshl_u8(env, U8_3(a), S8_3(b));
     const uint8_t out1 = qrshl_u8(env, U8_2(a), S8_2(b));
@@ -1705,7 +1705,7 @@ uint32_t HELPER(neon_qrshl_u8)(CPUARMState *env, uint32_t a, uint32_t b)
     return out0 << 24 | out1 << 16 | out2 << 8 | out3;
 }
 
-static int16_t qrshl_s16(CPUARMState *env, int16_t a, int16_t b)
+static int16_t qrshl_s16(CPUState *env, int16_t a, int16_t b)
 {
     const uint16_t au = a;
     uint16_t ret = qshl_s16(env, a, b);
@@ -1717,14 +1717,14 @@ static int16_t qrshl_s16(CPUARMState *env, int16_t a, int16_t b)
     return ret;
 }
 
-uint32_t HELPER(neon_qrshl_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrshl_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qrshl_s16(env, S16_1(a), S16_1(b));
     const uint16_t lo = qrshl_s16(env, S16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-static uint16_t qrshl_u16(CPUARMState *env, uint16_t a, int16_t b)
+static uint16_t qrshl_u16(CPUState *env, uint16_t a, int16_t b)
 {
     uint16_t ret = qshl_u16(env, a, b);
 
@@ -1735,14 +1735,14 @@ static uint16_t qrshl_u16(CPUARMState *env, uint16_t a, int16_t b)
     return ret;
 }
 
-uint32_t HELPER(neon_qrshl_u16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrshl_u16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qrshl_u16(env, U16_1(a), S16_1(b));
     const uint16_t lo = qrshl_u16(env, U16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-uint32_t HELPER(neon_qrshl_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrshl_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     const int32_t bs = b;
     uint32_t ret = qshl_s32(env, a, b);
@@ -1754,7 +1754,7 @@ uint32_t HELPER(neon_qrshl_s32)(CPUARMState *env, uint32_t a, uint32_t b)
     return ret;
 }
 
-uint32_t HELPER(neon_qrshl_u32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrshl_u32)(CPUState *env, uint32_t a, uint32_t b)
 {
     const int32_t bs = b;
     uint32_t ret = qshl_u32(env, a, b);
@@ -1766,7 +1766,7 @@ uint32_t HELPER(neon_qrshl_u32)(CPUARMState *env, uint32_t a, uint32_t b)
     return ret;
 }
 
-uint64_t HELPER(neon_qrshl_s64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qrshl_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int64_t bs = b;
     uint64_t ret = qshl_s64(env, a, b);
@@ -1778,7 +1778,7 @@ uint64_t HELPER(neon_qrshl_s64)(CPUARMState *env, uint64_t a, uint64_t b)
     return ret;
 }
 
-uint64_t HELPER(neon_qrshl_u64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_qrshl_u64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int64_t bs = b;
     uint64_t ret = qshl_u64(env, a, b);
@@ -2107,7 +2107,7 @@ uint32_t HELPER(neon_mul_u16)(uint32_t a, uint32_t b)
     return (hi << 16) | lo;
 }
 
-static int16_t qdmulh_s16(CPUARMState *env, int16_t a, int16_t b)
+static int16_t qdmulh_s16(CPUState *env, int16_t a, int16_t b)
 {
     if(a == INT16_MIN && b == INT16_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2117,14 +2117,14 @@ static int16_t qdmulh_s16(CPUARMState *env, int16_t a, int16_t b)
     return (a * b * 2) >> 16;
 }
 
-uint32_t HELPER(neon_qdmulh_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qdmulh_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qdmulh_s16(env, S16_1(a), S16_1(b));
     const uint16_t lo = qdmulh_s16(env, S16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-static int32_t qdmulh_s32(CPUARMState *env, int32_t a, int32_t b)
+static int32_t qdmulh_s32(CPUState *env, int32_t a, int32_t b)
 {
     const int64_t a64 = a;
     const int64_t b64 = b;
@@ -2137,12 +2137,12 @@ static int32_t qdmulh_s32(CPUARMState *env, int32_t a, int32_t b)
     return (a64 * b64 * 2) >> 32;
 }
 
-uint32_t HELPER(neon_qdmulh_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qdmulh_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     return qdmulh_s32(env, a, b);
 }
 
-static int16_t qrdmulh_s16(CPUARMState *env, int16_t a, int16_t b)
+static int16_t qrdmulh_s16(CPUState *env, int16_t a, int16_t b)
 {
     if(a == INT16_MIN && b == INT16_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2154,14 +2154,14 @@ static int16_t qrdmulh_s16(CPUARMState *env, int16_t a, int16_t b)
     return prod & 0x8000 ? (prod >> 16) + 1 : prod >> 16;
 }
 
-uint32_t HELPER(neon_qrdmulh_s16)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrdmulh_s16)(CPUState *env, uint32_t a, uint32_t b)
 {
     const uint16_t hi = qrdmulh_s16(env, S16_1(a), S16_1(b));
     const uint16_t lo = qrdmulh_s16(env, S16_0(a), S16_0(b));
     return (hi << 16) | lo;
 }
 
-static int32_t qrdmulh_s32(CPUARMState *env, int32_t a, int32_t b)
+static int32_t qrdmulh_s32(CPUState *env, int32_t a, int32_t b)
 {
     if(a == INT32_MIN && b == INT32_MIN) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2173,7 +2173,7 @@ static int32_t qrdmulh_s32(CPUARMState *env, int32_t a, int32_t b)
     return prod & 0x80000000 ? (prod >> 32) + 1 : prod >> 32;
 }
 
-uint32_t HELPER(neon_qrdmulh_s32)(CPUARMState *env, uint32_t a, uint32_t b)
+uint32_t HELPER(neon_qrdmulh_s32)(CPUState *env, uint32_t a, uint32_t b)
 {
     return qrdmulh_s32(env, a, b);
 }
@@ -2440,7 +2440,7 @@ uint32_t HELPER(neon_narrow_round_high_u16)(uint64_t a)
     return (uint32_t)out0 << 16 | (uint32_t) out1;
 }
 
-static int8 narrow_sat_s8(CPUARMState *env, int16_t a)
+static int8 narrow_sat_s8(CPUState *env, int16_t a)
 {
     if(a > INT8_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2454,7 +2454,7 @@ static int8 narrow_sat_s8(CPUARMState *env, int16_t a)
     return a;
 }
 
-uint32_t HELPER(neon_narrow_sat_s8)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_narrow_sat_s8)(CPUState *env, uint64_t a)
 {
     const uint8_t out3 = narrow_sat_s8(env, S16_0(a));
     const uint8_t out2 = narrow_sat_s8(env, S16_1(a));
@@ -2464,7 +2464,7 @@ uint32_t HELPER(neon_narrow_sat_s8)(CPUARMState *env, uint64_t a)
     return (uint32_t)out0 << 24 | (uint32_t)out1 << 16 | (uint32_t)out2 << 8 | (uint32_t)out3;
 }
 
-static uint8 narrow_sat_u8(CPUARMState *env, uint16_t a)
+static uint8 narrow_sat_u8(CPUState *env, uint16_t a)
 {
     if(a > UINT8_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2474,7 +2474,7 @@ static uint8 narrow_sat_u8(CPUARMState *env, uint16_t a)
     return a;
 }
 
-uint32_t HELPER(neon_narrow_sat_u8)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_narrow_sat_u8)(CPUState *env, uint64_t a)
 {
     const uint8_t out3 = narrow_sat_u8(env, U16_0(a));
     const uint8_t out2 = narrow_sat_u8(env, U16_1(a));
@@ -2484,7 +2484,7 @@ uint32_t HELPER(neon_narrow_sat_u8)(CPUARMState *env, uint64_t a)
     return (uint32_t)out0 << 24 | (uint32_t)out1 << 16 | (uint32_t)out2 << 8 | (uint32_t)out3;
 }
 
-static int16_t narrow_sat_s16(CPUARMState *env, int32_t a)
+static int16_t narrow_sat_s16(CPUState *env, int32_t a)
 {
     if(a > INT16_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2498,7 +2498,7 @@ static int16_t narrow_sat_s16(CPUARMState *env, int32_t a)
     return a;
 }
 
-uint32_t HELPER(neon_narrow_sat_s16)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_narrow_sat_s16)(CPUState *env, uint64_t a)
 {
     const uint16_t out0 = narrow_sat_s16(env, S32_1(a));
     const uint16_t out1 = narrow_sat_s16(env, S32_0(a));
@@ -2506,7 +2506,7 @@ uint32_t HELPER(neon_narrow_sat_s16)(CPUARMState *env, uint64_t a)
     return (uint32_t)out0 << 16 | (uint32_t)out1;
 }
 
-static uint16_t narrow_sat_u16(CPUARMState *env, uint32_t a)
+static uint16_t narrow_sat_u16(CPUState *env, uint32_t a)
 {
     if(a > UINT16_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2516,7 +2516,7 @@ static uint16_t narrow_sat_u16(CPUARMState *env, uint32_t a)
     return a;
 }
 
-uint32_t HELPER(neon_narrow_sat_u16)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_narrow_sat_u16)(CPUState *env, uint64_t a)
 {
     const uint16_t out0 = narrow_sat_u16(env, U32_1(a));
     const uint16_t out1 = narrow_sat_u16(env, U32_0(a));
@@ -2524,7 +2524,7 @@ uint32_t HELPER(neon_narrow_sat_u16)(CPUARMState *env, uint64_t a)
     return (uint32_t)out0 << 16 | (uint32_t)out1;
 }
 
-uint32_t HELPER(neon_narrow_sat_s32)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_narrow_sat_s32)(CPUState *env, uint64_t a)
 {
     const int64_t sa = a;
 
@@ -2540,7 +2540,7 @@ uint32_t HELPER(neon_narrow_sat_s32)(CPUARMState *env, uint64_t a)
     return a;
 }
 
-uint32_t HELPER(neon_narrow_sat_u32)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_narrow_sat_u32)(CPUState *env, uint64_t a)
 {
     if(a > UINT32_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2550,7 +2550,7 @@ uint32_t HELPER(neon_narrow_sat_u32)(CPUARMState *env, uint64_t a)
     return a;
 }
 
-static uint8 unarrow_sat8(CPUARMState *env, int16_t a)
+static uint8 unarrow_sat8(CPUState *env, int16_t a)
 {
     if(a > UINT8_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2564,7 +2564,7 @@ static uint8 unarrow_sat8(CPUARMState *env, int16_t a)
     return a;
 }
 
-uint32_t HELPER(neon_unarrow_sat8)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_unarrow_sat8)(CPUState *env, uint64_t a)
 {
     const uint8_t out3 = unarrow_sat8(env, S16_0(a));
     const uint8_t out2 = unarrow_sat8(env, S16_1(a));
@@ -2574,7 +2574,7 @@ uint32_t HELPER(neon_unarrow_sat8)(CPUARMState *env, uint64_t a)
     return (uint32_t)out0 << 24 | (uint32_t)out1 << 16 | (uint32_t)out2 << 8 | (uint32_t)out3;
 }
 
-static uint16 unarrow_sat16(CPUARMState *env, int32_t a)
+static uint16 unarrow_sat16(CPUState *env, int32_t a)
 {
     if(a > UINT16_MAX) {
 	env->vfp.xregs[ARM_VFP_FPSCR] |= CPSR_Q;
@@ -2588,7 +2588,7 @@ static uint16 unarrow_sat16(CPUARMState *env, int32_t a)
     return a;
 }
 
-uint32_t HELPER(neon_unarrow_sat16)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_unarrow_sat16)(CPUState *env, uint64_t a)
 {
     const uint16_t out0 = unarrow_sat16(env, S32_1(a));
     const uint16_t out1 = unarrow_sat16(env, S32_0(a));
@@ -2596,7 +2596,7 @@ uint32_t HELPER(neon_unarrow_sat16)(CPUARMState *env, uint64_t a)
     return (uint32_t)out0 << 16 | (uint32_t)out1;
 }
 
-uint32_t HELPER(neon_unarrow_sat32)(CPUARMState *env, uint64_t a)
+uint32_t HELPER(neon_unarrow_sat32)(CPUState *env, uint64_t a)
 {
     const int64_t sa = a;
 
@@ -2612,7 +2612,7 @@ uint32_t HELPER(neon_unarrow_sat32)(CPUARMState *env, uint64_t a)
     return a;
 }
 
-uint64_t HELPER(neon_addl_saturate_s32)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_addl_saturate_s32)(CPUState *env, uint64_t a, uint64_t b)
 {
     int64_t hi = (int64_t)S32_1(a) + (int64_t)S32_1(b);
     int64_t lo = (int64_t)S32_0(a) + (int64_t)S32_0(b);
@@ -2641,7 +2641,7 @@ uint64_t HELPER(neon_addl_saturate_s32)(CPUARMState *env, uint64_t a, uint64_t b
     return (uint64_t)hi32 << 32 | (uint64_t)lo32;
 }
 
-uint64_t HELPER(neon_addl_saturate_s64)(CPUARMState *env, uint64_t a, uint64_t b)
+uint64_t HELPER(neon_addl_saturate_s64)(CPUState *env, uint64_t a, uint64_t b)
 {
     const int64_t sa = a;
     const int64_t sb = b;
@@ -2660,7 +2660,7 @@ uint64_t HELPER(neon_addl_saturate_s64)(CPUARMState *env, uint64_t a, uint64_t b
     return sum;
 }
 
-void HELPER(neon_zip8)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
+void HELPER(neon_zip8)(CPUState *env, uint32_t aNum, uint32_t bNum)
 {
     uint64_t *aOut = &env->vfp.regs[aNum];
     uint64_t *bOut = &env->vfp.regs[bNum];
@@ -2700,7 +2700,7 @@ void HELPER(neon_zip8)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
     *bOut |= U8_4(a);
 }
 
-void HELPER(neon_qzip8)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
+void HELPER(neon_qzip8)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 {
     const int da1Num = da0Num + 1;
     const int db1Num = db0Num + 1;
@@ -2778,7 +2778,7 @@ void HELPER(neon_qzip8)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
     *db0Out |= U8_0(da1);
 }
 
-void HELPER(neon_unzip8)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
+void HELPER(neon_unzip8)(CPUState *env, uint32_t aNum, uint32_t bNum)
 {
     uint64_t *aOut = &env->vfp.regs[aNum];
     uint64_t *bOut = &env->vfp.regs[bNum];
@@ -2818,7 +2818,7 @@ void HELPER(neon_unzip8)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
     *bOut |= U8_1(a);
 }
 
-void HELPER(neon_qunzip8)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
+void HELPER(neon_qunzip8)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 {
     const int da1Num = da0Num + 1;
     const int db1Num = db0Num + 1;
@@ -2896,7 +2896,7 @@ void HELPER(neon_qunzip8)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
     *db0Out |= U8_1(da0);
 }
 
-void HELPER(neon_zip16)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
+void HELPER(neon_zip16)(CPUState *env, uint32_t aNum, uint32_t bNum)
 {
     uint64_t *aOut = &env->vfp.regs[aNum];
     uint64_t *bOut = &env->vfp.regs[bNum];
@@ -2920,7 +2920,7 @@ void HELPER(neon_zip16)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
     *bOut |= U16_2(a);
 }
 
-void HELPER(neon_qzip16)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
+void HELPER(neon_qzip16)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 {
     const int da1Num = da0Num + 1;
     const int db1Num = db0Num + 1;
@@ -2966,7 +2966,7 @@ void HELPER(neon_qzip16)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
     *db0Out |= U16_0(da1);
 }
 
-void HELPER(neon_unzip16)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
+void HELPER(neon_unzip16)(CPUState *env, uint32_t aNum, uint32_t bNum)
 {
     uint64_t *aOut = &env->vfp.regs[aNum];
     uint64_t *bOut = &env->vfp.regs[bNum];
@@ -2990,7 +2990,7 @@ void HELPER(neon_unzip16)(CPUARMState *env, uint32_t aNum, uint32_t bNum)
     *bOut |= U16_1(a);
 }
 
-void HELPER(neon_qunzip16)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
+void HELPER(neon_qunzip16)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 {
     const int da1Num = da0Num + 1;
     const int db1Num = db0Num + 1;
@@ -3036,7 +3036,7 @@ void HELPER(neon_qunzip16)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
     *db0Out |= U16_1(da0);
 }
 
-void HELPER(neon_qzip32)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
+void HELPER(neon_qzip32)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 {
     const int da1Num = da0Num + 1;
     const int db1Num = db0Num + 1;
@@ -3066,7 +3066,7 @@ void HELPER(neon_qzip32)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
     *db0Out |= U32_0(da1);
 }
 
-void HELPER(neon_qunzip32)(CPUARMState *env, uint32_t da0Num, uint32_t db0Num)
+void HELPER(neon_qunzip32)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 {
     const int da1Num = da0Num + 1;
     const int db1Num = db0Num + 1;

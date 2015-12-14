@@ -21,7 +21,7 @@
 #define __HELPER_REGS_H__
 
 /* Swap temporary saved registers with GPRs */
-static inline void hreg_swap_gpr_tgpr(CPUPPCState *env)
+static inline void hreg_swap_gpr_tgpr(CPUState *env)
 {
     target_ulong tmp;
 
@@ -39,7 +39,7 @@ static inline void hreg_swap_gpr_tgpr(CPUPPCState *env)
     env->tgpr[3] = tmp;
 }
 
-static inline void hreg_compute_mem_idx(CPUPPCState *env)
+static inline void hreg_compute_mem_idx(CPUState *env)
 {
     /* Precompute MMU index */
     if (msr_pr == 0 && msr_hv != 0) {
@@ -49,7 +49,7 @@ static inline void hreg_compute_mem_idx(CPUPPCState *env)
     }
 }
 
-static inline void hreg_compute_hflags(CPUPPCState *env)
+static inline void hreg_compute_hflags(CPUState *env)
 {
     target_ulong hflags_mask;
 
@@ -64,7 +64,7 @@ static inline void hreg_compute_hflags(CPUPPCState *env)
     env->hflags |= env->hflags_nmsr;
 }
 
-static inline int hreg_store_msr(CPUPPCState *env, target_ulong value,
+static inline int hreg_store_msr(CPUState *env, target_ulong value,
                                  int alter_hv)
 {
     int excp;

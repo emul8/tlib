@@ -21,8 +21,6 @@
 
 #define TARGET_LONG_BITS 32
 
-#define CPUState struct CPUARMState
-
 #include "tlib-common.h"
 #include "cpu-defs.h"
 
@@ -69,8 +67,8 @@ typedef uint32_t ARMReadCPFunc(void *opaque, int cp_info,
    s<2n+1> maps to the most significant half of d<n>
  */
 
-#define CPU_STATE_SIZE ((size_t) &((CPUARMState *) 0)->current_tb)
-typedef struct CPUARMState {
+#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
+typedef struct CPUState {
     /* Regs for current mode.  */
     uint32_t regs[16];
     /* Frequently accessed CPSR bits are stored separately for efficiently.
@@ -213,21 +211,21 @@ typedef struct CPUARMState {
         ARMWriteCPFunc *cp_write;
         void *opaque;
     } cp[15];
-} CPUARMState;
+} CPUState;
 
-CPUARMState *cpu_init(const char *cpu_model);
+CPUState *cpu_init(const char *cpu_model);
 void arm_translate_init(void);
-int cpu_exec(CPUARMState *s);
-void cpu_close(CPUARMState *s);
-void do_interrupt(CPUARMState *);
-void switch_mode(CPUARMState *, int);
+int cpu_exec(CPUState *s);
+void cpu_close(CPUState *s);
+void do_interrupt(CPUState *);
+void switch_mode(CPUState *, int);
 
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */
 int cpu_signal_handler(int host_signum, void *pinfo,
                            void *puc);
-int cpu_arm_handle_mmu_fault (CPUARMState *env, target_ulong address, int rw,
+int cpu_arm_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx);
 #define cpu_handle_mmu_fault cpu_arm_handle_mmu_fault
 
@@ -258,13 +256,13 @@ int cpu_arm_handle_mmu_fault (CPUARMState *env, target_ulong address, int rw,
 #define CPSR_EXEC (CPSR_T | CPSR_IT | CPSR_J)
 
 /* Return the current CPSR value.  */
-uint32_t cpsr_read(CPUARMState *env);
+uint32_t cpsr_read(CPUState *env);
 /* Set the CPSR.  Note that some bits of mask must be all-set or all-clear.  */
-void cpsr_write(CPUARMState *env, uint32_t val, uint32_t mask);
+void cpsr_write(CPUState *env, uint32_t val, uint32_t mask);
 
 #ifdef TARGET_PROTO_ARM_M
 /* Return the current xPSR value.  */
-static inline uint32_t xpsr_read(CPUARMState *env)
+static inline uint32_t xpsr_read(CPUState *env)
 {
     int ZF;
     ZF = (env->ZF == 0);
@@ -276,7 +274,7 @@ static inline uint32_t xpsr_read(CPUARMState *env)
 }
 
 /* Set the xPSR.  Note that some bits of mask must be all-set or all-clear.  */
-static inline void xpsr_write(CPUARMState *env, uint32_t val, uint32_t mask)
+static inline void xpsr_write(CPUState *env, uint32_t val, uint32_t mask)
 {
     if (mask & CPSR_NZCV) {
         env->ZF = (~val) & CPSR_Z;
@@ -303,8 +301,8 @@ static inline void xpsr_write(CPUARMState *env, uint32_t val, uint32_t mask)
 #endif
 
 /* Return the current FPSCR value.  */
-uint32_t vfp_get_fpscr(CPUARMState *env);
-void vfp_set_fpscr(CPUARMState *env, uint32_t val);
+uint32_t vfp_get_fpscr(CPUState *env);
+void vfp_set_fpscr(CPUState *env, uint32_t val);
 
 enum arm_cpu_mode {
   ARM_CPU_MODE_USR = 0x10,
@@ -361,7 +359,7 @@ enum arm_features {
     ARM_FEATURE_GENERIC_TIMER,
 };
 
-static inline int arm_feature(CPUARMState *env, int feature)
+static inline int arm_feature(CPUState *env, int feature)
 {
     return (env->features & (1u << feature)) != 0;
 }
@@ -369,7 +367,7 @@ static inline int arm_feature(CPUARMState *env, int feature)
 
 /* Interface between CPU and Interrupt controller.  */
 
-void cpu_arm_set_cp_io(CPUARMState *env, int cpnum,
+void cpu_arm_set_cp_io(CPUState *env, int cpnum,
                        ARMReadCPFunc *cp_read, ARMWriteCPFunc *cp_write,
                        void *opaque);
 
@@ -498,6 +496,6 @@ static inline void cpu_pc_from_tb(CPUState *env, TranslationBlock *tb)
     env->regs[15] = tb->pc;
 }
 
-void do_v7m_exception_exit(CPUARMState *env);
+void do_v7m_exception_exit(CPUState *env);
 
 #endif

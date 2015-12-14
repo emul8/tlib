@@ -358,7 +358,7 @@ void do_interrupt(CPUState *env)
     }
 }
 
-void cpu_reset(CPUSPARCState *env)
+void cpu_reset(CPUState *env)
 {
     tlb_flush(env, 1);
     env->cwp = 0;
@@ -375,7 +375,7 @@ void cpu_reset(CPUSPARCState *env)
     env->cache_control = 0;
 }
 
-static int cpu_sparc_register(CPUSPARCState *env, const char *cpu_model)
+static int cpu_sparc_register(CPUState *env, const char *cpu_model)
 {
     sparc_def_t def1, *def = &def1;
 
@@ -394,17 +394,17 @@ static int cpu_sparc_register(CPUSPARCState *env, const char *cpu_model)
     return 0;
 }
 
-static void cpu_close(CPUSPARCState *env)
+static void cpu_close(CPUState *env)
 {
     free(env->def);
     free(env);
 }
 
-CPUSPARCState *cpu_init(const char *cpu_model)
+CPUState *cpu_init(const char *cpu_model)
 {
-    CPUSPARCState *env;
+    CPUState *env;
 
-    env = tlib_mallocz(sizeof(CPUSPARCState));
+    env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
 
     gen_intermediate_code_init(env);
@@ -418,7 +418,7 @@ CPUSPARCState *cpu_init(const char *cpu_model)
     return env;
 }
 
-void cpu_sparc_set_id(CPUSPARCState *env, unsigned int cpu)
+void cpu_sparc_set_id(CPUState *env, unsigned int cpu)
 {
     env->mxccregs[7] = ((cpu + 8) & 0xf) << 24;
 }

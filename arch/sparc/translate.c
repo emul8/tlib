@@ -100,61 +100,61 @@ static int sign_extend(int x, int len)
 /* floating point registers moves */
 static void gen_op_load_fpr_DT0(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.lower));
 }
 
 static void gen_op_load_fpr_DT1(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, dt1) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, dt1) +
                    offsetof(CPU_DoubleU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, dt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, dt1) +
                    offsetof(CPU_DoubleU, l.lower));
 }
 
 static void gen_op_store_DT0_fpr(unsigned int dst)
 {
-    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.upper));
-    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUSPARCState, dt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUState, dt0) +
                    offsetof(CPU_DoubleU, l.lower));
 }
 
 static void gen_op_load_fpr_QT0(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upmost));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lower));
-    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lowest));
 }
 
 static void gen_op_load_fpr_QT1(unsigned int src)
 {
-    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.upmost));
-    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 1], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.upper));
-    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 2], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.lower));
-    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUSPARCState, qt1) +
+    tcg_gen_st_i32(cpu_fpr[src + 3], cpu_env, offsetof(CPUState, qt1) +
                    offsetof(CPU_QuadU, l.lowest));
 }
 
 static void gen_op_store_QT0_fpr(unsigned int dst)
 {
-    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upmost));
-    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 1], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.upper));
-    tcg_gen_ld_i32(cpu_fpr[dst + 2], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 2], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lower));
-    tcg_gen_ld_i32(cpu_fpr[dst + 3], cpu_env, offsetof(CPUSPARCState, qt0) +
+    tcg_gen_ld_i32(cpu_fpr[dst + 3], cpu_env, offsetof(CPUState, qt0) +
                    offsetof(CPU_QuadU, l.lowest));
 }
 
@@ -2733,7 +2733,7 @@ static void disas_sparc_insn(DisasContext * dc)
 }
 
 static inline void gen_intermediate_code_internal(TranslationBlock * tb,
-                                                  int spc, CPUSPARCState *env)
+                                                  int spc, CPUState *env)
 {
     target_ulong pc_start, last_pc;
     uint16_t *gen_opc_end;
@@ -2856,17 +2856,17 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
     }
 }
 
-void gen_intermediate_code(CPUSPARCState * env, TranslationBlock * tb)
+void gen_intermediate_code(CPUState * env, TranslationBlock * tb)
 {
     gen_intermediate_code_internal(tb, 0, env);
 }
 
-void gen_intermediate_code_pc(CPUSPARCState * env, TranslationBlock * tb)
+void gen_intermediate_code_pc(CPUState * env, TranslationBlock * tb)
 {
     gen_intermediate_code_internal(tb, 1, env);
 }
 
-void gen_intermediate_code_init(CPUSPARCState *env)
+void gen_intermediate_code_init(CPUState *env)
 {
     unsigned int i;
     static int inited;
