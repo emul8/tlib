@@ -7,7 +7,4 @@ void ppc_set_irq (CPUState *env, int n_IRQ, int level);
 typedef uint32_t (*dcr_read_cb)(void *opaque, int dcrn);
 typedef void (*dcr_write_cb)(void *opaque, int dcrn, uint32_t val);
 
-extern CPUWriteMemoryFunc * const PPC_io_write[];
-extern CPUReadMemoryFunc * const PPC_io_read[];
-
 #endif
