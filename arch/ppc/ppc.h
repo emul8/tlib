@@ -19,13 +19,6 @@ clk_setup_cb cpu_ppc_tb_init (CPUState *env, uint32_t freq);
 /* Embedded PowerPC DCR management */
 typedef uint32_t (*dcr_read_cb)(void *opaque, int dcrn);
 typedef void (*dcr_write_cb)(void *opaque, int dcrn, uint32_t val);
-clk_setup_cb ppc_40x_timers_init (CPUState *env, uint32_t freq,
-                                  unsigned int decr_excp);
-
-/* Embedded PowerPC reset */
-void ppc40x_core_reset (CPUState *env);
-void ppc40x_chip_reset (CPUState *env);
-void ppc40x_system_reset (CPUState *env);
 
 extern CPUWriteMemoryFunc * const PPC_io_write[];
 extern CPUReadMemoryFunc * const PPC_io_read[];
