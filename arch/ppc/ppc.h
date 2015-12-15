@@ -47,12 +47,4 @@ void ppc40x_system_reset (CPUState *env);
 extern CPUWriteMemoryFunc * const PPC_io_write[];
 extern CPUReadMemoryFunc * const PPC_io_read[];
 
-/* PPC machines for OpenBIOS */
-enum {
-    ARCH_PREP = 0,
-    ARCH_MAC99,
-    ARCH_HEATHROW,
-    ARCH_MAC99_U3,
-};
-
 #endif
