@@ -27,17 +27,6 @@ struct ppc_tb_t {
     uint32_t flags;
 };
 
-/* PPC Timers flags */
-#define PPC_TIMER_BOOKE              (1 << 0) /* Enable Booke support */
-#define PPC_TIMER_E500               (1 << 1) /* Enable e500 support */
-#define PPC_DECR_UNDERFLOW_TRIGGERED (1 << 2) /* Decr interrupt triggered when
-                                               * the most significant bit
-                                               * changes from 0 to 1.
-                                               */
-#define PPC_DECR_ZERO_TRIGGERED      (1 << 3) /* Decr interrupt triggered when
-                                               * the decrementer reaches zero.
-                                               */
-
 uint64_t cpu_ppc_get_tb(ppc_tb_t *tb_env, uint64_t vmclk, int64_t tb_offset);
 clk_setup_cb cpu_ppc_tb_init (CPUState *env, uint32_t freq);
 /* Embedded PowerPC DCR management */
