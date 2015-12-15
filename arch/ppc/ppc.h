@@ -3,19 +3,6 @@
 #include "cpu.h"
 void ppc_set_irq (CPUState *env, int n_IRQ, int level);
 
-/* PowerPC hardware exceptions management helpers */
-typedef void (*clk_setup_cb)(void *opaque, uint32_t freq);
-typedef struct clk_setup_t clk_setup_t;
-struct clk_setup_t {
-    clk_setup_cb cb;
-    void *opaque;
-};
-static inline void clk_setup (clk_setup_t *clk, uint32_t freq)
-{
-    if (clk->cb != NULL)
-        (*clk->cb)(clk->opaque, freq);
-}
-
 struct ppc_tb_t {
     /* Time base management */
     int64_t  tb_offset;    /* Compensation                    */
