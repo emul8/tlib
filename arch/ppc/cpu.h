@@ -852,8 +852,11 @@ struct ppc_def_t {
     int  (*check_pow)(CPUState *env);
 };
 
-#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
-
+// +---------------------------------------+
+// | ALL FIELDS WHICH STATE MUST BE STORED |
+// | DURING SERIALIZATION SHOULD BE PLACED |
+// | BEFORE >CPU_COMMON< SECTION.          |
+// +---------------------------------------+
 struct CPUState {
     /* First are the most commonly used resources
      * during translated code execution

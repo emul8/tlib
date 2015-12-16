@@ -246,8 +246,11 @@ typedef struct SparcTLBEntry {
     uint64_t tte;
 } SparcTLBEntry;
 
-#define CPU_STATE_SIZE ((size_t) &((CPUState *) 0)->current_tb)
-
+// +---------------------------------------+
+// | ALL FIELDS WHICH STATE MUST BE STORED |
+// | DURING SERIALIZATION SHOULD BE PLACED |
+// | BEFORE >CPU_COMMON< SECTION.          |
+// +---------------------------------------+
 typedef struct CPUState {
     target_ulong gregs[8]; /* general registers */
     target_ulong *regwptr; /* pointer to current register window */
