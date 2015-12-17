@@ -22,7 +22,12 @@
 
 DEFAULT_VOID_HANDLER1(void tlib_on_translation_block_find_slow, uint32_t pc)
 
-DEFAULT_VOID_HANDLER1(void tlib_abort, char *message)
+void tlib_abort(char *message) __attribute__((weak));
+
+void tlib_abort(char *message)
+{
+  abort();
+}
 
 DEFAULT_VOID_HANDLER2(void tlib_log, enum log_level level, char* message)
 
