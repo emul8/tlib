@@ -8797,7 +8797,7 @@ static inline void gen_intermediate_code_internal(CPUState *env,
     int max_insns;
 
     pc_start = tb->pc;
-    gen_opc_end = GLOBAL_gen_opc_buf + OPC_MAX_SIZE;
+    gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
     dc->nip = pc_start;
     dc->tb = tb;
     dc->exception = POWERPC_EXCP_NONE;
@@ -8859,14 +8859,14 @@ static inline void gen_intermediate_code_internal(CPUState *env,
             }
         }
         if (unlikely(search_pc)) {
-            j = gen_opc_ptr - GLOBAL_gen_opc_buf;
+            j = gen_opc_ptr - ctx->gen_opc_buf;
             if (lj < j) {
                 lj++;
                 while (lj < j)
-                    gen_opc_instr_start[lj++] = 0;
+                    ctx->gen_opc_instr_start[lj++] = 0;
             }
-            gen_opc_pc[lj] = dc->nip;
-            gen_opc_instr_start[lj] = 1;
+            ctx->gen_opc_pc[lj] = dc->nip;
+            ctx->gen_opc_instr_start[lj] = 1;
         }
 
         if (unlikely(dc->le_mode)) {
@@ -8930,10 +8930,10 @@ static inline void gen_intermediate_code_internal(CPUState *env,
     gen_block_footer(tb, num_insns);
     *gen_opc_ptr = INDEX_op_end;
     if (unlikely(search_pc)) {
-        j = gen_opc_ptr - GLOBAL_gen_opc_buf;
+        j = gen_opc_ptr - ctx->gen_opc_buf;
         lj++;
         while (lj <= j)
-            gen_opc_instr_start[lj++] = 0;
+            ctx->gen_opc_instr_start[lj++] = 0;
     } else {
         tb->size = dc->nip - pc_start;
         tb->icount = num_insns;
@@ -8956,5 +8956,5 @@ void gen_intermediate_code_pc (CPUState *env, struct TranslationBlock *tb)
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
-    env->nip = gen_opc_pc[pc_pos];
+    env->nip = ctx->gen_opc_pc[pc_pos];
 }

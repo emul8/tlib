@@ -23,14 +23,19 @@
 #include "tcg-additional.h"
 #include "exec-all.h"
 
+static tcg_context_t sctx;
+
 static void init_tcg()
 {
-  attach_gen_opc_buf((void*)&GLOBAL_gen_opc_buf);
-  attach_tcg_ctx((void*)&GLOBAL_tcg_ctx);
-  attach_code_gen_prologue((void*)&GLOBAL_code_gen_prologue);
-  attach_gen_opparam_buf((void*)&GLOBAL_gen_opparam_buf);
-  attach_ld_helpers((void*)__ldb_mmu, (void*)__ldw_mmu, (void*)__ldl_mmu, (void*)__ldq_mmu);
-  attach_st_helpers((void*)__stb_mmu, (void*)__stw_mmu, (void*)__stl_mmu, (void*)__stq_mmu);
+  sctx.ldb = __ldb_mmu;
+  sctx.ldw = __ldw_mmu;
+  sctx.ldl = __ldl_mmu;
+  sctx.ldq = __ldq_mmu;
+  sctx.stb = __stb_mmu;
+  sctx.stw = __stw_mmu;
+  sctx.stl = __stl_mmu;
+  sctx.stq = __stq_mmu;
+  tcg_attach_context(&sctx);
   set_temp_buf_offset(offsetof(CPUState, temp_buf));
   int i;
   for (i = 0; i < 7; i++)

@@ -21,9 +21,6 @@
 
 #include <stdint.h>
 
-extern uint16_t GLOBAL_gen_opc_buf[];
-
-
 #include "tlib-common.h"
 #include "cpu-common.h"
 

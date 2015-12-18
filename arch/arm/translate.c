@@ -9910,7 +9910,7 @@ static inline void gen_intermediate_code_internal(CPUState *env,
 
     dc->tb = tb;
 
-    gen_opc_end = GLOBAL_gen_opc_buf + OPC_MAX_SIZE;
+    gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
 
     dc->is_jmp = DISAS_NEXT;
     dc->pc = pc_start;
@@ -10009,15 +10009,15 @@ static inline void gen_intermediate_code_internal(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - GLOBAL_gen_opc_buf;
+            j = gen_opc_ptr - ctx->gen_opc_buf;
             if (lj < j) {
                 lj++;
                 while (lj < j)
-                    gen_opc_instr_start[lj++] = 0;
+                    ctx->gen_opc_instr_start[lj++] = 0;
             }
-            gen_opc_pc[lj] = dc->pc;
+            ctx->gen_opc_pc[lj] = dc->pc;
             gen_opc_condexec_bits[lj] = (dc->condexec_cond << 4) | (dc->condexec_mask >> 1);
-            gen_opc_instr_start[lj] = 1;
+            ctx->gen_opc_instr_start[lj] = 1;
         }
 
         if (dc->thumb) {
@@ -10129,10 +10129,10 @@ done_generating:
         tlib_on_block_translation(pc_start, dc->pc - pc_start, dc->thumb);
     }
     if (search_pc) {
-        j = gen_opc_ptr - GLOBAL_gen_opc_buf;
+        j = gen_opc_ptr - ctx->gen_opc_buf;
         lj++;
         while (lj <= j)
-            gen_opc_instr_start[lj++] = 0;
+            ctx->gen_opc_instr_start[lj++] = 0;
     } else {
         tb->size = dc->pc - pc_start;
         tb->icount = num_insns;
@@ -10151,6 +10151,6 @@ void gen_intermediate_code_pc(CPUState *env, TranslationBlock *tb)
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
-    env->regs[15] = gen_opc_pc[pc_pos];
+    env->regs[15] = ctx->gen_opc_pc[pc_pos];
     env->condexec_bits = gen_opc_condexec_bits[pc_pos];
 }

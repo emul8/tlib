@@ -30,8 +30,6 @@
 #include "cpu.h"
 #include "tcg.h"
 
-extern TCGContext GLOBAL_tcg_ctx;
-
 #include "osdep.h"
 
 #define SMC_BITMAP_USE_THRESHOLD 10
@@ -41,24 +39,6 @@ static int code_gen_max_blocks;
 TranslationBlock *tb_phys_hash[CODE_GEN_PHYS_HASH_SIZE];
 static int nb_tbs;
 /* any access to the tbs or the page table must use this lock */
-
-#if defined(__arm__)
-/* The prologue must be reachable with a direct jump. ARM and Sparc64
- have limited branch ranges (possibly also PPC) so place it in a
- section close to code segment. */
-#define code_gen_section                                \
-    __attribute__((__section__(".gen_code")))           \
-    __attribute__((aligned (32)))
-#elif defined(_WIN32)
-/* Maximum alignment for Win32 is 16. */
-#define code_gen_section                                \
-    __attribute__((aligned (16)))
-#else
-#define code_gen_section                                \
-    __attribute__((aligned (32)))
-#endif
-
-uint8_t GLOBAL_code_gen_prologue[1024] code_gen_section;
 
 static uint8_t *code_gen_buffer;
 static unsigned long code_gen_buffer_size;
@@ -338,7 +318,7 @@ static void code_gen_alloc()
     code_gen_buffer = tlib_malloc(code_gen_buffer_size);
     map_exec(code_gen_buffer, code_gen_buffer_size);
 #endif
-    map_exec(GLOBAL_code_gen_prologue, sizeof(GLOBAL_code_gen_prologue));
+    map_exec(ctx->code_gen_prologue, 1024);
     code_gen_buffer_max_size = code_gen_buffer_size -
         (TCG_MAX_OP_SIZE * OPC_BUF_SIZE);
     code_gen_max_blocks = code_gen_buffer_size / CODE_GEN_AVG_BLOCK_SIZE;
@@ -365,7 +345,7 @@ void cpu_exec_init_all()
     page_init();
     /* There's no guest base to take into account, so go ahead and
        initialize the prologue now.  */
-    tcg_prologue_init(&GLOBAL_tcg_ctx);
+    tcg_prologue_init();
 }
 
 void cpu_exec_init(CPUState *env)

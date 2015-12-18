@@ -43,21 +43,6 @@ target_ulong virt_to_phys(target_ulong virt) {
         return phys_addr;
 }
 
-// TODO: some hacks
-#define code_gen_section                                \
-    __attribute__((aligned (32)))
-
-
-extern uint8_t GLOBAL_code_gen_prologue[] code_gen_section;
-
-#ifdef tcg_qemu_tb_exec
-#undef tcg_qemu_tb_exec
-#endif
-#define tcg_qemu_tb_exec(env, tb_ptr) \
-    ((long REGPARM (*)(void *, void *))GLOBAL_code_gen_prologue)(env, tb_ptr)
-// TODO: end of hacks
-
-
 int tb_invalidated_flag;
 
 void cpu_loop_exit(CPUState *env)
