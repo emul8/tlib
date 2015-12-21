@@ -210,7 +210,8 @@ int cpu_exec(CPUState *env)
                         //reached cpu_abort or tlib_on_cpu_power_down.
                         //This happens only if psret == 0.
                         //Then we want to break the loop.
-                        return 0;
+                        ret = 0;
+                        break;
 #endif
                     }
                 }
