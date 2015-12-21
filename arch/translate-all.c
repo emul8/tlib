@@ -25,8 +25,6 @@
 #include "cpu.h"
 #include "tcg.h"
 
-tcg_context_t *ctx;
-
 /* '*gen_code_size_ptr' contains the size of the generated code (host
    code).
 */
