@@ -339,7 +339,7 @@ void code_gen_free(void) {
 
 void cpu_exec_init_all()
 {
-    cpu_gen_init();
+    tcg_context_init();
     code_gen_alloc();
     code_gen_ptr = code_gen_buffer;
     page_init();

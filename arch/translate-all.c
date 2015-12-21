@@ -27,11 +27,6 @@
 
 tcg_context_t *ctx;
 
-void cpu_gen_init(void)
-{
-    tcg_context_init();
-}
-
 /* '*gen_code_size_ptr' contains the size of the generated code (host
    code).
 */

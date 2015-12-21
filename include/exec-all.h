@@ -41,7 +41,6 @@ void gen_intermediate_code_pc(CPUState *env, struct TranslationBlock *tb);
 void restore_state_to_opc(CPUState *env, struct TranslationBlock *tb,
                           int pc_pos);
 
-void cpu_gen_init(void);
 void cpu_gen_code(CPUState *env, struct TranslationBlock *tb,
                  int *gen_code_size_ptr);
 int cpu_restore_state(CPUState *env, struct TranslationBlock *tb,
