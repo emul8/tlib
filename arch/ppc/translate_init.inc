@@ -8175,15 +8175,13 @@ static void fix_opcode_tables (opc_handler_t **ppc_opcodes)
 }
 
 /*****************************************************************************/
-static int create_ppc_opcodes (CPUState *env, const ppc_def_t *def)
+static int create_ppc_opcodes (opc_handler_t **table, const ppc_def_t *def, opcode_t *opc)
 {
-    opcode_t *opc;
-
-    fill_new_table(env->opcodes, 0x40);
-    for (opc = opcodes; opc < &opcodes[ARRAY_SIZE(opcodes)]; opc++) {
+    fill_new_table(table, 0x40);
+    for (; opc < &opcodes[ARRAY_SIZE(opcodes)]; opc++) {
         if (((opc->handler.type & def->insns_flags) != 0) ||
             ((opc->handler.type2 & def->insns_flags2) != 0)) {
-            if (register_insn(env->opcodes, opc) < 0) {
+            if (register_insn(table, opc) < 0) {
                 tlib_printf(LOG_LEVEL_WARNING, "ERROR initializing PowerPC instruction "
                        "0x%02x 0x%02x 0x%02x\n", opc->opc1, opc->opc2,
                        opc->opc3);
@@ -8191,7 +8189,7 @@ static int create_ppc_opcodes (CPUState *env, const ppc_def_t *def)
             }
         }
     }
-    fix_opcode_tables(env->opcodes);
+    fix_opcode_tables(table);
     fflush(stdout);
     fflush(stderr);
 
@@ -8209,7 +8207,9 @@ int cpu_ppc_register_internal (CPUState *env, const ppc_def_t *def)
     env->flags = def->flags;
     env->bfd_mach = def->bfd_mach;
     env->check_pow = def->check_pow;
-    if (create_ppc_opcodes(env, def) < 0)
+    if (create_ppc_opcodes(env->opcodes, def, opcodes) < 0)
+        return -1;
+    if (create_ppc_opcodes(env->vle_opcodes, def, vle_opcodes) < 0)
         return -1;
     init_ppc_proc(env, def);
 

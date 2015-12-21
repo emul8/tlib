@@ -315,17 +315,31 @@ static inline void gen_sync_exception(DisasContext *s)
     s->exception = POWERPC_EXCP_SYNC;
 }
 
+// Standard PPC helper macros
 #define GEN_HANDLER(name, opc1, opc2, opc3, inval, type)                      \
-GEN_OPCODE(name, opc1, opc2, opc3, inval, type, PPC_NONE)
+GEN_OPCODE(name, opc1, opc2, opc3, inval, type, PPC_NONE, 4)
 
 #define GEN_HANDLER_E(name, opc1, opc2, opc3, inval, type, type2)             \
-GEN_OPCODE(name, opc1, opc2, opc3, inval, type, type2)
+GEN_OPCODE(name, opc1, opc2, opc3, inval, type, type2, 4)
 
 #define GEN_HANDLER2(name, onam, opc1, opc2, opc3, inval, type)               \
-GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE)
+GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE, 4)
 
 #define GEN_HANDLER2_E(name, onam, opc1, opc2, opc3, inval, type, type2)      \
-GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2)
+GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2, 4)
+
+// PPC VLE 2-byte helper macros
+#define GEN_SHORT_HANDLER(name, opc1, opc2, opc3, inval, type)                      \
+GEN_OPCODE(name, opc1, opc2, opc3, inval, type, PPC_NONE, 2)
+
+#define GEN_SHORT_HANDLER_E(name, opc1, opc2, opc3, inval, type, type2)             \
+GEN_OPCODE(name, opc1, opc2, opc3, inval, type, type2, 2)
+
+#define GEN_SHORT_HANDLER2(name, onam, opc1, opc2, opc3, inval, type)               \
+GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE, 2)
+
+#define GEN_SHORT_HANDLER2_E(name, onam, opc1, opc2, opc3, inval, type, type2)      \
+GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2, 2)
 
 typedef struct opcode_t {
     unsigned char opc1, opc2, opc3;
@@ -437,7 +451,6 @@ EXTRACT_HELPER(LK, 0, 1);
 static inline target_ulong MASK(uint32_t start, uint32_t end)
 {
     target_ulong ret;
-
 #if defined(TARGET_PPC64)
     if (likely(start == 0)) {
         ret = UINT64_MAX << (63 - end);
@@ -464,7 +477,7 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
 /*****************************************************************************/
 /* PowerPC instructions table                                                */
 
-#define GEN_OPCODE(name, op1, op2, op3, invl, _typ, _typ2)                    \
+#define GEN_OPCODE(name, op1, op2, op3, invl, _typ, _typ2, _length)           \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -475,10 +488,11 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
         .type = _typ,                                                         \
         .type2 = _typ2,                                                       \
         .handler = &gen_##name,                                               \
+        .length = _length,                                                    \
     },                                                                        \
     .oname = stringify(name),                                                 \
 }
-#define GEN_OPCODE_DUAL(name, op1, op2, op3, invl1, invl2, _typ, _typ2)       \
+#define GEN_OPCODE_DUAL(name, op1, op2, op3, invl1, invl2, _typ, _typ2, _length)       \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -490,10 +504,11 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
         .type = _typ,                                                         \
         .type2 = _typ2,                                                       \
         .handler = &gen_##name,                                               \
+        .length = _length,                                                    \
     },                                                                        \
     .oname = stringify(name),                                                 \
 }
-#define GEN_OPCODE2(name, onam, op1, op2, op3, invl, _typ, _typ2)             \
+#define GEN_OPCODE2(name, onam, op1, op2, op3, invl, _typ, _typ2, _length)    \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -504,6 +519,7 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
         .type = _typ,                                                         \
         .type2 = _typ2,                                                       \
         .handler = &gen_##name,                                               \
+        .length = _length,                                                    \
     },                                                                        \
     .oname = onam,                                                            \
 }
@@ -531,6 +547,7 @@ static opc_handler_t invalid_handler = {
     .type    = PPC_NONE,
     .type2   = PPC_NONE,
     .handler = gen_invalid,
+    .length  = 4,
 };
 
 /***                           Integer comparison                          ***/
@@ -8677,7 +8694,7 @@ GEN_VAFORM_PAIRED(vmaddfp, vnmsubfp, 23),
 
 #undef GEN_SPE
 #define GEN_SPE(name0, name1, opc2, opc3, inval0, inval1, type) \
-    GEN_OPCODE_DUAL(name0##_##name1, 0x04, opc2, opc3, inval0, inval1, type, PPC_NONE)
+    GEN_OPCODE_DUAL(name0##_##name1, 0x04, opc2, opc3, inval0, inval1, type, PPC_NONE, 4)
 GEN_SPE(evaddw,      speundef,    0x00, 0x08, 0x00000000, 0xFFFFFFFF, PPC_SPE),
 GEN_SPE(evaddiw,     speundef,    0x01, 0x08, 0x00000000, 0xFFFFFFFF, PPC_SPE),
 GEN_SPE(evsubfw,     speundef,    0x02, 0x08, 0x00000000, 0xFFFFFFFF, PPC_SPE),
@@ -8779,6 +8796,9 @@ GEN_SPEOP_LDST(evstwwe, 0x1C, 2),
 GEN_SPEOP_LDST(evstwwo, 0x1E, 2),
 };
 
+static opcode_t vle_opcodes[] = {
+};
+
 #include "translate_init.inc"
 #include "helper_regs.h"
 
@@ -8795,6 +8815,7 @@ void gen_intermediate_code(CPUState *env,
     int j, lj = -1;
     int num_insns;
     int max_insns;
+    uint32_t op1, op2, op3;
 
     pc_start = tb->pc;
     gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
@@ -8810,6 +8831,7 @@ void gen_intermediate_code(CPUState *env,
     dc->has_cfar = !!(env->flags & POWERPC_FLAG_CFAR);
 #endif
     dc->fpu_enabled = msr_fp;
+    dc->vle_enabled = tlib_is_vle_enabled();
     if ((env->flags & POWERPC_FLAG_SPE) && msr_spe)
         dc->spe_enabled = msr_spe;
     else
@@ -8874,18 +8896,39 @@ void gen_intermediate_code(CPUState *env,
         } else {
             dc->opcode = ldl_code(dc->nip);
         }
-        dc->nip += 4;
-        table = env->opcodes;
+
+        if(dc->vle_enabled) // use the vle decoding function to obtain the opcodes
+        {
+            decode_vle_instruction(dc->opcode, &op1, &op2, &op3);
+        }
+        else // use standard decoding macros
+        {
+            op1 = opc1(dc->opcode);
+            op2 = opc2(dc->opcode);
+            op3 = opc3(dc->opcode);
+        }
+        if(dc->vle_enabled)
+        {
+            table = env->vle_opcodes;
+            cpu_abort(env, "No VLE support."); // to be removed
+        }
+        else
+        {
+            table = env->opcodes;
+        }
+
         num_insns++;
-        handler = table[opc1(dc->opcode)];
+        handler = table[op1];
         if (is_indirect_opcode(handler)) {
             table = ind_table(handler);
-            handler = table[opc2(dc->opcode)];
+            handler = table[op2];
             if (is_indirect_opcode(handler)) {
                 table = ind_table(handler);
-                handler = table[opc3(dc->opcode)];
+                handler = table[op3];
             }
         }
+        dc->nip += handler->length;
+
         /* Is opcode *REALLY* valid ? */
         if (likely(handler->handler != &gen_invalid)) {
             uint32_t inval;
@@ -8947,4 +8990,154 @@ void gen_intermediate_code(CPUState *env,
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
     env->nip = ctx->gen_opc_pc[pc_pos];
+}
+
+
+// This function decodes a VLE instruction and returns its 3 opcodes.
+// It also calculates the parameters after detecting the encoding format
+// by op1. Those should be saved somewhere in gen_intermediate_code_internal
+// or moved to a separate function and called from some pre-helper function or the helper itself
+// It should be verified if the shift values for 16-bit instructions are ok
+// or if they should be smaller by 16 (the 32bit opcode variable may now contain 2 16b instructions)
+void decode_vle_instruction(uint32_t opcode, uint32_t *op1, uint32_t *op2, uint32_t *op3)
+{
+    uint32_t o1 = (opcode >> 26) & ((1 << 6) - 1);
+    uint32_t op2_shift=0, op2_len=0, op3_shift=0, op3_len=0;
+    uint32_t param1, param2, param3, param4, param5, param6;
+
+    switch(o1)
+    {
+	case 0x08: // se_cmpli
+	case 0x1A: // se_slwi
+	    param1 = (opcode >> 20) & 0x1F;
+	    param2 = (opcode >> 16) & 0xF;
+	    op2_len = 1;
+	    op2_shift = 25;
+	    break;
+	case 0x1C:
+	    // if op2 MSB ( (opc >> 15) & 1 ) is 0, map it to e_li (doesnt matter what the other bits of op2 are)
+	    op2_len = 5;
+	    op2_shift = 11;
+	    param1 = (opcode >> 21) & 0x1F;
+	    param2 = (opcode >> 16) & 0x1F; // e_or2i: param2 := param2 cat param3
+	    param3 = opcode & 0x3FF;
+	    break;
+	case 0x06: // last bit may be 0-1 (Rc)
+	    op2_len = 5;
+	    op2_shift = 11;
+	    op3_len = 3;  // used by e_lhau, e_lhzu, e_lwzu
+	    op3_shift = 8;
+	    param1 = (opcode >> 21) & 0x1F; // rd
+	    param2 = (opcode >> 16) & 0x1F; // ra
+	    param3 = (opcode >> 11) & 0x1;  // rc
+	    param4 = (opcode >> 10) & 0x1;  // f
+	    param5 = (opcode >> 8) & 0x3;   //scl
+	    param6 = opcode & 0xFF; // ui8 / d8
+	    // e_mcrf needs special treatment for rd and ra
+	    break;
+	case 0x1F: // e_rlw, e_rlwi
+	    op2_len = 10;  // this would require us to make the opcode table bigger
+	    		   // (currently it's 0x40, so it supports opcodes up to 6 bit long)
+	    op2_shift = 1; // we should consider splitting this into adjacent 5b op2 and 5b op3
+	                   // since making the array bigger would be a huge waste of memory
+	    param1 = (opcode >> 21) & 0x1F; // rs
+	    param2 = (opcode >> 16) & 0x1F; // ra
+	    param3 = (opcode >> 11) & 0x1F; // rb, sh
+	    param4 = opcode & 0x1; // rc
+	    break;
+	case 0x01: //se_add, se_mullw
+	case 0x02:
+	case 0x10: //se_srw, se_slw
+	case 0x11: // se_or
+	    param1 = (opcode >> 20) & 0xF;
+	    param2 = (opcode >> 16) & 0xF;
+	    op2_len = 2;
+	    op2_shift = 24;
+	    break;
+	case 0x00:
+	    param1 = (opcode >> 16) & 0xF; //used by some instructions, like se_not or se_neg
+	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
+	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
+	    op3_len = 4;  // used to distinguish between isync, illegal, se_rf(c)i...
+	    op3_shift = 16;
+	    break;
+	case 0x1D: // e_rlwinm, e_rlwimi
+	    param1 = (opcode >> 21) & 0x1F; // rs
+	    param2 = (opcode >> 16) & 0x1F; // ra
+	    param3 = (opcode >> 11) & 0x1F;  // sh
+	    param4 = (opcode >> 6) & 0x1F;  // mb
+	    param5 = (opcode >> 1) & 0x1F;   // me
+	    op2_len = 1;
+	    op2_shift = 0;
+	    break;
+
+	//1 opcode instructions
+        case 0x09: // se_subi
+	    param1 = (opcode >> 25) & 0x1; // rc
+	    param2 = (opcode >> 20) & 0x1F; // oim5
+	    param3 = (opcode >> 16) & 0xF; // rx
+	    break;
+        case 0x07: // e_add16i
+	case 0x0D: // e_stb
+	case 0x14: // e_lwz
+	case 0x15: // e_stw
+        case 0x17: // e_sth
+        case 0x19:
+	    param1 = (opcode >> 21) & 0x1F; // rs
+	    param2 = (opcode >> 16) & 0x1F; // ra
+	    param3 = opcode & 0xFFFF; // d
+	    break;
+
+        case 0x18:
+        case 0x0B:
+	case 0x0E:
+	case 0x16:
+
+	//5 bit op1 instructions
+	case 0x12:
+	case 0x13: // se_li
+	    param1 = (opcode >> 20) & 0x3F;
+	    param2 = (opcode >> 16) & 0xF;
+	    break;
+
+	//4 bit op1 instructions
+	case 0x28:
+	case 0x29:
+	case 0x2A:
+	case 0x2B: // se_lhz.
+
+	case 0x30:
+	case 0x31:
+	case 0x32:
+	case 0x33: // se_lwz
+
+	case 0x24:
+	case 0x25:
+	case 0x26:
+	case 0x27: // se_stb
+
+	case 0x2C:
+	case 0x2D:
+	case 0x2E:
+	case 0x2F: // se_sth
+	    param1 = (opcode >> 24) & 0xF;
+	    param2 = (opcode >> 20) & 0xF;
+	    param3 = (opcode >> 16) & 0xF;
+	    break;
+    }
+
+    // to prevent unused variable errors
+    (void)param1;
+    (void)param2;
+    (void)param3;
+    (void)param4;
+    (void)param5;
+    (void)param6;
+
+    if(op1)
+        *op1 = o1;
+    if(op2)
+        *op2 = (opcode >> op2_shift) & ((1 << op2_len) - 1);
+    if(op3)
+        *op3 = (opcode >> op3_shift) & ((1 << op3_len) - 1);
 }
