@@ -210,7 +210,8 @@ int cpu_exec(CPUState *env)
                         //reached cpu_abort or tlib_on_cpu_power_down.
                         //This happens only if psret == 0.
                         //Then we want to break the loop.
-                        return 0;
+                        ret = 0;
+                        break;
 #endif
                     }
                 }
@@ -335,22 +336,21 @@ int cpu_exec(CPUState *env)
                        the stack if an interrupt occurred at the wrong time.
                        We avoid this by disabling interrupts when
                        pc contains a magic address.  */
-			// fix from https://bugs.launchpad.net/qemu/+bug/942659
-		if ((interrupt_request & CPU_INTERRUPT_HARD) &&
+                    // fix from https://bugs.launchpad.net/qemu/+bug/942659
+                    if ((interrupt_request & CPU_INTERRUPT_HARD) &&
 #ifdef TARGET_PROTO_ARM_M
-        (env->regs[15] < 0xfffffff0) && !(env->uncached_cpsr & CPSR_PRIMASK))
+                    (env->regs[15] < 0xfffffff0) && !(env->uncached_cpsr & CPSR_PRIMASK))
 #else
-        !(env->uncached_cpsr & CPSR_I))
+                    !(env->uncached_cpsr & CPSR_I))
 #endif
-        {
-            env->exception_index = EXCP_IRQ;
-            do_interrupt(env);
-            next_tb = 0;
-        }
-
+                    {
+                        env->exception_index = EXCP_IRQ;
+                        do_interrupt(env);
+                        next_tb = 0;
+                    }
 #endif
-                   /* Don't use the cached interrupt_request value,
-                      do_interrupt may have updated the EXITTB flag. */
+                    /* Don't use the cached interrupt_request value,
+                       do_interrupt may have updated the EXITTB flag. */
                     if (env->interrupt_request & CPU_INTERRUPT_EXITTB) {
                         env->interrupt_request &= ~CPU_INTERRUPT_EXITTB;
                         /* ensure that no TB jump will be modified as
@@ -395,8 +395,8 @@ int cpu_exec(CPUState *env)
                 asm volatile("" ::: "memory");
                 if (likely(!env->exit_request)) {
                     tc_ptr = tb->tc_ptr;
-                /* execute the generated code */
-		    next_tb = tcg_qemu_tb_exec(env, tc_ptr);
+                    /* execute the generated code */
+                    next_tb = tcg_qemu_tb_exec(env, tc_ptr);
                     if ((next_tb & 3) == 2) {
                         tb = (TranslationBlock *)(long)(next_tb & ~3);
                         /* Restore PC.  */

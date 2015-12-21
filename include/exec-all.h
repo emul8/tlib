@@ -36,12 +36,10 @@ typedef ram_addr_t tb_page_addr_t;
 struct TranslationBlock;
 typedef struct TranslationBlock TranslationBlock;
 
-void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb);
-void gen_intermediate_code_pc(CPUState *env, struct TranslationBlock *tb);
+void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb, int search_pc);
 void restore_state_to_opc(CPUState *env, struct TranslationBlock *tb,
                           int pc_pos);
 
-void cpu_gen_init(void);
 void cpu_gen_code(CPUState *env, struct TranslationBlock *tb,
                  int *gen_code_size_ptr);
 int cpu_restore_state(CPUState *env, struct TranslationBlock *tb,

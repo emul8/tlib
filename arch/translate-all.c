@@ -25,13 +25,6 @@
 #include "cpu.h"
 #include "tcg.h"
 
-tcg_context_t *ctx;
-
-void cpu_gen_init(void)
-{
-    tcg_context_init();
-}
-
 /* '*gen_code_size_ptr' contains the size of the generated code (host
    code).
 */
@@ -43,7 +36,7 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 
     tcg_func_start(s);
 
-    gen_intermediate_code(env, tb);
+    gen_intermediate_code(env, tb, 0);
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;
@@ -68,7 +61,7 @@ int cpu_restore_state(CPUState *env,
 
     tcg_func_start(s);
 
-    gen_intermediate_code_pc(env, tb);
+    gen_intermediate_code(env, tb, 1);
 
     /* find opc index corresponding to search_pc */
     tc_ptr = (unsigned long)tb->tc_ptr;

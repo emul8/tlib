@@ -50,8 +50,10 @@
 
 /* internal defines */
 typedef struct DisasContext {
-    target_ulong pc;
+    struct TranslationBlock *tb;
+    int singlestep_enabled;
     int is_jmp;
+    target_ulong pc;
     /* Nonzero if this instruction has been conditionally skipped.  */
     int condjmp;
     /* The label that will be jumped to when the instruction is skipped.  */
@@ -59,8 +61,6 @@ typedef struct DisasContext {
     /* Thumb-2 condtional execution bits.  */
     int condexec_mask;
     int condexec_cond;
-    struct TranslationBlock *tb;
-    int singlestep_enabled;
     int thumb;
     int user;
     int vfp_enabled;
@@ -9892,9 +9892,9 @@ undef:
    information for each intermediate instruction. */
 
 
-static inline void gen_intermediate_code_internal(CPUState *env,
-                                                  TranslationBlock *tb,
-                                                  int search_pc)
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb,
+                           int search_pc)
 {
     DisasContext dc1, *dc = &dc1;
     CPUBreakpoint *bp;
@@ -10137,16 +10137,6 @@ done_generating:
         tb->size = dc->pc - pc_start;
         tb->icount = num_insns;
     }
-}
-
-void gen_intermediate_code(CPUState *env, TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 0);
-}
-
-void gen_intermediate_code_pc(CPUState *env, TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 1);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
