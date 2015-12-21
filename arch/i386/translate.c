@@ -7636,9 +7636,9 @@ void optimize_flags_init(void)
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
-static inline void gen_intermediate_code_internal(CPUState *env,
-                                                  TranslationBlock *tb,
-                                                  int search_pc)
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb,
+                           int search_pc)
 {
     DisasContext dc1, *dc = &dc1;
     target_ulong pc_ptr;
@@ -7788,16 +7788,6 @@ static inline void gen_intermediate_code_internal(CPUState *env,
         tb->size = pc_ptr - pc_start;
         tb->icount = num_insns;
     }
-}
-
-void gen_intermediate_code(CPUState *env, TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 0);
-}
-
-void gen_intermediate_code_pc(CPUState *env, TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 1);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

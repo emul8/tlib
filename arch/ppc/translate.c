@@ -8783,9 +8783,9 @@ GEN_SPEOP_LDST(evstwwo, 0x1E, 2),
 #include "helper_regs.h"
 
 /*****************************************************************************/
-static inline void gen_intermediate_code_internal(CPUState *env,
-                                                  TranslationBlock *tb,
-                                                  int search_pc)
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb,
+                           int search_pc)
 {
     DisasContext dc1, *dc = &dc1;
     opc_handler_t **table, *handler;
@@ -8942,16 +8942,6 @@ static inline void gen_intermediate_code_internal(CPUState *env,
         int flags = env->bfd_mach | dc->le_mode << 16;
         tlib_on_block_translation(pc_start, dc->nip - pc_start, flags);
     }
-}
-
-void gen_intermediate_code (CPUState *env, struct TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 0);
-}
-
-void gen_intermediate_code_pc (CPUState *env, struct TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 1);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

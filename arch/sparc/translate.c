@@ -2732,8 +2732,9 @@ static void disas_sparc_insn(DisasContext * dc)
     tcg_temp_free(cpu_tmp2);
 }
 
-static inline void gen_intermediate_code_internal(TranslationBlock * tb,
-                                                  int spc, CPUState *env)
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb,
+                           int search_pc)
 {
     target_ulong pc_start, last_pc;
     uint16_t *gen_opc_end;
@@ -2785,7 +2786,7 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
                 }
             }
         }
-        if (spc) {
+        if (search_pc) {
             j = gen_opc_ptr - ctx->gen_opc_buf;
             if (lj < j) {
                 lj++;
@@ -2840,7 +2841,7 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
     }
     gen_block_footer(tb, num_insns);
     *gen_opc_ptr = INDEX_op_end;
-    if (spc) {
+    if (search_pc) {
         j = gen_opc_ptr - ctx->gen_opc_buf;
         lj++;
         while (lj <= j)
@@ -2854,16 +2855,6 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(pc_start, last_pc + 4 - pc_start, 0);
     }
-}
-
-void gen_intermediate_code(CPUState * env, TranslationBlock * tb)
-{
-    gen_intermediate_code_internal(tb, 0, env);
-}
-
-void gen_intermediate_code_pc(CPUState * env, TranslationBlock * tb)
-{
-    gen_intermediate_code_internal(tb, 1, env);
 }
 
 void gen_intermediate_code_init(CPUState *env)
