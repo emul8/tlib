@@ -79,6 +79,8 @@ static int x86_64_hregs;
 #endif
 
 typedef struct DisasContext {
+    struct TranslationBlock *tb;
+    int singlestep_enabled; /* "hardware" single step enabled */
     /* current insn context */
     int override; /* -1 if no override */
     int prefix;
@@ -103,11 +105,9 @@ typedef struct DisasContext {
     int cpl;
     int iopl;
     int tf;     /* TF cpu flag */
-    int singlestep_enabled; /* "hardware" single step enabled */
     int jmp_opt; /* use direct block chaining for direct jumps */
     int mem_index; /* select memory access functions */
     uint64_t flags; /* all execution flags */
-    struct TranslationBlock *tb;
     int popl_esp_hack; /* for correct popl with esp base handling */
     int rip_offset; /* only used in x86_64, but left for simplicity */
     int cpuid_features;

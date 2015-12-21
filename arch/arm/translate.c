@@ -50,8 +50,10 @@
 
 /* internal defines */
 typedef struct DisasContext {
-    target_ulong pc;
+    struct TranslationBlock *tb;
+    int singlestep_enabled;
     int is_jmp;
+    target_ulong pc;
     /* Nonzero if this instruction has been conditionally skipped.  */
     int condjmp;
     /* The label that will be jumped to when the instruction is skipped.  */
@@ -59,8 +61,6 @@ typedef struct DisasContext {
     /* Thumb-2 condtional execution bits.  */
     int condexec_mask;
     int condexec_cond;
-    struct TranslationBlock *tb;
-    int singlestep_enabled;
     int thumb;
     int user;
     int vfp_enabled;

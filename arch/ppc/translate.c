@@ -181,6 +181,7 @@ void ppc_translate_init(void)
 /* internal defines */
 typedef struct DisasContext {
     struct TranslationBlock *tb;
+    int singlestep_enabled;
     target_ulong nip;
     uint32_t opcode;
     uint32_t exception;
@@ -197,7 +198,6 @@ typedef struct DisasContext {
     int altivec_enabled;
     int spe_enabled;
     ppc_spr_t *spr_cb; /* Needed to check rights for mfspr/mtspr */
-    int singlestep_enabled;
 } DisasContext;
 
 struct opc_handler_t {

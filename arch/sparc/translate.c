@@ -59,6 +59,8 @@ static target_ulong gen_opc_jump_pc[2];
 #include "tb-helper.h"
 
 typedef struct DisasContext {
+    struct TranslationBlock *tb;
+    int singlestep_enabled;
     target_ulong pc;    /* current Program Counter: integer or DYNAMIC_PC */
     target_ulong npc;   /* next PC: integer or DYNAMIC_PC or JUMP_PC */
     target_ulong jump_pc[2]; /* used when JUMP_PC pc value is used */
@@ -66,9 +68,7 @@ typedef struct DisasContext {
     int mem_idx;
     int fpu_enabled;
     int address_mask_32bit;
-    int singlestep;
     uint32_t cc_op;  /* current CC operation */
-    struct TranslationBlock *tb;
     sparc_def_t *def;
 } DisasContext;
 
@@ -191,7 +191,7 @@ static inline void gen_goto_tb(DisasContext *s, int tb_num,
     tb = s->tb;
     if ((pc & TARGET_PAGE_MASK) == (tb->pc & TARGET_PAGE_MASK) &&
         (npc & TARGET_PAGE_MASK) == (tb->pc & TARGET_PAGE_MASK) &&
-        !s->singlestep)  {
+        !s->singlestep_enabled) {
         /* jump to same page: we can use a direct jump */
         tcg_gen_goto_tb(tb_num);
         tcg_gen_movi_tl(cpu_pc, pc);
@@ -2754,7 +2754,7 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
     dc->def = env->def;
     dc->fpu_enabled = tb_fpu_enabled(tb->flags);
     dc->address_mask_32bit = tb_am_enabled(tb->flags);
-    dc->singlestep = (env->singlestep_enabled);
+    dc->singlestep_enabled = (env->singlestep_enabled);
     gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
 
     cpu_tmp0 = tcg_temp_new();
@@ -2812,7 +2812,7 @@ static inline void gen_intermediate_code_internal(TranslationBlock * tb,
             break;
         /* if single step mode, we generate only one instruction and
            generate an exception */
-        if (dc->singlestep) {
+        if (dc->singlestep_enabled) {
             break;
         }
     } while ((gen_opc_ptr < gen_opc_end) &&
