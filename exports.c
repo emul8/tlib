@@ -58,10 +58,14 @@ int32_t tlib_init(char *cpu_name)
   return 0;
 }
 
+void free_phys_dirty(void);
+
 void tlib_dispose()
 {
   code_gen_free();
   free_all_page_descriptors();
+  free_phys_dirty();
+  tlib_free(cpu);
 }
 
 void tlib_reset()
@@ -158,6 +162,11 @@ uint32_t tlib_is_range_mapped(uint32_t start, uint32_t end)
     start += TARGET_PAGE_SIZE;
   }
   return 0;
+}
+
+void free_phys_dirty()
+{
+  tlib_free(dirty_ram.phys_dirty);
 }
 
 void tlib_invalidate_translation_blocks(unsigned long start, unsigned long end)
