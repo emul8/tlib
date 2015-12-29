@@ -19,6 +19,7 @@
  */
 #include "cpu.h"
 #include "helper.h"
+#include <math.h>
 
 #define S32_1(x) ((int32_t)((x >> 32) & 0xffffffffu))
 #define S32_0(x) ((int32_t)(x & 0xffffffffu))
@@ -3096,45 +3097,132 @@ void HELPER(neon_qunzip32)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
     *db0Out |= U32_1(da0);
 }
 
-/* EMPTY STUBS */
-
-uint32_t HELPER(neon_min_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_abd_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    float_status *_fpstatus = fpstatus;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+
+    const float result = fabsf(af - bf);
+    uint32_t *res_addr = (uint32_t*) &result;
+
+    if(isinf(result) && !isinf(af) && !isinf(bf)) {
+        _fpstatus->float_exception_flags |= float_flag_overflow | float_flag_inexact;
+    }
+
+    if(isnan(result) && !isnan(af) && !isnan(bf)) {
+        _fpstatus->float_exception_flags |= float_flag_invalid;
+    }
+
+    return *res_addr;
 }
 
-uint32_t HELPER(neon_max_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_min_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    float result;
+    uint32_t *res_addr = (uint32_t*) &result;
+
+    if(isnan(af) || isnan(bf)) {
+        result = NAN;
+    }
+    else {
+        result = af < bf ? af : bf;
+    }
+
+    return *res_addr;
 }
 
-uint32_t HELPER(neon_abd_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_max_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    float result;
+    uint32_t *res_addr = (uint32_t*) &result;
+
+    if(isnan(af) || isnan(bf)) {
+        result = NAN;
+    }
+    else {
+        result = af > bf ? af : bf;
+    }
+
+    return *res_addr;
 }
 
-uint32_t HELPER(neon_ceq_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_ceq_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    return af == bf ? UINT32_MAX : 0;
 }
 
-uint32_t HELPER(neon_cge_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_cge_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    float_status *_fpstatus = fpstatus;
+
+    if(isnan(af) || isnan(bf)) {
+        _fpstatus->float_exception_flags |= float_flag_invalid;
+    }
+
+    return af >= bf ? UINT32_MAX : 0;
 }
 
-uint32_t HELPER(neon_cgt_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_cgt_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    float_status *_fpstatus = fpstatus;
+
+    if(isnan(af) || isnan(bf)) {
+        _fpstatus->float_exception_flags |= float_flag_invalid;
+    }
+
+    return af > bf ? UINT32_MAX : 0;
 }
 
-uint32_t HELPER(neon_acge_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_acge_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    float_status *_fpstatus = fpstatus;
+
+    if(isnan(af) || isnan(bf)) {
+        _fpstatus->float_exception_flags |= float_flag_invalid;
+    }
+
+    return fabsf(af) >= fabsf(bf) ? UINT32_MAX : 0;
 }
 
-uint32_t HELPER(neon_acgt_f32)(uint32_t arg1, uint32_t arg2, void *ptr)
+uint32_t HELPER(neon_acgt_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    return 0;
+    const float *afp = (float*)&a;
+    const float *bfp = (float*)&b;
+    const float af = *afp;
+    const float bf = *bfp;
+    float_status *_fpstatus = fpstatus;
+
+    if(isnan(af) || isnan(bf)) {
+        _fpstatus->float_exception_flags |= float_flag_invalid;
+    }
+
+    return fabsf(af) > fabsf(bf) ? UINT32_MAX : 0;
 }
 
