@@ -1047,6 +1047,40 @@ do {                                            \
     env->wdt_period[3] = (d_);                  \
  } while (0)
 
+typedef struct DisasContext {
+    struct TranslationBlock *tb;
+    target_ulong nip;
+    uint32_t opcode;
+    uint32_t exception;
+    /* Routine used to access memory */
+    int mem_idx;
+    int access_type;
+    /* Translation flags */
+    int le_mode;
+#if defined(TARGET_PPC64)
+    int sf_mode;
+    int has_cfar;
+#endif
+    int fpu_enabled;
+    int altivec_enabled;
+    int spe_enabled;
+    ppc_spr_t *spr_cb; /* Needed to check rights for mfspr/mtspr */
+    int singlestep_enabled;
+} DisasContext;
+
+struct opc_handler_t {
+    /* invalid bits for instruction 1 (Rc(opcode) == 0) */
+    uint32_t inval1;
+    /* invalid bits for instruction 2 (Rc(opcode) == 1) */
+    uint32_t inval2;
+    /* instruction type */
+    uint64_t type;
+    /* extended instruction type */
+    uint64_t type2;
+    /* handler */
+    void (*handler)(DisasContext *ctx);
+};
+
 /* Context used internally during MMU translations */
 typedef struct mmu_ctx_t mmu_ctx_t;
 struct mmu_ctx_t {
