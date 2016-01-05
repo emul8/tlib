@@ -66,6 +66,7 @@ void tlib_dispose()
   free_all_page_descriptors();
   free_phys_dirty();
   tlib_free(cpu);
+  tcg_dispose(&GLOBAL_tcg_ctx);
 }
 
 void tlib_reset()
