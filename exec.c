@@ -46,8 +46,6 @@ static unsigned long code_gen_buffer_size;
 static unsigned long code_gen_buffer_max_size;
 static uint8_t *code_gen_ptr;
 
-int phys_ram_fd;
-
 dirty_ram_t dirty_ram = {0};
 
 CPUState *cpu;

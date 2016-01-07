@@ -621,7 +621,6 @@ target_phys_addr_t cpu_get_phys_page_debug(CPUState *env, target_ulong addr);
 
 /* memory API */
 
-extern int phys_ram_fd;
 extern unsigned long translation_cache_size;
 
 typedef struct dirty_ram_t {
