@@ -418,8 +418,6 @@ void cpu_arm_set_cp_io(CPUState *env, int cpnum,
 #define TARGET_PHYS_ADDR_SPACE_BITS 32
 #define TARGET_VIRT_ADDR_SPACE_BITS 32
 
-#define CPU_SAVE_VERSION 4
-
 /* MMU modes definitions */
 #define MMU_MODE0_SUFFIX _kernel
 #define MMU_MODE1_SUFFIX _user

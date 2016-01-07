@@ -336,8 +336,6 @@ void cpu_unassigned_access(CPUState *env1, target_phys_addr_t addr,
                            int is_write, int is_exec, int is_asi, int size);
 int cpu_signal_handler(int host_signum, void *pinfo, void *puc);
 
-#define CPU_SAVE_VERSION 7
-
 /* MMU modes definitions */
 #define MMU_USER_IDX   0
 #define MMU_MODE0_SUFFIX _user

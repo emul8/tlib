@@ -1122,8 +1122,6 @@ int ppcemb_tlb_search (CPUState *env, target_ulong address, uint32_t pid);
 int ppc_dcr_read (ppc_dcr_t *dcr_env, int dcrn, uint32_t *valp);
 int ppc_dcr_write (ppc_dcr_t *dcr_env, int dcrn, uint32_t val);
 
-#define CPU_SAVE_VERSION 4
-
 /* MMU modes definitions */
 #define MMU_MODE0_SUFFIX _user
 #define MMU_MODE1_SUFFIX _kernel

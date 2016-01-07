@@ -924,8 +924,6 @@ uint64_t cpu_get_tsc(CPUState *env);
 
 #define cpudef_setup	x86_cpudef_setup
 
-#define CPU_SAVE_VERSION 12
-
 /* MMU modes definitions */
 #define MMU_MODE0_SUFFIX _kernel
 #define MMU_MODE1_SUFFIX _user
