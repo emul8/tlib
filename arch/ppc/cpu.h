@@ -2070,6 +2070,6 @@ static inline void cpu_pc_from_tb(CPUState *env, TranslationBlock *tb)
 }
 
 int ppc_set_pending_interrupt(int n_IRQ, int level);
-void decode_vle_instruction(uint32_t opcode, uint32_t *op1, uint32_t *op2, uint32_t *op3);
+void decode_vle_instruction(DisasContext *ctxp, uint32_t *op1, uint32_t *op2, uint32_t *op3);
 
 #endif /* !defined (__CPU_PPC_H__) */

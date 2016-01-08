@@ -8899,7 +8899,7 @@ void gen_intermediate_code(CPUState *env,
 
         if(dc->vle_enabled) // use the vle decoding function to obtain the opcodes
         {
-            decode_vle_instruction(dc->opcode, &op1, &op2, &op3);
+            decode_vle_instruction(dc, &op1, &op2, &op3);
         }
         else // use standard decoding macros
         {
@@ -8999,140 +8999,77 @@ void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 // or moved to a separate function and called from some pre-helper function or the helper itself
 // It should be verified if the shift values for 16-bit instructions are ok
 // or if they should be smaller by 16 (the 32bit opcode variable may now contain 2 16b instructions)
-void decode_vle_instruction(uint32_t opcode, uint32_t *op1, uint32_t *op2, uint32_t *op3)
+void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t *op2, uint32_t *op3)
 {
+    uint32_t opcode = ctxp->opcode;;
     uint32_t o1 = (opcode >> 26) & ((1 << 6) - 1);
-    uint32_t op2_shift=0, op2_len=0, op3_shift=0, op3_len=0;
-    uint32_t param1, param2, param3, param4, param5, param6;
+    uint32_t op2_shift = 0, op2_len = 0, op3_shift = 0, op3_len = 0;
 
     switch(o1)
     {
-	case 0x08: // se_cmpli
-	case 0x1A: // se_slwi
-	    param1 = (opcode >> 20) & 0x1F;
-	    param2 = (opcode >> 16) & 0xF;
-	    op2_len = 1;
-	    op2_shift = 25;
+    case 0x00:
+	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
+	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
+	    op3_len = 4;
+	    op3_shift = 16;
 	    break;
-	case 0x1C:
-	    // if op2 MSB ( (opc >> 15) & 1 ) is 0, map it to e_li (doesnt matter what the other bits of op2 are)
-	    op2_len = 5;
-	    op2_shift = 11;
-	    param1 = (opcode >> 21) & 0x1F;
-	    param2 = (opcode >> 16) & 0x1F; // e_or2i: param2 := param2 cat param3
-	    param3 = opcode & 0x3FF;
-	    break;
-	case 0x06: // last bit may be 0-1 (Rc)
-	    op2_len = 5;
-	    op2_shift = 11;
-	    op3_len = 3;  // used by e_lhau, e_lhzu, e_lwzu
-	    op3_shift = 8;
-	    param1 = (opcode >> 21) & 0x1F; // rd
-	    param2 = (opcode >> 16) & 0x1F; // ra
-	    param3 = (opcode >> 11) & 0x1;  // rc
-	    param4 = (opcode >> 10) & 0x1;  // f
-	    param5 = (opcode >> 8) & 0x3;   //scl
-	    param6 = opcode & 0xFF; // ui8 / d8
-	    // e_mcrf needs special treatment for rd and ra
-	    break;
-	case 0x1F: // e_rlw, e_rlwi
-	    op2_len = 10;  // this would require us to make the opcode table bigger
-	    		   // (currently it's 0x40, so it supports opcodes up to 6 bit long)
-	    op2_shift = 1; // we should consider splitting this into adjacent 5b op2 and 5b op3
-	                   // since making the array bigger would be a huge waste of memory
-	    param1 = (opcode >> 21) & 0x1F; // rs
-	    param2 = (opcode >> 16) & 0x1F; // ra
-	    param3 = (opcode >> 11) & 0x1F; // rb, sh
-	    param4 = opcode & 0x1; // rc
-	    break;
-	case 0x01: //se_add, se_mullw
-	case 0x02:
-	case 0x10: //se_srw, se_slw
-	case 0x11: // se_or
-	    param1 = (opcode >> 20) & 0xF;
-	    param2 = (opcode >> 16) & 0xF;
+    case 0x01:
+    case 0x03:
+    case 0x10:
+    case 0x11:
 	    op2_len = 2;
 	    op2_shift = 24;
 	    break;
-	case 0x00:
-	    param1 = (opcode >> 16) & 0xF; //used by some instructions, like se_not or se_neg
-	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
-	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
-	    op3_len = 4;  // used to distinguish between isync, illegal, se_rf(c)i...
-	    op3_shift = 16;
+    case 0x06:
+	    op2_len = 4; //this will allow more sensible grouping than 6-2
+	    op2_shift = 12;
+	    op3_len = 4;
+	    op3_shift = 8;
 	    break;
-	case 0x1D: // e_rlwinm, e_rlwimi
-	    param1 = (opcode >> 21) & 0x1F; // rs
-	    param2 = (opcode >> 16) & 0x1F; // ra
-	    param3 = (opcode >> 11) & 0x1F;  // sh
-	    param4 = (opcode >> 6) & 0x1F;  // mb
-	    param5 = (opcode >> 1) & 0x1F;   // me
+    case 0x08:
+    case 0x0A:
+    case 0x0B:
+    case 0x18:
+    case 0x19:
+    case 0x1A:
+    case 0x1B:
+    case 0x1E: //this might cause problems, as the docs suggest op2_len = 4 for e_bc.
+               //For this table it does not matter though.
 	    op2_len = 1;
-	    op2_shift = 0;
+	    op2_shift = 25;
+        break;
+	case 0x1C:
+	    op2_len = 1;
+	    op2_shift = 15;
+	    op3_len = 4;
+	    op3_shift = 11;
 	    break;
-
-	//1 opcode instructions
-        case 0x09: // se_subi
-	    param1 = (opcode >> 25) & 0x1; // rc
-	    param2 = (opcode >> 20) & 0x1F; // oim5
-	    param3 = (opcode >> 16) & 0xF; // rx
+    case 0x1D:
+        op2_len = 1;
+        op2_shift = 0;
+        break;
+	case 0x1F:
+	    op2_len = 6;
+	    op2_shift = 5;
+	    op3_len = 4;
+	    op3_shift = 1;
 	    break;
-        case 0x07: // e_add16i
-	case 0x0D: // e_stb
-	case 0x14: // e_lwz
-	case 0x15: // e_stw
-        case 0x17: // e_sth
-        case 0x19:
-	    param1 = (opcode >> 21) & 0x1F; // rs
-	    param2 = (opcode >> 16) & 0x1F; // ra
-	    param3 = opcode & 0xFFFF; // d
-	    break;
-
-        case 0x18:
-        case 0x0B:
-	case 0x0E:
-	case 0x16:
-
-	//5 bit op1 instructions
-	case 0x12:
-	case 0x13: // se_li
-	    param1 = (opcode >> 20) & 0x3F;
-	    param2 = (opcode >> 16) & 0xF;
-	    break;
-
-	//4 bit op1 instructions
-	case 0x28:
-	case 0x29:
-	case 0x2A:
-	case 0x2B: // se_lhz.
-
-	case 0x30:
-	case 0x31:
-	case 0x32:
-	case 0x33: // se_lwz
-
-	case 0x24:
-	case 0x25:
-	case 0x26:
-	case 0x27: // se_stb
-
-	case 0x2C:
-	case 0x2D:
-	case 0x2E:
-	case 0x2F: // se_sth
-	    param1 = (opcode >> 24) & 0xF;
-	    param2 = (opcode >> 20) & 0xF;
-	    param3 = (opcode >> 16) & 0xF;
-	    break;
+    //the following cases have no additional opcodes and are left here for the sake of completeness
+    case 0x07:
+    case 0x09:
+    case 0x0C:
+    case 0x0D:
+    case 0x0E:
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x16:
+    case 0x17:
+    //cases >0x1F are also verified to not have any more opcodes
+    default:
+        break;
     }
-
-    // to prevent unused variable errors
-    (void)param1;
-    (void)param2;
-    (void)param3;
-    (void)param4;
-    (void)param5;
-    (void)param6;
 
     if(op1)
         *op1 = o1;
