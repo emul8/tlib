@@ -8873,7 +8873,704 @@ static inline uint32_t LI20_LI20(uint32_t opcode)
 }
 EXTRACT_HELPER(LI20_RD, 21, 5);
 
+static void gen_se_add(DisasContext *ctx)
+{
+}
+
+static void gen_se_addi(DisasContext *ctx)
+{
+}
+
+static void gen_e_add16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_add2i(DisasContext *ctx)
+{
+}
+
+static void gen_e_add2is(DisasContext *ctx)
+{
+}
+
+static void gen_e_addic(DisasContext *ctx)
+{
+}
+
+static void gen_se_and(DisasContext *ctx)
+{
+}
+
+static void gen_se_andc(DisasContext *ctx)
+{
+}
+
+static void gen_e_andi(DisasContext *ctx)
+{
+}
+
+static void gen_se_andi(DisasContext *ctx)
+{
+}
+
+static void gen_e_and2i(DisasContext *ctx)
+{
+}
+
+static void gen_e_and2is(DisasContext *ctx)
+{
+}
+
+static void gen_e_b(DisasContext *ctx)
+{
+}
+
+static void gen_se_b(DisasContext *ctx)
+{
+}
+
+static void gen_e_bc(DisasContext *ctx)
+{
+}
+
+static void gen_se_bc(DisasContext *ctx)
+{
+}
+
+static void gen_se_bclri(DisasContext *ctx)
+{
+}
+
+static void gen_se_bctr(DisasContext *ctx)
+{
+}
+
+static void gen_se_bgeni(DisasContext *ctx)
+{
+}
+
+static void gen_se_blr(DisasContext *ctx)
+{
+}
+
+static void gen_se_bmaski(DisasContext *ctx)
+{
+}
+
+static void gen_se_bseti(DisasContext *ctx)
+{
+}
+
+static void gen_se_btsti(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmp(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmph(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmph(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmphl(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmphl(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmph16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmp16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmphl16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmpl16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmpi_or_cmpli(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmpi(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmpl(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmpli(DisasContext *ctx)
+{
+}
+
+static void gen_e_crand(DisasContext *ctx)
+{
+}
+
+static void gen_e_crandc(DisasContext *ctx)
+{
+}
+
+static void gen_e_creqv(DisasContext *ctx)
+{
+}
+
+static void gen_e_crnand(DisasContext *ctx)
+{
+}
+
+static void gen_e_crnor(DisasContext *ctx)
+{
+}
+
+static void gen_e_cror(DisasContext *ctx)
+{
+}
+
+static void gen_e_crorc(DisasContext *ctx)
+{
+}
+
+static void gen_e_crxor(DisasContext *ctx)
+{
+}
+
+static void gen_se_extsb(DisasContext *ctx)
+{
+}
+
+static void gen_se_extsh(DisasContext *ctx)
+{
+}
+
+static void gen_se_extzb(DisasContext *ctx)
+{
+}
+
+static void gen_se_extzh(DisasContext *ctx)
+{
+}
+
+static void gen_se_illegal(DisasContext *ctx)
+{
+}
+
+static void gen_se_isync(DisasContext *ctx)
+{
+}
+
+static void gen_e_lbz(DisasContext *ctx)
+{
+}
+
+static void gen_se_lbz(DisasContext *ctx)
+{
+}
+
+static void gen_e_lbzu(DisasContext *ctx)
+{
+}
+
+static void gen_e_lha(DisasContext *ctx)
+{
+}
+
+static void gen_e_lhau(DisasContext *ctx)
+{
+}
+
+static void gen_e_lhz(DisasContext *ctx)
+{
+}
+
+static void gen_se_lhz(DisasContext *ctx)
+{
+}
+
+static void gen_e_lhzu(DisasContext *ctx)
+{
+}
+
+static void gen_e_li(DisasContext *ctx)
+{
+}
+
+static void gen_e_lis(DisasContext *ctx)
+{
+}
+
+static void gen_se_li(DisasContext *ctx)
+{
+}
+
+static void gen_e_lmw(DisasContext *ctx)
+{
+}
+
+static void gen_e_lwz(DisasContext *ctx)
+{
+}
+
+static void gen_se_lwz(DisasContext *ctx)
+{
+}
+
+static void gen_e_lwzu(DisasContext *ctx)
+{
+}
+
+static void gen_e_mcrf(DisasContext *ctx)
+{
+}
+
+static void gen_se_mfar(DisasContext *ctx)
+{
+}
+
+static void gen_se_mfctr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mflr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mtar(DisasContext *ctx)
+{
+}
+
+static void gen_se_mtctr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mtlr(DisasContext *ctx)
+{
+}
+
+static void gen_e_mulli(DisasContext *ctx)
+{
+}
+
+static void gen_e_mull2i(DisasContext *ctx)
+{
+}
+
+static void gen_se_mullw(DisasContext *ctx)
+{
+}
+
+static void gen_se_neg(DisasContext *ctx)
+{
+}
+
+static void gen_se_not(DisasContext *ctx)
+{
+}
+
+static void gen_se_or(DisasContext *ctx)
+{
+}
+
+static void gen_e_or2i(DisasContext *ctx)
+{
+}
+
+static void gen_e_or2is(DisasContext *ctx)
+{
+}
+
+static void gen_e_ori(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfci(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfdi(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfi(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfmci(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlw(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlwi(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlwimi(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlwinm(DisasContext *ctx)
+{
+}
+
+static void gen_se_sc(DisasContext *ctx)
+{
+}
+
+static void gen_e_slwi(DisasContext *ctx)
+{
+}
+
+static void gen_se_slw(DisasContext *ctx)
+{
+}
+
+static void gen_se_slwi(DisasContext *ctx)
+{
+}
+
+static void gen_se_sraw(DisasContext *ctx)
+{
+}
+
+static void gen_se_srawi(DisasContext *ctx)
+{
+}
+
+static void gen_e_srwi(DisasContext *ctx)
+{
+}
+
+static void gen_se_srw(DisasContext *ctx)
+{
+}
+
+static void gen_se_srwi(DisasContext *ctx)
+{
+}
+
+static void gen_e_stb(DisasContext *ctx)
+{
+}
+
+static void gen_se_stb(DisasContext *ctx)
+{
+}
+
+static void gen_e_stbu(DisasContext *ctx)
+{
+}
+
+static void gen_e_sth(DisasContext *ctx)
+{
+}
+
+static void gen_se_sth(DisasContext *ctx)
+{
+}
+
+static void gen_e_sthu(DisasContext *ctx)
+{
+}
+
+static void gen_e_stmw(DisasContext *ctx)
+{
+}
+
+static void gen_e_stw(DisasContext *ctx)
+{
+}
+
+static void gen_se_stw(DisasContext *ctx)
+{
+}
+
+static void gen_e_stwu(DisasContext *ctx)
+{
+}
+
+static void gen_se_sub(DisasContext *ctx)
+{
+}
+
+static void gen_se_subf(DisasContext *ctx)
+{
+}
+
+static void gen_e_subfic(DisasContext *ctx)
+{
+}
+
+static void gen_se_subi(DisasContext *ctx)
+{
+}
+
+static void gen_e_xori(DisasContext *ctx)
+{
+}
+
+static void gen_e_addi(DisasContext *ctx)
+{
+}
+
 static opcode_t vle_opcodes[] = {
+GEN_SIMPLE_SHORT_HANDLER(se_illegal, 0x0, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_isync, 0x0, 0x0, 0x1),
+GEN_SIMPLE_SHORT_HANDLER(se_sc, 0x0, 0x0, 0x2),
+GEN_SIMPLE_SHORT_HANDLER(se_blr, 0x0, 0x0, 0x4),
+GEN_SIMPLE_SHORT_HANDLER(se_blr, 0x0, 0x0, 0x5),
+GEN_SIMPLE_SHORT_HANDLER(se_bctr, 0x0, 0x0, 0x6),
+GEN_SIMPLE_SHORT_HANDLER(se_bctr, 0x0, 0x0, 0x7),
+GEN_SIMPLE_SHORT_HANDLER(se_rfi, 0x0, 0x0, 0x8),
+GEN_SIMPLE_SHORT_HANDLER(se_rfci, 0x0, 0x0, 0x9),
+GEN_SIMPLE_SHORT_HANDLER(se_rfdi, 0x0, 0x0, 0xA),
+GEN_SIMPLE_SHORT_HANDLER(se_rfmci, 0x0, 0x0, 0xB),
+GEN_SIMPLE_SHORT_HANDLER(se_not, 0x0, 0x2, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_neg, 0x0, 0x3, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mflr, 0x0, 0x8, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtlr, 0x0, 0x9, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfctr, 0x0, 0xA, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtctr, 0x0, 0xB, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_extzb, 0x0, 0xC, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_extsb, 0x0, 0xD, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_extzh, 0x0, 0xE, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_extsh, 0x0, 0xF, 0x0),
+
+//Due to the shorter opcode, we need to register it multiple times.
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x10, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x11, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x12, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x13, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x14, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x15, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x16, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x17, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x18, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x19, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1A, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1B, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1C, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1D, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1E, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1F, 0x0),
+
+//Due to the shorter opcode, we need to register it multiple times.
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x20, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x21, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x22, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x23, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x24, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x25, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x26, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x27, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x28, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x29, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2A, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2B, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2C, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2D, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2E, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2F, 0x0),
+
+//Due to the shorter opcode, we need to register it multiple times.
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x30, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x31, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x32, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x33, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x34, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x35, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x36, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x37, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x38, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x39, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3A, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3B, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3C, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3D, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3E, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3F, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_add, 0x1, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_mullw, 0x1, 0x1, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_sub, 0x1, 0x2, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_subf, 0x1, 0x3, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_cmp, 0x3, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_cmpl, 0x3, 0x1, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_cmph, 0x3, 0x2, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_cmphl, 0x3, 0x3, 0x0),
+
+GEN_SIMPLE_HANDLER(e_lbzu, 0x6, 0x0, 0x0),
+GEN_SIMPLE_HANDLER(e_lhzu, 0x6, 0x0, 0x1),
+GEN_SIMPLE_HANDLER(e_lwzu, 0x6, 0x0, 0x2),
+GEN_SIMPLE_HANDLER(e_lhau, 0x6, 0x0, 0x3),
+GEN_SIMPLE_HANDLER(e_stbu, 0x6, 0x0, 0x4),
+GEN_SIMPLE_HANDLER(e_sthu, 0x6, 0x0, 0x5),
+GEN_SIMPLE_HANDLER(e_stwu, 0x6, 0x0, 0x6),
+GEN_SIMPLE_HANDLER(e_lmw, 0x6, 0x0, 0x8),
+GEN_SIMPLE_HANDLER(e_stmw, 0x6, 0x0, 0x9),
+GEN_SIMPLE_HANDLER(e_addi, 0x6, 0x8, 0x0),
+GEN_SIMPLE_HANDLER(e_addic, 0x6, 0x9, 0x0),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x0),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x1),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x2),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x3),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x4),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x5),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x6),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x7),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0x8), //this one has a specific opcode, so let's treat it here
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0x9),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xA),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xB),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xC),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xD),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xE),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xF),
+GEN_SIMPLE_HANDLER(e_subfic, 0x6, 0xB, 0x0),
+GEN_SIMPLE_HANDLER(e_andi, 0x6, 0xC, 0x0),
+GEN_SIMPLE_HANDLER(e_ori, 0x6, 0xD, 0x0),
+GEN_SIMPLE_HANDLER(e_xori, 0x6, 0xE, 0x0),
+
+GEN_SIMPLE_HANDLER(e_add16i, 0x7, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_addi, 0x8, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_cmpli, 0x8, 0x1, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_subi, 0x9, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_cmpi, 0xA, 0x1, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bmaski, 0xB, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_andi, 0xB, 0x1, 0x0),
+
+GEN_SIMPLE_HANDLER(e_lbz, 0xC, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_stb, 0xD, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_lha, 0xE, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_srw, 0x10, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_sraw, 0x10, 0x1, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_slw, 0x10, 0x2, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_or, 0x11, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_andc, 0x11, 0x1, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_and, 0x11, 0x2, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_and, 0x11, 0x3, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_li, 0x12, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_li, 0x13, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_lwz, 0x14, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_stw, 0x15, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_lhz, 0x16, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_sth, 0x17, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bclri, 0x18, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_bgeni, 0x18, 0x1, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bseti, 0x19, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_btsti, 0x19, 0x1, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_srwi, 0x1A, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_srawi, 0x1A, 0x1, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_slwi, 0x1B, 0x0, 0x0),
+
+GEN_SIMPLE_HANDLER(e_li, 0x1C, 0x0, 0x0),
+GEN_SIMPLE_HANDLER(e_add2i, 0x1C, 0x1, 0x01),
+GEN_SIMPLE_HANDLER(e_add2is, 0x1C, 0x1, 0x02),
+GEN_SIMPLE_HANDLER(e_cmp16i, 0x1C, 0x1, 0x03),
+GEN_SIMPLE_HANDLER(e_mull2i, 0x1C, 0x1, 0x04),
+GEN_SIMPLE_HANDLER(e_cmpl16i, 0x1C, 0x1, 0x05),
+GEN_SIMPLE_HANDLER(e_cmph16i, 0x1C, 0x1, 0x06),
+GEN_SIMPLE_HANDLER(e_cmphl16i, 0x1C, 0x1, 0x07),
+GEN_SIMPLE_HANDLER(e_or2i, 0x1C, 0x1, 0x08),
+GEN_SIMPLE_HANDLER(e_and2i, 0x1C, 0x1, 0x09),
+GEN_SIMPLE_HANDLER(e_or2is, 0x1C, 0x1, 0x0A),
+GEN_SIMPLE_HANDLER(e_lis, 0x1C, 0x1, 0x0C),
+GEN_SIMPLE_HANDLER(e_and2is, 0x1C, 0x1, 0x0D),
+
+GEN_SIMPLE_HANDLER(e_rlwimi, 0x1D, 0x0, 0x0),
+GEN_SIMPLE_HANDLER(e_rlwinm, 0x1D, 0x1, 0x0),
+
+GEN_SIMPLE_HANDLER(e_b, 0x1E, 0x0, 0x0),
+GEN_SIMPLE_HANDLER(e_bc, 0x1E, 0x1, 0x0),
+
+GEN_SIMPLE_HANDLER(e_cmph, 0x1F, 0x0, 0xE),
+GEN_SIMPLE_HANDLER(e_mcrf, 0x1F, 0x1, 0x0),
+GEN_SIMPLE_HANDLER(e_crnor, 0x1F, 0x1, 0x1),
+GEN_SIMPLE_HANDLER(e_cmphl, 0x1F, 0x2, 0xE),
+GEN_SIMPLE_HANDLER(e_slwi, 0x1F, 0x3, 0x8),
+GEN_SIMPLE_HANDLER(e_crandc, 0x1F, 0x8, 0x1),
+GEN_SIMPLE_HANDLER(e_crxor, 0x1F, 0xC, 0x1),
+GEN_SIMPLE_HANDLER(e_crnand, 0x1F, 0xE, 0x1),
+GEN_SIMPLE_HANDLER(e_crand, 0x1F, 0x10, 0x1),
+GEN_SIMPLE_HANDLER(e_rlw, 0x1F, 0x11, 0x8),
+GEN_SIMPLE_HANDLER(e_creqv, 0x1F, 0x12, 0x1),
+GEN_SIMPLE_HANDLER(e_rlwi, 0x1F, 0x13, 0x8),
+GEN_SIMPLE_HANDLER(e_crorc, 0x1F, 0x1A, 0x1),
+GEN_SIMPLE_HANDLER(e_cror, 0x1F, 0x1C, 0x1),
+GEN_SIMPLE_HANDLER(e_srwi, 0x1F, 0x23, 0x8),
+
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x20, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x21, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x22, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x23, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x24, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x25, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x26, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x27, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x28, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x29, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x2A, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x2B, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2C, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2D, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2E, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2F, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x30, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x31, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x32, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x33, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x34, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x35, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x36, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x37, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bc, 0x38, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_bc, 0x39, 0x0, 0x0),
+
+GEN_SIMPLE_SHORT_HANDLER(se_b, 0x3A, 0x0, 0x0),
 };
 
 #include "translate_init.inc"
