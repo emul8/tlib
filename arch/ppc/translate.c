@@ -341,6 +341,12 @@ GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE, 2)
 #define GEN_SHORT_HANDLER2_E(name, onam, opc1, opc2, opc3, inval, type, type2)      \
 GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2, 2)
 
+#define GEN_SIMPLE_HANDLER(name, opc1, opc2, opc3)                                  \
+GEN_OPCODE(name, opc1, opc2, opc3, 0, PPC_NONE, PPC_NONE, 4)
+
+#define GEN_SIMPLE_SHORT_HANDLER(name, opc1, opc2, opc3)                                  \
+GEN_OPCODE(name, opc1, opc2, opc3, 0, PPC_NONE, PPC_NONE, 2)
+
 typedef struct opcode_t {
     unsigned char opc1, opc2, opc3;
 #if HOST_LONG_BITS == 64 /* Explicitly align to 64 bits */
@@ -8795,6 +8801,77 @@ GEN_SPEOP_LDST(evstwho, 0x1A, 2),
 GEN_SPEOP_LDST(evstwwe, 0x1C, 2),
 GEN_SPEOP_LDST(evstwwo, 0x1E, 2),
 };
+
+EXTRACT_HELPER(IM5_UI5, 20, 5);
+EXTRACT_HELPER(IM5_RX, 16, 4);
+
+EXTRACT_HELPER(OIM5_RC, 25, 1);
+EXTRACT_HELPER(OIM5_OIM5, 20, 5);
+EXTRACT_HELPER(OIM5_RX, 16, 4);
+
+
+EXTRACT_HELPER(IM7_UI7, 20, 8);
+EXTRACT_HELPER(IM7_RX, 16, 4);
+
+EXTRACT_HELPER(R_RX, 16, 4);
+
+EXTRACT_HELPER(RR_RC, 24, 1);
+EXTRACT_HELPER(RR_RY, 20, 4);
+EXTRACT_HELPER(RR_RX, 16, 4);
+
+EXTRACT_HELPER(SD4_SD4, 24, 4);
+EXTRACT_HELPER(SD4_RZ, 20, 4);
+EXTRACT_HELPER(SD4_RX, 16, 4);
+
+EXTRACT_HELPER(BD15_BO32, 20, 2);
+EXTRACT_HELPER(BD15_BI32, 16, 4);
+EXTRACT_HELPER(BD15_BD15, 1, 15);
+EXTRACT_HELPER(BD15_LK, 0, 1);
+
+EXTRACT_HELPER(BD24_BD24, 1, 24);
+EXTRACT_HELPER(BD24_LK, 0, 1);
+
+EXTRACT_HELPER(D8_RD, 21, 5);
+EXTRACT_HELPER(D8_RA, 16, 5);
+EXTRACT_HELPER(D8_XO, 8, 8);
+EXTRACT_HELPER(D8_D8, 0, 8);
+
+static inline uint32_t I16A_SI(uint32_t opcode)
+{
+    return ((opcode >> 10) & (((1 << 5) - 1) << 11)) | (opcode & ((1 << 11) - 1));
+}
+EXTRACT_HELPER(I16A_RA, 16, 5);
+
+static inline uint32_t I16L_UI(uint32_t opcode)
+{
+    return ((opcode >> 5) & (((1 << 5) - 1) << 11)) | (opcode & ((1 << 11) - 1));
+}
+EXTRACT_HELPER(I16L_RD, 21, 5);
+
+EXTRACT_HELPER(M_RS, 21, 5);
+EXTRACT_HELPER(M_RA, 16, 5);
+EXTRACT_HELPER(M_SH, 11, 5);
+EXTRACT_HELPER(M_MB, 6, 5);
+EXTRACT_HELPER(M_ME, 1, 5);
+
+EXTRACT_HELPER(D_RD, 21, 5);
+EXTRACT_HELPER(D_RA, 16, 5);
+EXTRACT_HELPER(D_SI, 0, 16);
+
+EXTRACT_HELPER(SCI8_BF32, 21, 2);
+EXTRACT_HELPER(SCI8_RD, 21, 5);
+EXTRACT_HELPER(SCI8_RA, 16, 5);
+EXTRACT_HELPER(SCI8_RC, 11, 1);
+EXTRACT_HELPER(SCI8_F, 10, 1);
+EXTRACT_HELPER(SCI8_SCL, 8, 2);
+EXTRACT_HELPER(SCI8_UI8, 0, 8);
+
+static inline uint32_t LI20_LI20(uint32_t opcode)
+{
+    return ((opcode << 5) & (((1 << 4) - 1) << 15)) | ((opcode >> 5) & (((1 << 5) - 1) << 11))
+        | (opcode & ((1 << 11) - 1));
+}
+EXTRACT_HELPER(LI20_RD, 21, 5);
 
 static opcode_t vle_opcodes[] = {
 };
