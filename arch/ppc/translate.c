@@ -8866,6 +8866,30 @@ EXTRACT_HELPER(SCI8_F, 10, 1);
 EXTRACT_HELPER(SCI8_SCL, 8, 2);
 EXTRACT_HELPER(SCI8_UI8, 0, 8);
 
+static target_long SCI8(uint32_t opcode)
+{
+    uint32_t f = SCI8_F(opcode);
+    uint32_t scl = SCI8_SCL(opcode);
+    uint32_t ui8 = SCI8_UI8(opcode);
+    target_long shift_value = (ui8 << (8 * scl));
+
+    if(f)
+    {
+        switch(scl)
+        {
+            case 0:
+                return shift_value | 0xFFFFFF00;
+            case 1:
+                return shift_value | 0xFFFF00FF;
+            case 2:
+                return shift_value | 0xFF00FFFF;
+            default:
+                return shift_value | 0x00FFFFFF;
+        }
+    }
+    return shift_value;
+}
+
 static inline uint32_t LI20_LI20(uint32_t opcode)
 {
     return ((opcode << 5) & (((1 << 4) - 1) << 15)) | ((opcode >> 5) & (((1 << 5) - 1) << 11))
@@ -8875,6 +8899,7 @@ EXTRACT_HELPER(LI20_RD, 21, 5);
 
 static void gen_se_add(DisasContext *ctx)
 {
+    gen_op_arith_add(ctx, cpu_gpr[RR_RX(ctx->opcode)], cpu_gpr[RR_RY(ctx->opcode)], cpu_gpr[RR_RX(ctx->opcode)], 0, 0, 0);
 }
 
 static void gen_se_addi(DisasContext *ctx)
@@ -8883,14 +8908,18 @@ static void gen_se_addi(DisasContext *ctx)
 
 static void gen_e_add16i(DisasContext *ctx)
 {
+    tcg_gen_addi_tl(cpu_gpr[D_RD(ctx->opcode)], cpu_gpr[D_RA(ctx->opcode)], D_SI(ctx->opcode));
 }
 
 static void gen_e_add2i(DisasContext *ctx)
 {
+    tcg_gen_addi_tl(cpu_gpr[I16A_RA(ctx->opcode)], cpu_gpr[I16A_RA(ctx->opcode)], I16A_SI(ctx->opcode));
+    gen_set_Rc0(ctx, cpu_gpr[I16A_RA(ctx->opcode)]);
 }
 
 static void gen_e_add2is(DisasContext *ctx)
 {
+    tcg_gen_addi_tl(cpu_gpr[I16A_RA(ctx->opcode)], cpu_gpr[I16A_RA(ctx->opcode)], I16A_SI(ctx->opcode) << 16);
 }
 
 static void gen_e_addic(DisasContext *ctx)
@@ -9331,6 +9360,11 @@ static void gen_e_xori(DisasContext *ctx)
 
 static void gen_e_addi(DisasContext *ctx)
 {
+    target_long imm = SCI8(ctx->opcode);
+    tcg_gen_addi_tl(cpu_gpr[SCI8_RD(ctx->opcode)], cpu_gpr[SCI8_RA(ctx->opcode)], imm);
+    if (unlikely(SCI8_RC(ctx->opcode))) {
+        gen_set_Rc0(ctx, cpu_gpr[SCI8_RD(ctx->opcode)]);
+    }
 }
 
 static opcode_t vle_opcodes[] = {
