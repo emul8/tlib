@@ -198,6 +198,7 @@ typedef struct DisasContext {
     int altivec_enabled;
     int spe_enabled;
     ppc_spr_t *spr_cb; /* Needed to check rights for mfspr/mtspr */
+    uint32_t vle_enabled;
 } DisasContext;
 
 struct opc_handler_t {
@@ -209,6 +210,8 @@ struct opc_handler_t {
     uint64_t type;
     /* extended instruction type */
     uint64_t type2;
+    /* instruction length in bytes */
+    uint8_t length;
     /* handler */
     void (*handler)(DisasContext *s);
 };
@@ -9610,6 +9613,92 @@ GEN_SIMPLE_SHORT_HANDLER(se_b, 0x3A, 0xFF, 0xFF),
 #include "translate_init.inc"
 #include "helper_regs.h"
 
+// This function decodes a VLE instruction and returns its 3 opcodes.
+// It also calculates the parameters after detecting the encoding format
+// by op1. Those should be saved somewhere in gen_intermediate_code_internal
+// or moved to a separate function and called from some pre-helper function or the helper itself
+// It should be verified if the shift values for 16-bit instructions are ok
+// or if they should be smaller by 16 (the 32bit opcode variable may now contain 2 16b instructions)
+static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t *op2, uint32_t *op3)
+{
+    uint32_t opcode = ctxp->opcode;;
+    uint32_t o1 = (opcode >> 26) & ((1 << 6) - 1);
+    uint32_t op2_shift = 0, op2_len = 0, op3_shift = 0, op3_len = 0;
+
+    switch(o1)
+    {
+    case 0x00:
+	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
+	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
+	    op3_len = 4;
+	    op3_shift = 16;
+	    break;
+    case 0x01:
+    case 0x03:
+    case 0x10:
+    case 0x11:
+	    op2_len = 2;
+	    op2_shift = 24;
+	    break;
+    case 0x06:
+	    op2_len = 4; //this will allow more sensible grouping than 6-2
+	    op2_shift = 12;
+	    op3_len = 4;
+	    op3_shift = 8;
+	    break;
+    case 0x08:
+    case 0x0A:
+    case 0x0B:
+    case 0x18:
+    case 0x19:
+    case 0x1A:
+    case 0x1B:
+    case 0x1E: //this might cause problems, as the docs suggest op2_len = 4 for e_bc.
+               //For this table it does not matter though.
+	    op2_len = 1;
+	    op2_shift = 25;
+        break;
+	case 0x1C:
+	    op2_len = 1;
+	    op2_shift = 15;
+	    op3_len = 4;
+	    op3_shift = 11;
+	    break;
+    case 0x1D:
+        op2_len = 1;
+        op2_shift = 0;
+        break;
+	case 0x1F:
+	    op2_len = 6;
+	    op2_shift = 5;
+	    op3_len = 4;
+	    op3_shift = 1;
+	    break;
+    //the following cases have no additional opcodes and are left here for the sake of completeness
+    case 0x07:
+    case 0x09:
+    case 0x0C:
+    case 0x0D:
+    case 0x0E:
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x16:
+    case 0x17:
+    //cases >0x1F are also verified to not have any more opcodes
+    default:
+        break;
+    }
+
+    if(op1)
+        *op1 = o1;
+    if(op2)
+        *op2 = (opcode >> op2_shift) & ((1 << op2_len) - 1);
+    if(op3)
+        *op3 = (opcode >> op3_shift) & ((1 << op3_len) - 1);
+}
+
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
@@ -9797,91 +9886,4 @@ void gen_intermediate_code(CPUState *env,
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
     env->nip = ctx->gen_opc_pc[pc_pos];
-}
-
-
-// This function decodes a VLE instruction and returns its 3 opcodes.
-// It also calculates the parameters after detecting the encoding format
-// by op1. Those should be saved somewhere in gen_intermediate_code_internal
-// or moved to a separate function and called from some pre-helper function or the helper itself
-// It should be verified if the shift values for 16-bit instructions are ok
-// or if they should be smaller by 16 (the 32bit opcode variable may now contain 2 16b instructions)
-void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t *op2, uint32_t *op3)
-{
-    uint32_t opcode = ctxp->opcode;;
-    uint32_t o1 = (opcode >> 26) & ((1 << 6) - 1);
-    uint32_t op2_shift = 0, op2_len = 0, op3_shift = 0, op3_len = 0;
-
-    switch(o1)
-    {
-    case 0x00:
-	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
-	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
-	    op3_len = 4;
-	    op3_shift = 16;
-	    break;
-    case 0x01:
-    case 0x03:
-    case 0x10:
-    case 0x11:
-	    op2_len = 2;
-	    op2_shift = 24;
-	    break;
-    case 0x06:
-	    op2_len = 4; //this will allow more sensible grouping than 6-2
-	    op2_shift = 12;
-	    op3_len = 4;
-	    op3_shift = 8;
-	    break;
-    case 0x08:
-    case 0x0A:
-    case 0x0B:
-    case 0x18:
-    case 0x19:
-    case 0x1A:
-    case 0x1B:
-    case 0x1E: //this might cause problems, as the docs suggest op2_len = 4 for e_bc.
-               //For this table it does not matter though.
-	    op2_len = 1;
-	    op2_shift = 25;
-        break;
-	case 0x1C:
-	    op2_len = 1;
-	    op2_shift = 15;
-	    op3_len = 4;
-	    op3_shift = 11;
-	    break;
-    case 0x1D:
-        op2_len = 1;
-        op2_shift = 0;
-        break;
-	case 0x1F:
-	    op2_len = 6;
-	    op2_shift = 5;
-	    op3_len = 4;
-	    op3_shift = 1;
-	    break;
-    //the following cases have no additional opcodes and are left here for the sake of completeness
-    case 0x07:
-    case 0x09:
-    case 0x0C:
-    case 0x0D:
-    case 0x0E:
-    case 0x12:
-    case 0x13:
-    case 0x14:
-    case 0x15:
-    case 0x16:
-    case 0x17:
-    //cases >0x1F are also verified to not have any more opcodes
-    default:
-        break;
-    }
-
-    if(op1)
-        *op1 = o1;
-    if(op2)
-        *op2 = (opcode >> op2_shift) & ((1 << op2_len) - 1);
-    if(op3)
-        *op3 = (opcode >> op3_shift) & ((1 << op3_len) - 1);
 }
