@@ -8036,8 +8036,8 @@ static int create_new_table (opc_handler_t **table, unsigned char idx)
 {
     opc_handler_t **tmp;
 
-    tmp = malloc(0x20 * sizeof(opc_handler_t));
-    fill_new_table(tmp, 0x20);
+    tmp = malloc(0x40 * sizeof(opc_handler_t));
+    fill_new_table(tmp, 0x40);
     table[idx] = (opc_handler_t *)((unsigned long)tmp | PPC_INDIRECT);
 
     return 0;
@@ -8175,10 +8175,11 @@ static void fix_opcode_tables (opc_handler_t **ppc_opcodes)
 }
 
 /*****************************************************************************/
-static int create_ppc_opcodes (opc_handler_t **table, const ppc_def_t *def, opcode_t *opc)
+static int create_ppc_opcodes (opc_handler_t **table, const ppc_def_t *def, opcode_t *opc, int length)
 {
+    opcode_t *base = opc;
     fill_new_table(table, 0x40);
-    for (; opc < &opcodes[ARRAY_SIZE(opcodes)]; opc++) {
+    for (; opc < &base[length]; opc++) {
         if (((opc->handler.type & def->insns_flags) != 0) ||
             ((opc->handler.type2 & def->insns_flags2) != 0)) {
             if (register_insn(table, opc) < 0) {
@@ -8190,8 +8191,6 @@ static int create_ppc_opcodes (opc_handler_t **table, const ppc_def_t *def, opco
         }
     }
     fix_opcode_tables(table);
-    fflush(stdout);
-    fflush(stderr);
 
     return 0;
 }
@@ -8207,9 +8206,9 @@ int cpu_ppc_register_internal (CPUState *env, const ppc_def_t *def)
     env->flags = def->flags;
     env->bfd_mach = def->bfd_mach;
     env->check_pow = def->check_pow;
-    if (create_ppc_opcodes(env->opcodes, def, opcodes) < 0)
+    if (create_ppc_opcodes(env->opcodes, def, opcodes, ARRAY_SIZE(opcodes)) < 0)
         return -1;
-    if (create_ppc_opcodes(env->vle_opcodes, def, vle_opcodes) < 0)
+    if (create_ppc_opcodes(env->vle_opcodes, def, vle_opcodes, ARRAY_SIZE(vle_opcodes)) < 0)
         return -1;
     init_ppc_proc(env, def);
 
