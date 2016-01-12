@@ -334,7 +334,6 @@ void cpu_set_cwp(CPUState *env1, int new_cwp);
 /* cpu-exec.c */
 void cpu_unassigned_access(CPUState *env1, target_phys_addr_t addr,
                            int is_write, int is_exec, int is_asi, int size);
-int cpu_signal_handler(int host_signum, void *pinfo, void *puc);
 
 /* MMU modes definitions */
 #define MMU_USER_IDX   0

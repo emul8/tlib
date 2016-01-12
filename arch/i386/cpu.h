@@ -852,12 +852,6 @@ floatx80 cpu_set_fp80(uint64_t mant, uint16_t upper);
    they can trigger unexpected exceptions */
 void cpu_x86_load_seg(CPUState *s, int seg_reg, int selector);
 
-/* you can call this signal handler from your SIGBUS and SIGSEGV
-   signal handlers to inform the virtual CPU of exceptions. non zero
-   is returned if the signal was handled by the virtual CPU.  */
-int cpu_signal_handler(int host_signum, void *pinfo,
-                           void *puc);
-
 /* cpuid.c */
 void cpu_x86_cpuid(CPUState *env, uint32_t index, uint32_t count,
                    uint32_t *eax, uint32_t *ebx,

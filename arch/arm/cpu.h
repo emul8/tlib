@@ -224,11 +224,6 @@ void cpu_close(CPUState *s);
 void do_interrupt(CPUState *);
 void switch_mode(CPUState *, int);
 
-/* you can call this signal handler from your SIGBUS and SIGSEGV
-   signal handlers to inform the virtual CPU of exceptions. non zero
-   is returned if the signal was handled by the virtual CPU.  */
-int cpu_signal_handler(int host_signum, void *pinfo,
-                           void *puc);
 int cpu_arm_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx);
 #define cpu_handle_mmu_fault cpu_arm_handle_mmu_fault

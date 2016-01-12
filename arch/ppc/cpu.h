@@ -1062,11 +1062,6 @@ CPUState *cpu_init (const char *cpu_model);
 void ppc_translate_init(void);
 int cpu_exec (CPUState *s);
 void cpu_close (CPUState *s);
-/* you can call this signal handler from your SIGBUS and SIGSEGV
-   signal handlers to inform the virtual CPU of exceptions. non zero
-   is returned if the signal was handled by the virtual CPU.  */
-int cpu_signal_handler (int host_signum, void *pinfo,
-                            void *puc);
 int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx);
 #define cpu_handle_mmu_fault cpu_ppc_handle_mmu_fault
