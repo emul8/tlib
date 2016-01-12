@@ -988,8 +988,6 @@ struct CPUState {
     float_status vec_status;
 
     /* Internal devices resources */
-    /* Time base and decrementer */
-    ppc_tb_t *tb_env;
     /* Device control registers */
     ppc_dcr_t *dcr_env;
 
