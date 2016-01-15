@@ -332,22 +332,10 @@ GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE, 4)
 GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2, 4)
 
 // PPC VLE 2-byte helper macros
-#define GEN_SHORT_HANDLER(name, opc1, opc2, opc3, inval, type)                      \
-GEN_OPCODE(name, opc1, opc2, opc3, inval, type, PPC_NONE, 2)
-
-#define GEN_SHORT_HANDLER_E(name, opc1, opc2, opc3, inval, type, type2)             \
-GEN_OPCODE(name, opc1, opc2, opc3, inval, type, type2, 2)
-
-#define GEN_SHORT_HANDLER2(name, onam, opc1, opc2, opc3, inval, type)               \
-GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE, 2)
-
-#define GEN_SHORT_HANDLER2_E(name, onam, opc1, opc2, opc3, inval, type, type2)      \
-GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2, 2)
-
-#define GEN_SIMPLE_HANDLER(name, opc1, opc2, opc3)                                  \
+#define GEN_SIMPLE_HANDLER(name, opc1, opc2, opc3)                            \
 GEN_OPCODE(name, opc1, opc2, opc3, 0, PPC_INSNS_BASE, PPC_NONE, 4)
 
-#define GEN_SIMPLE_SHORT_HANDLER(name, opc1, opc2, opc3)                                  \
+#define GEN_SIMPLE_SHORT_HANDLER(name, opc1, opc2, opc3)                      \
 GEN_OPCODE(name, opc1, opc2, opc3, 0, PPC_INSNS_BASE, PPC_NONE, 2)
 
 typedef struct opcode_t {
@@ -501,7 +489,7 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
     },                                                                        \
     .oname = stringify(name),                                                 \
 }
-#define GEN_OPCODE_DUAL(name, op1, op2, op3, invl1, invl2, _typ, _typ2, _length)       \
+#define GEN_OPCODE_DUAL(name, op1, op2, op3, invl1, invl2, _typ, _typ2, _length) \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -9614,11 +9602,6 @@ GEN_SIMPLE_SHORT_HANDLER(se_b, 0x3A, 0xFF, 0xFF),
 #include "helper_regs.h"
 
 // This function decodes a VLE instruction and returns its 3 opcodes.
-// It also calculates the parameters after detecting the encoding format
-// by op1. Those should be saved somewhere in gen_intermediate_code_internal
-// or moved to a separate function and called from some pre-helper function or the helper itself
-// It should be verified if the shift values for 16-bit instructions are ok
-// or if they should be smaller by 16 (the 32bit opcode variable may now contain 2 16b instructions)
 static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t *op2, uint32_t *op3)
 {
     uint32_t opcode = ctxp->opcode;;
@@ -9674,20 +9657,7 @@ static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t 
 	    op3_len = 4;
 	    op3_shift = 1;
 	    break;
-    //the following cases have no additional opcodes and are left here for the sake of completeness
-    case 0x07:
-    case 0x09:
-    case 0x0C:
-    case 0x0D:
-    case 0x0E:
-    case 0x12:
-    case 0x13:
-    case 0x14:
-    case 0x15:
-    case 0x16:
-    case 0x17:
-    //cases >0x1F are also verified to not have any more opcodes
-    default:
+    default: //other instructions are verified to have no other opodes.
         break;
     }
 

@@ -1003,7 +1003,6 @@ struct CPUState {
     uint32_t flags;
     uint64_t insns_flags;
     uint64_t insns_flags2;
-    uint32_t rchw;
 
 #if defined(TARGET_PPC64)
     target_phys_addr_t vpa;
