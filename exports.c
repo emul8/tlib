@@ -61,6 +61,7 @@ int32_t tlib_init(char *cpu_name)
 void tlib_dispose()
 {
   code_gen_free();
+  free_all_page_descriptors();
 }
 
 void tlib_reset()

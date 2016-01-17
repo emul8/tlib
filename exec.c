@@ -191,6 +191,45 @@ static void page_init(void)
     tlib_host_page_mask = ~(tlib_host_page_size - 1);
 }
 
+static void free_all_page_descriptors_inner(void **lp, int level)
+{
+    int i;
+
+    if(!level)
+    {
+      // why the pointer below does not have to be of type
+      // PageDesc/PhysPageDesc? because it does not change anything from the
+      // free() point of view
+      void *pd = *lp;
+      if(pd)
+      {
+          tlib_free(pd);
+      }
+    }
+    else
+    {
+      void **pp = *lp;
+      for(i = 0; i < L2_SIZE; i++)
+      {
+        free_all_page_descriptors_inner(pp + i, level - 1);
+      }
+    }
+}
+
+void free_all_page_descriptors()
+{
+    int i;
+
+    for(i = 0; i < P_L1_SIZE; i++)
+    {
+      free_all_page_descriptors_inner(l1_phys_map + i, P_L1_SHIFT / L2_BITS - 1);
+    }
+    for(i = 0; i < V_L1_SIZE; i++)
+    {
+      free_all_page_descriptors_inner(l1_map + i, V_L1_SHIFT / L2_BITS - 1);
+    }
+}
+
 static PageDesc *page_find_alloc(tb_page_addr_t index, int alloc)
 {
     PageDesc *pd;
