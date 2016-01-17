@@ -229,10 +229,15 @@ static void free_all_page_descriptors_inner(void **lp, int level, visitor_functi
   else
   {
     void **pp = *lp;
+    if(!pp)
+    {
+      return;
+    }
     for(i = 0; i < L2_SIZE; i++)
     {
       free_all_page_descriptors_inner(pp + i, level - 1, visitor);
     }
+    tlib_free(pp);
   }
 }
 
