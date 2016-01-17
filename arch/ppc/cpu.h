@@ -1063,7 +1063,6 @@ struct mmu_ctx_t {
 CPUState *cpu_init (const char *cpu_model);
 void ppc_translate_init(void);
 int cpu_exec (CPUState *s);
-void cpu_close (CPUState *s);
 /* you can call this signal handler from your SIGBUS and SIGSEGV
    signal handlers to inform the virtual CPU of exceptions. non zero
    is returned if the signal was handled by the virtual CPU.  */

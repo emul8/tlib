@@ -62,6 +62,7 @@ void free_phys_dirty(void);
 
 void tlib_dispose()
 {
+  tlib_arch_dispose();
   code_gen_free();
   free_all_page_descriptors();
   free_phys_dirty();

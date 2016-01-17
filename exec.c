@@ -2211,6 +2211,13 @@ void stq_be_phys(target_phys_addr_t addr, uint64_t val)
     cpu_physical_memory_write(addr, &val, 8);
 }
 
+void tlib_arch_dispose(void) __attribute__((weak));
+
+void tlib_arch_dispose()
+{
+
+}
+
 
 #define MMUSUFFIX _cmmu
 #define GETPC() NULL

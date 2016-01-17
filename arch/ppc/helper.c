@@ -2653,8 +2653,18 @@ CPUState *cpu_init (const char *cpu_model)
     return env;
 }
 
-void cpu_close (CPUState *env)
+void tlib_arch_dispose()
 {
-    /* Should also remove all opcode tables... */
-    tlib_free(env);
+  switch (cpu->tlb_type)
+  {
+    case TLB_6XX:
+      tlib_free(cpu->tlb.tlb6);
+      break;
+    case TLB_EMB:
+      tlib_free(cpu->tlb.tlbe);
+      break;
+    case TLB_MAS:
+      tlib_free(cpu->tlb.tlbm);
+      break;
+  }
 }

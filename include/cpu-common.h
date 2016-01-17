@@ -134,4 +134,6 @@ typedef struct PhysPageDesc {
 
 target_ulong virt_to_phys(target_ulong virt);
 
+void tlib_arch_dispose(void);
+
 #endif /* !CPU_COMMON_H */
