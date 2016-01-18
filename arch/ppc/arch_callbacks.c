@@ -29,3 +29,5 @@ DEFAULT_INT_HANDLER1(uint32_t tlib_read_decrementer, void)
 DEFAULT_VOID_HANDLER1(void tlib_write_decrementer, uint32_t value)
 
 DEFAULT_VOID_HANDLER1(void tlib_on_interrupt_complete, void)
+
+DEFAULT_INT_HANDLER1(uint32_t tlib_is_vle_enabled, void)

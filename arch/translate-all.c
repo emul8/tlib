@@ -25,33 +25,18 @@
 #include "cpu.h"
 #include "tcg.h"
 
-/* code generation context */
-TCGContext GLOBAL_tcg_ctx;
-
-uint16_t GLOBAL_gen_opc_buf[OPC_BUF_SIZE];
-
-TCGArg GLOBAL_gen_opparam_buf[OPPARAM_BUF_SIZE];
-
-target_ulong gen_opc_pc[OPC_BUF_SIZE];
-uint8_t gen_opc_instr_start[OPC_BUF_SIZE];
-
-void cpu_gen_init(void)
-{
-    tcg_context_init(&GLOBAL_tcg_ctx);
-}
-
 /* '*gen_code_size_ptr' contains the size of the generated code (host
    code).
 */
 void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 {
-    TCGContext *s = &GLOBAL_tcg_ctx;
+    TCGContext *s = ctx->tcg_ctx;
     uint8_t *gen_code_buf;
     int gen_code_size;
 
     tcg_func_start(s);
 
-    gen_intermediate_code(env, tb);
+    gen_intermediate_code(env, tb, 0);
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;
@@ -70,13 +55,13 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 int cpu_restore_state(CPUState *env,
 		TranslationBlock *tb, unsigned long searched_pc)
 {
-    TCGContext *s = &GLOBAL_tcg_ctx;
+    TCGContext *s = ctx->tcg_ctx;
     int j;
     unsigned long tc_ptr;
 
     tcg_func_start(s);
 
-    gen_intermediate_code_pc(env, tb);
+    gen_intermediate_code(env, tb, 1);
 
     /* find opc index corresponding to search_pc */
     tc_ptr = (unsigned long)tb->tc_ptr;
@@ -90,7 +75,7 @@ int cpu_restore_state(CPUState *env,
     if (j < 0)
         return -1;
     /* now find start of instruction before */
-    while (gen_opc_instr_start[j] == 0)
+    while (ctx->gen_opc_instr_start[j] == 0)
         j--;
 
     restore_state_to_opc(env, tb, j);

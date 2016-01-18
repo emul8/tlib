@@ -988,8 +988,6 @@ struct CPUState {
     float_status vec_status;
 
     /* Internal devices resources */
-    /* Time base and decrementer */
-    ppc_tb_t *tb_env;
     /* Device control registers */
     ppc_dcr_t *dcr_env;
 
@@ -1016,6 +1014,7 @@ struct CPUState {
     /* Those resources are used only during code translation */
     /* opcode handlers */
     opc_handler_t *opcodes[0x40];
+    opc_handler_t *vle_opcodes[0x40];
 
     int (*check_pow)(CPUState *env);
 
@@ -1063,11 +1062,6 @@ struct mmu_ctx_t {
 CPUState *cpu_init (const char *cpu_model);
 void ppc_translate_init(void);
 int cpu_exec (CPUState *s);
-/* you can call this signal handler from your SIGBUS and SIGSEGV
-   signal handlers to inform the virtual CPU of exceptions. non zero
-   is returned if the signal was handled by the virtual CPU.  */
-int cpu_signal_handler (int host_signum, void *pinfo,
-                            void *puc);
 int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx);
 #define cpu_handle_mmu_fault cpu_ppc_handle_mmu_fault
@@ -1120,8 +1114,6 @@ int ppcemb_tlb_search (CPUState *env, target_ulong address, uint32_t pid);
 /* Device control registers */
 int ppc_dcr_read (ppc_dcr_t *dcr_env, int dcrn, uint32_t *valp);
 int ppc_dcr_write (ppc_dcr_t *dcr_env, int dcrn, uint32_t val);
-
-#define CPU_SAVE_VERSION 4
 
 /* MMU modes definitions */
 #define MMU_MODE0_SUFFIX _user

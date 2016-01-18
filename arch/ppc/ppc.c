@@ -190,39 +190,3 @@ int ppc_dcr_write (ppc_dcr_t *dcr_env, int dcrn, uint32_t val)
     return -1;
 }
 
-int ppc_dcr_register (CPUState *env, int dcrn, void *opaque,
-                      dcr_read_cb dcr_read, dcr_write_cb dcr_write)
-{
-    ppc_dcr_t *dcr_env;
-    ppc_dcrn_t *dcr;
-
-    dcr_env = env->dcr_env;
-    if (dcr_env == NULL)
-        return -1;
-    if (dcrn < 0 || dcrn >= DCRN_NB)
-        return -1;
-    dcr = &dcr_env->dcrn[dcrn];
-    if (dcr->opaque != NULL ||
-        dcr->dcr_read != NULL ||
-        dcr->dcr_write != NULL)
-        return -1;
-    dcr->opaque = opaque;
-    dcr->dcr_read = dcr_read;
-    dcr->dcr_write = dcr_write;
-
-    return 0;
-}
-
-int ppc_dcr_init (CPUState *env, int (*read_error)(int dcrn),
-                  int (*write_error)(int dcrn))
-{
-    ppc_dcr_t *dcr_env;
-
-    dcr_env = tlib_mallocz(sizeof(ppc_dcr_t));
-    dcr_env->read_error = read_error;
-    dcr_env->write_error = write_error;
-    env->dcr_env = dcr_env;
-
-    return 0;
-}
-

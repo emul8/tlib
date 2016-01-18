@@ -79,6 +79,8 @@ static int x86_64_hregs;
 #endif
 
 typedef struct DisasContext {
+    struct TranslationBlock *tb;
+    int singlestep_enabled; /* "hardware" single step enabled */
     /* current insn context */
     int override; /* -1 if no override */
     int prefix;
@@ -103,11 +105,9 @@ typedef struct DisasContext {
     int cpl;
     int iopl;
     int tf;     /* TF cpu flag */
-    int singlestep_enabled; /* "hardware" single step enabled */
     int jmp_opt; /* use direct block chaining for direct jumps */
     int mem_index; /* select memory access functions */
     uint64_t flags; /* all execution flags */
-    struct TranslationBlock *tb;
     int popl_esp_hack; /* for correct popl with esp base handling */
     int rip_offset; /* only used in x86_64, but left for simplicity */
     int cpuid_features;
@@ -7636,9 +7636,9 @@ void optimize_flags_init(void)
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
-static inline void gen_intermediate_code_internal(CPUState *env,
-                                                  TranslationBlock *tb,
-                                                  int search_pc)
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb,
+                           int search_pc)
 {
     DisasContext dc1, *dc = &dc1;
     target_ulong pc_ptr;
@@ -7704,7 +7704,7 @@ static inline void gen_intermediate_code_internal(CPUState *env,
     cpu_ptr0 = tcg_temp_new_ptr();
     cpu_ptr1 = tcg_temp_new_ptr();
 
-    gen_opc_end = GLOBAL_gen_opc_buf + OPC_MAX_SIZE;
+    gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
 
     dc->is_jmp = DISAS_NEXT;
     pc_ptr = pc_start;
@@ -7726,15 +7726,15 @@ static inline void gen_intermediate_code_internal(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - GLOBAL_gen_opc_buf;
+            j = gen_opc_ptr - ctx->gen_opc_buf;
             if (lj < j) {
                 lj++;
                 while (lj < j)
-                    gen_opc_instr_start[lj++] = 0;
+                    ctx->gen_opc_instr_start[lj++] = 0;
             }
-            gen_opc_pc[lj] = pc_ptr;
+            ctx->gen_opc_pc[lj] = pc_ptr;
             gen_opc_cc_op[lj] = dc->cc_op;
-            gen_opc_instr_start[lj] = 1;
+            ctx->gen_opc_instr_start[lj] = 1;
         }
 
         pc_ptr = disas_insn(dc, pc_ptr);
@@ -7766,10 +7766,10 @@ static inline void gen_intermediate_code_internal(CPUState *env,
     *gen_opc_ptr = INDEX_op_end;
     /* we don't forget to fill the last values */
     if (search_pc) {
-        j = gen_opc_ptr - GLOBAL_gen_opc_buf;
+        j = gen_opc_ptr - ctx->gen_opc_buf;
         lj++;
         while (lj <= j)
-            gen_opc_instr_start[lj++] = 0;
+            ctx->gen_opc_instr_start[lj++] = 0;
     }
 
     if (tlib_is_on_block_translation_enabled) {
@@ -7790,20 +7790,10 @@ static inline void gen_intermediate_code_internal(CPUState *env,
     }
 }
 
-void gen_intermediate_code(CPUState *env, TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 0);
-}
-
-void gen_intermediate_code_pc(CPUState *env, TranslationBlock *tb)
-{
-    gen_intermediate_code_internal(env, tb, 1);
-}
-
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
     int cc_op;
-    env->eip = gen_opc_pc[pc_pos] - tb->cs_base;
+    env->eip = ctx->gen_opc_pc[pc_pos] - tb->cs_base;
     cc_op = gen_opc_cc_op[pc_pos];
     if (cc_op != CC_OP_DYNAMIC)
         env->cc_op = cc_op;
