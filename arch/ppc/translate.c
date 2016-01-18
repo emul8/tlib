@@ -198,6 +198,7 @@ typedef struct DisasContext {
     int altivec_enabled;
     int spe_enabled;
     ppc_spr_t *spr_cb; /* Needed to check rights for mfspr/mtspr */
+    uint32_t vle_enabled;
 } DisasContext;
 
 struct opc_handler_t {
@@ -209,6 +210,8 @@ struct opc_handler_t {
     uint64_t type;
     /* extended instruction type */
     uint64_t type2;
+    /* instruction length in bytes */
+    uint8_t length;
     /* handler */
     void (*handler)(DisasContext *s);
 };
@@ -315,17 +318,25 @@ static inline void gen_sync_exception(DisasContext *s)
     s->exception = POWERPC_EXCP_SYNC;
 }
 
+// Standard PPC helper macros
 #define GEN_HANDLER(name, opc1, opc2, opc3, inval, type)                      \
-GEN_OPCODE(name, opc1, opc2, opc3, inval, type, PPC_NONE)
+GEN_OPCODE(name, opc1, opc2, opc3, inval, type, PPC_NONE, 4)
 
 #define GEN_HANDLER_E(name, opc1, opc2, opc3, inval, type, type2)             \
-GEN_OPCODE(name, opc1, opc2, opc3, inval, type, type2)
+GEN_OPCODE(name, opc1, opc2, opc3, inval, type, type2, 4)
 
 #define GEN_HANDLER2(name, onam, opc1, opc2, opc3, inval, type)               \
-GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE)
+GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, PPC_NONE, 4)
 
 #define GEN_HANDLER2_E(name, onam, opc1, opc2, opc3, inval, type, type2)      \
-GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2)
+GEN_OPCODE2(name, onam, opc1, opc2, opc3, inval, type, type2, 4)
+
+// PPC VLE 2-byte helper macros
+#define GEN_SIMPLE_HANDLER(name, opc1, opc2, opc3)                            \
+GEN_OPCODE(name, opc1, opc2, opc3, 0, PPC_INSNS_BASE, PPC_NONE, 4)
+
+#define GEN_SIMPLE_SHORT_HANDLER(name, opc1, opc2, opc3)                      \
+GEN_OPCODE(name, opc1, opc2, opc3, 0, PPC_INSNS_BASE, PPC_NONE, 2)
 
 typedef struct opcode_t {
     unsigned char opc1, opc2, opc3;
@@ -437,7 +448,6 @@ EXTRACT_HELPER(LK, 0, 1);
 static inline target_ulong MASK(uint32_t start, uint32_t end)
 {
     target_ulong ret;
-
 #if defined(TARGET_PPC64)
     if (likely(start == 0)) {
         ret = UINT64_MAX << (63 - end);
@@ -464,7 +474,7 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
 /*****************************************************************************/
 /* PowerPC instructions table                                                */
 
-#define GEN_OPCODE(name, op1, op2, op3, invl, _typ, _typ2)                    \
+#define GEN_OPCODE(name, op1, op2, op3, invl, _typ, _typ2, _length)           \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -475,10 +485,11 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
         .type = _typ,                                                         \
         .type2 = _typ2,                                                       \
         .handler = &gen_##name,                                               \
+        .length = _length,                                                    \
     },                                                                        \
     .oname = stringify(name),                                                 \
 }
-#define GEN_OPCODE_DUAL(name, op1, op2, op3, invl1, invl2, _typ, _typ2)       \
+#define GEN_OPCODE_DUAL(name, op1, op2, op3, invl1, invl2, _typ, _typ2, _length) \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -490,10 +501,11 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
         .type = _typ,                                                         \
         .type2 = _typ2,                                                       \
         .handler = &gen_##name,                                               \
+        .length = _length,                                                    \
     },                                                                        \
     .oname = stringify(name),                                                 \
 }
-#define GEN_OPCODE2(name, onam, op1, op2, op3, invl, _typ, _typ2)             \
+#define GEN_OPCODE2(name, onam, op1, op2, op3, invl, _typ, _typ2, _length)    \
 {                                                                             \
     .opc1 = op1,                                                              \
     .opc2 = op2,                                                              \
@@ -504,6 +516,7 @@ static inline target_ulong MASK(uint32_t start, uint32_t end)
         .type = _typ,                                                         \
         .type2 = _typ2,                                                       \
         .handler = &gen_##name,                                               \
+        .length = _length,                                                    \
     },                                                                        \
     .oname = onam,                                                            \
 }
@@ -531,6 +544,7 @@ static opc_handler_t invalid_handler = {
     .type    = PPC_NONE,
     .type2   = PPC_NONE,
     .handler = gen_invalid,
+    .length  = 4,
 };
 
 /***                           Integer comparison                          ***/
@@ -8677,7 +8691,7 @@ GEN_VAFORM_PAIRED(vmaddfp, vnmsubfp, 23),
 
 #undef GEN_SPE
 #define GEN_SPE(name0, name1, opc2, opc3, inval0, inval1, type) \
-    GEN_OPCODE_DUAL(name0##_##name1, 0x04, opc2, opc3, inval0, inval1, type, PPC_NONE)
+    GEN_OPCODE_DUAL(name0##_##name1, 0x04, opc2, opc3, inval0, inval1, type, PPC_NONE, 4)
 GEN_SPE(evaddw,      speundef,    0x00, 0x08, 0x00000000, 0xFFFFFFFF, PPC_SPE),
 GEN_SPE(evaddiw,     speundef,    0x01, 0x08, 0x00000000, 0xFFFFFFFF, PPC_SPE),
 GEN_SPE(evsubfw,     speundef,    0x02, 0x08, 0x00000000, 0xFFFFFFFF, PPC_SPE),
@@ -8779,8 +8793,881 @@ GEN_SPEOP_LDST(evstwwe, 0x1C, 2),
 GEN_SPEOP_LDST(evstwwo, 0x1E, 2),
 };
 
+EXTRACT_HELPER(IM5_UI5, 20, 5);
+EXTRACT_HELPER(IM5_RX, 16, 4);
+
+EXTRACT_HELPER(OIM5_RC, 25, 1);
+EXTRACT_HELPER(OIM5_OIM5, 20, 5);
+EXTRACT_HELPER(OIM5_RX, 16, 4);
+
+
+EXTRACT_HELPER(IM7_UI7, 20, 8);
+EXTRACT_HELPER(IM7_RX, 16, 4);
+
+EXTRACT_HELPER(R_RX, 16, 4);
+
+EXTRACT_HELPER(RR_RC, 24, 1);
+EXTRACT_HELPER(RR_RY, 20, 4);
+EXTRACT_HELPER(RR_RX, 16, 4);
+
+EXTRACT_HELPER(SD4_SD4, 24, 4);
+EXTRACT_HELPER(SD4_RZ, 20, 4);
+EXTRACT_HELPER(SD4_RX, 16, 4);
+
+EXTRACT_HELPER(BD15_BO32, 20, 2);
+EXTRACT_HELPER(BD15_BI32, 16, 4);
+EXTRACT_HELPER(BD15_BD15, 1, 15);
+EXTRACT_HELPER(BD15_LK, 0, 1);
+
+EXTRACT_HELPER(BD24_BD24, 1, 24);
+EXTRACT_HELPER(BD24_LK, 0, 1);
+
+EXTRACT_HELPER(D8_RD, 21, 5);
+EXTRACT_HELPER(D8_RA, 16, 5);
+EXTRACT_HELPER(D8_XO, 8, 8);
+EXTRACT_HELPER(D8_D8, 0, 8);
+
+static inline uint32_t I16A_SI(uint32_t opcode)
+{
+    return ((opcode >> 10) & (((1 << 5) - 1) << 11)) | (opcode & ((1 << 11) - 1));
+}
+EXTRACT_HELPER(I16A_RA, 16, 5);
+
+static inline uint32_t I16L_UI(uint32_t opcode)
+{
+    return ((opcode >> 5) & (((1 << 5) - 1) << 11)) | (opcode & ((1 << 11) - 1));
+}
+EXTRACT_HELPER(I16L_RD, 21, 5);
+
+EXTRACT_HELPER(M_RS, 21, 5);
+EXTRACT_HELPER(M_RA, 16, 5);
+EXTRACT_HELPER(M_SH, 11, 5);
+EXTRACT_HELPER(M_MB, 6, 5);
+EXTRACT_HELPER(M_ME, 1, 5);
+
+EXTRACT_HELPER(D_RD, 21, 5);
+EXTRACT_HELPER(D_RA, 16, 5);
+EXTRACT_HELPER(D_SI, 0, 16);
+
+EXTRACT_HELPER(SCI8_BF32, 21, 2);
+EXTRACT_HELPER(SCI8_RD, 21, 5);
+EXTRACT_HELPER(SCI8_RA, 16, 5);
+EXTRACT_HELPER(SCI8_RC, 11, 1);
+EXTRACT_HELPER(SCI8_F, 10, 1);
+EXTRACT_HELPER(SCI8_SCL, 8, 2);
+EXTRACT_HELPER(SCI8_UI8, 0, 8);
+
+static target_long SCI8(uint32_t opcode)
+{
+    uint32_t f = SCI8_F(opcode);
+    uint32_t scl = SCI8_SCL(opcode);
+    uint32_t ui8 = SCI8_UI8(opcode);
+    target_long shift_value = (ui8 << (8 * scl));
+
+    if(f)
+    {
+        switch(scl)
+        {
+            case 0:
+                return shift_value | 0xFFFFFF00;
+            case 1:
+                return shift_value | 0xFFFF00FF;
+            case 2:
+                return shift_value | 0xFF00FFFF;
+            default:
+                return shift_value | 0x00FFFFFF;
+        }
+    }
+    return shift_value;
+}
+
+static inline uint32_t LI20_LI20(uint32_t opcode)
+{
+    return ((opcode << 5) & (((1 << 4) - 1) << 15)) | ((opcode >> 5) & (((1 << 5) - 1) << 11))
+        | (opcode & ((1 << 11) - 1));
+}
+EXTRACT_HELPER(LI20_RD, 21, 5);
+
+static void gen_se_add(DisasContext *ctx)
+{
+    gen_op_arith_add(ctx, cpu_gpr[RR_RX(ctx->opcode)], cpu_gpr[RR_RY(ctx->opcode)], cpu_gpr[RR_RX(ctx->opcode)], 0, 0, 0);
+}
+
+static void gen_se_addi(DisasContext *ctx)
+{
+}
+
+static void gen_e_add16i(DisasContext *ctx)
+{
+    tcg_gen_addi_tl(cpu_gpr[D_RD(ctx->opcode)], cpu_gpr[D_RA(ctx->opcode)], D_SI(ctx->opcode));
+}
+
+static void gen_e_add2i(DisasContext *ctx)
+{
+    tcg_gen_addi_tl(cpu_gpr[I16A_RA(ctx->opcode)], cpu_gpr[I16A_RA(ctx->opcode)], I16A_SI(ctx->opcode));
+    gen_set_Rc0(ctx, cpu_gpr[I16A_RA(ctx->opcode)]);
+}
+
+static void gen_e_add2is(DisasContext *ctx)
+{
+    tcg_gen_addi_tl(cpu_gpr[I16A_RA(ctx->opcode)], cpu_gpr[I16A_RA(ctx->opcode)], I16A_SI(ctx->opcode) << 16);
+}
+
+static void gen_e_addic(DisasContext *ctx)
+{
+}
+
+static void gen_se_and(DisasContext *ctx)
+{
+}
+
+static void gen_se_andc(DisasContext *ctx)
+{
+}
+
+static void gen_e_andi(DisasContext *ctx)
+{
+}
+
+static void gen_se_andi(DisasContext *ctx)
+{
+}
+
+static void gen_e_and2i(DisasContext *ctx)
+{
+}
+
+static void gen_e_and2is(DisasContext *ctx)
+{
+}
+
+static void gen_e_b(DisasContext *ctx)
+{
+}
+
+static void gen_se_b(DisasContext *ctx)
+{
+}
+
+static void gen_e_bc(DisasContext *ctx)
+{
+}
+
+static void gen_se_bc(DisasContext *ctx)
+{
+}
+
+static void gen_se_bclri(DisasContext *ctx)
+{
+}
+
+static void gen_se_bctr(DisasContext *ctx)
+{
+}
+
+static void gen_se_bgeni(DisasContext *ctx)
+{
+}
+
+static void gen_se_blr(DisasContext *ctx)
+{
+}
+
+static void gen_se_bmaski(DisasContext *ctx)
+{
+}
+
+static void gen_se_bseti(DisasContext *ctx)
+{
+}
+
+static void gen_se_btsti(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmp(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmph(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmph(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmphl(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmphl(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmph16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmp16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmphl16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmpl16i(DisasContext *ctx)
+{
+}
+
+static void gen_e_cmpi_or_cmpli(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmpi(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmpl(DisasContext *ctx)
+{
+}
+
+static void gen_se_cmpli(DisasContext *ctx)
+{
+}
+
+static void gen_e_crand(DisasContext *ctx)
+{
+}
+
+static void gen_e_crandc(DisasContext *ctx)
+{
+}
+
+static void gen_e_creqv(DisasContext *ctx)
+{
+}
+
+static void gen_e_crnand(DisasContext *ctx)
+{
+}
+
+static void gen_e_crnor(DisasContext *ctx)
+{
+}
+
+static void gen_e_cror(DisasContext *ctx)
+{
+}
+
+static void gen_e_crorc(DisasContext *ctx)
+{
+}
+
+static void gen_e_crxor(DisasContext *ctx)
+{
+}
+
+static void gen_se_extsb(DisasContext *ctx)
+{
+}
+
+static void gen_se_extsh(DisasContext *ctx)
+{
+}
+
+static void gen_se_extzb(DisasContext *ctx)
+{
+}
+
+static void gen_se_extzh(DisasContext *ctx)
+{
+}
+
+static void gen_se_illegal(DisasContext *ctx)
+{
+}
+
+static void gen_se_isync(DisasContext *ctx)
+{
+}
+
+static void gen_e_lbz(DisasContext *ctx)
+{
+}
+
+static void gen_se_lbz(DisasContext *ctx)
+{
+}
+
+static void gen_e_lbzu(DisasContext *ctx)
+{
+}
+
+static void gen_e_lha(DisasContext *ctx)
+{
+}
+
+static void gen_e_lhau(DisasContext *ctx)
+{
+}
+
+static void gen_e_lhz(DisasContext *ctx)
+{
+}
+
+static void gen_se_lhz(DisasContext *ctx)
+{
+}
+
+static void gen_e_lhzu(DisasContext *ctx)
+{
+}
+
+static void gen_e_li(DisasContext *ctx)
+{
+}
+
+static void gen_e_lis(DisasContext *ctx)
+{
+}
+
+static void gen_se_li(DisasContext *ctx)
+{
+}
+
+static void gen_e_lmw(DisasContext *ctx)
+{
+}
+
+static void gen_e_lwz(DisasContext *ctx)
+{
+}
+
+static void gen_se_lwz(DisasContext *ctx)
+{
+}
+
+static void gen_e_lwzu(DisasContext *ctx)
+{
+}
+
+static void gen_e_mcrf(DisasContext *ctx)
+{
+}
+
+static void gen_se_mfar(DisasContext *ctx)
+{
+}
+
+static void gen_se_mfctr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mflr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mtar(DisasContext *ctx)
+{
+}
+
+static void gen_se_mtctr(DisasContext *ctx)
+{
+}
+
+static void gen_se_mtlr(DisasContext *ctx)
+{
+}
+
+static void gen_e_mulli(DisasContext *ctx)
+{
+}
+
+static void gen_e_mull2i(DisasContext *ctx)
+{
+}
+
+static void gen_se_mullw(DisasContext *ctx)
+{
+}
+
+static void gen_se_neg(DisasContext *ctx)
+{
+}
+
+static void gen_se_not(DisasContext *ctx)
+{
+}
+
+static void gen_se_or(DisasContext *ctx)
+{
+}
+
+static void gen_e_or2i(DisasContext *ctx)
+{
+}
+
+static void gen_e_or2is(DisasContext *ctx)
+{
+}
+
+static void gen_e_ori(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfci(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfdi(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfi(DisasContext *ctx)
+{
+}
+
+static void gen_se_rfmci(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlw(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlwi(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlwimi(DisasContext *ctx)
+{
+}
+
+static void gen_e_rlwinm(DisasContext *ctx)
+{
+}
+
+static void gen_se_sc(DisasContext *ctx)
+{
+}
+
+static void gen_e_slwi(DisasContext *ctx)
+{
+}
+
+static void gen_se_slw(DisasContext *ctx)
+{
+}
+
+static void gen_se_slwi(DisasContext *ctx)
+{
+}
+
+static void gen_se_sraw(DisasContext *ctx)
+{
+}
+
+static void gen_se_srawi(DisasContext *ctx)
+{
+}
+
+static void gen_e_srwi(DisasContext *ctx)
+{
+}
+
+static void gen_se_srw(DisasContext *ctx)
+{
+}
+
+static void gen_se_srwi(DisasContext *ctx)
+{
+}
+
+static void gen_e_stb(DisasContext *ctx)
+{
+}
+
+static void gen_se_stb(DisasContext *ctx)
+{
+}
+
+static void gen_e_stbu(DisasContext *ctx)
+{
+}
+
+static void gen_e_sth(DisasContext *ctx)
+{
+}
+
+static void gen_se_sth(DisasContext *ctx)
+{
+}
+
+static void gen_e_sthu(DisasContext *ctx)
+{
+}
+
+static void gen_e_stmw(DisasContext *ctx)
+{
+}
+
+static void gen_e_stw(DisasContext *ctx)
+{
+}
+
+static void gen_se_stw(DisasContext *ctx)
+{
+}
+
+static void gen_e_stwu(DisasContext *ctx)
+{
+}
+
+static void gen_se_sub(DisasContext *ctx)
+{
+}
+
+static void gen_se_subf(DisasContext *ctx)
+{
+}
+
+static void gen_e_subfic(DisasContext *ctx)
+{
+}
+
+static void gen_se_subi(DisasContext *ctx)
+{
+}
+
+static void gen_e_xori(DisasContext *ctx)
+{
+}
+
+static void gen_e_addi(DisasContext *ctx)
+{
+    target_long imm = SCI8(ctx->opcode);
+    tcg_gen_addi_tl(cpu_gpr[SCI8_RD(ctx->opcode)], cpu_gpr[SCI8_RA(ctx->opcode)], imm);
+    if (unlikely(SCI8_RC(ctx->opcode))) {
+        gen_set_Rc0(ctx, cpu_gpr[SCI8_RD(ctx->opcode)]);
+    }
+}
+
+static opcode_t vle_opcodes[] = {
+GEN_SIMPLE_SHORT_HANDLER(se_illegal, 0x0, 0x0, 0x0),
+GEN_SIMPLE_SHORT_HANDLER(se_isync, 0x0, 0x0, 0x1),
+GEN_SIMPLE_SHORT_HANDLER(se_sc, 0x0, 0x0, 0x2),
+GEN_SIMPLE_SHORT_HANDLER(se_blr, 0x0, 0x0, 0x4),
+GEN_SIMPLE_SHORT_HANDLER(se_blr, 0x0, 0x0, 0x5),
+GEN_SIMPLE_SHORT_HANDLER(se_bctr, 0x0, 0x0, 0x6),
+GEN_SIMPLE_SHORT_HANDLER(se_bctr, 0x0, 0x0, 0x7),
+GEN_SIMPLE_SHORT_HANDLER(se_rfi, 0x0, 0x0, 0x8),
+GEN_SIMPLE_SHORT_HANDLER(se_rfci, 0x0, 0x0, 0x9),
+GEN_SIMPLE_SHORT_HANDLER(se_rfdi, 0x0, 0x0, 0xA),
+GEN_SIMPLE_SHORT_HANDLER(se_rfmci, 0x0, 0x0, 0xB),
+GEN_SIMPLE_SHORT_HANDLER(se_not, 0x0, 0x2, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_neg, 0x0, 0x3, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mflr, 0x0, 0x8, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtlr, 0x0, 0x9, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfctr, 0x0, 0xA, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtctr, 0x0, 0xB, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_extzb, 0x0, 0xC, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_extsb, 0x0, 0xD, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_extzh, 0x0, 0xE, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_extsh, 0x0, 0xF, 0xFF),
+
+//Due to the shorter opcode, we need to register it multiple times.
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x10, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x11, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x12, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x13, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x14, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x15, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x16, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x17, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x18, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x19, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1A, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1B, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1C, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1D, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1E, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mr, 0x0, 0x1F, 0xFF),
+
+//Due to the shorter opcode, we need to register it multiple times.
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x20, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x21, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x22, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x23, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x24, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x25, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x26, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x27, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x28, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x29, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2A, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2B, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2C, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2D, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2E, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mtar, 0x0, 0x2F, 0xFF),
+
+//Due to the shorter opcode, we need to register it multiple times.
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x30, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x31, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x32, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x33, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x34, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x35, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x36, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x37, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x38, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x39, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3A, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3B, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3C, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3D, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3E, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mfar, 0x0, 0x3F, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_add, 0x1, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_mullw, 0x1, 0x1, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_sub, 0x1, 0x2, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_subf, 0x1, 0x3, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_cmp, 0x3, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_cmpl, 0x3, 0x1, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_cmph, 0x3, 0x2, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_cmphl, 0x3, 0x3, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_lbzu, 0x6, 0x0, 0x0),
+GEN_SIMPLE_HANDLER(e_lhzu, 0x6, 0x0, 0x1),
+GEN_SIMPLE_HANDLER(e_lwzu, 0x6, 0x0, 0x2),
+GEN_SIMPLE_HANDLER(e_lhau, 0x6, 0x0, 0x3),
+GEN_SIMPLE_HANDLER(e_stbu, 0x6, 0x0, 0x4),
+GEN_SIMPLE_HANDLER(e_sthu, 0x6, 0x0, 0x5),
+GEN_SIMPLE_HANDLER(e_stwu, 0x6, 0x0, 0x6),
+GEN_SIMPLE_HANDLER(e_lmw, 0x6, 0x0, 0x8),
+GEN_SIMPLE_HANDLER(e_stmw, 0x6, 0x0, 0x9),
+GEN_SIMPLE_HANDLER(e_addi, 0x6, 0x8, 0xFF),
+GEN_SIMPLE_HANDLER(e_addic, 0x6, 0x9, 0xFF),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x0),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x1),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x2),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x3),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x4),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x5),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x6),
+GEN_SIMPLE_HANDLER(e_mulli, 0x6, 0xA, 0x7),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0x8), //this one has a specific opcode, so let's treat it here
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0x9),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xA),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xB),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xC),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xD),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xE),
+GEN_SIMPLE_HANDLER(e_cmpi_or_cmpli, 0x6, 0xA, 0xF),
+GEN_SIMPLE_HANDLER(e_subfic, 0x6, 0xB, 0xFF),
+GEN_SIMPLE_HANDLER(e_andi, 0x6, 0xC, 0xFF),
+GEN_SIMPLE_HANDLER(e_ori, 0x6, 0xD, 0xFF),
+GEN_SIMPLE_HANDLER(e_xori, 0x6, 0xE, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_add16i, 0x7, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_addi, 0x8, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_cmpli, 0x8, 0x1, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_subi, 0x9, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_cmpi, 0xA, 0x1, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bmaski, 0xB, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_andi, 0xB, 0x1, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_lbz, 0xC, 0xFF, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_stb, 0xD, 0xFF, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_lha, 0xE, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_srw, 0x10, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_sraw, 0x10, 0x1, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_slw, 0x10, 0x2, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_or, 0x11, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_andc, 0x11, 0x1, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_and, 0x11, 0x2, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_and, 0x11, 0x3, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_li, 0x12, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_li, 0x13, 0xFF, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_lwz, 0x14, 0xFF, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_stw, 0x15, 0xFF, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_lhz, 0x16, 0xFF, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_sth, 0x17, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bclri, 0x18, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_bgeni, 0x18, 0x1, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bseti, 0x19, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_btsti, 0x19, 0x1, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_srwi, 0x1A, 0x0, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_srawi, 0x1A, 0x1, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_slwi, 0x1B, 0x0, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_li, 0x1C, 0x0, 0xFF),
+GEN_SIMPLE_HANDLER(e_add2i, 0x1C, 0x1, 0x01),
+GEN_SIMPLE_HANDLER(e_add2is, 0x1C, 0x1, 0x02),
+GEN_SIMPLE_HANDLER(e_cmp16i, 0x1C, 0x1, 0x03),
+GEN_SIMPLE_HANDLER(e_mull2i, 0x1C, 0x1, 0x04),
+GEN_SIMPLE_HANDLER(e_cmpl16i, 0x1C, 0x1, 0x05),
+GEN_SIMPLE_HANDLER(e_cmph16i, 0x1C, 0x1, 0x06),
+GEN_SIMPLE_HANDLER(e_cmphl16i, 0x1C, 0x1, 0x07),
+GEN_SIMPLE_HANDLER(e_or2i, 0x1C, 0x1, 0x08),
+GEN_SIMPLE_HANDLER(e_and2i, 0x1C, 0x1, 0x09),
+GEN_SIMPLE_HANDLER(e_or2is, 0x1C, 0x1, 0x0A),
+GEN_SIMPLE_HANDLER(e_lis, 0x1C, 0x1, 0x0C),
+GEN_SIMPLE_HANDLER(e_and2is, 0x1C, 0x1, 0x0D),
+
+GEN_SIMPLE_HANDLER(e_rlwimi, 0x1D, 0x0, 0xFF),
+GEN_SIMPLE_HANDLER(e_rlwinm, 0x1D, 0x1, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_b, 0x1E, 0x0, 0xFF),
+GEN_SIMPLE_HANDLER(e_bc, 0x1E, 0x1, 0xFF),
+
+GEN_SIMPLE_HANDLER(e_cmph, 0x1F, 0x0, 0xE),
+GEN_SIMPLE_HANDLER(e_mcrf, 0x1F, 0x1, 0x0),
+GEN_SIMPLE_HANDLER(e_crnor, 0x1F, 0x1, 0x1),
+GEN_SIMPLE_HANDLER(e_cmphl, 0x1F, 0x2, 0xE),
+GEN_SIMPLE_HANDLER(e_slwi, 0x1F, 0x3, 0x8),
+GEN_SIMPLE_HANDLER(e_crandc, 0x1F, 0x8, 0x1),
+GEN_SIMPLE_HANDLER(e_crxor, 0x1F, 0xC, 0x1),
+GEN_SIMPLE_HANDLER(e_crnand, 0x1F, 0xE, 0x1),
+GEN_SIMPLE_HANDLER(e_crand, 0x1F, 0x10, 0x1),
+GEN_SIMPLE_HANDLER(e_rlw, 0x1F, 0x11, 0x8),
+GEN_SIMPLE_HANDLER(e_creqv, 0x1F, 0x12, 0x1),
+GEN_SIMPLE_HANDLER(e_rlwi, 0x1F, 0x13, 0x8),
+GEN_SIMPLE_HANDLER(e_crorc, 0x1F, 0x1A, 0x1),
+GEN_SIMPLE_HANDLER(e_cror, 0x1F, 0x1C, 0x1),
+GEN_SIMPLE_HANDLER(e_srwi, 0x1F, 0x23, 0x8),
+
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x20, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x21, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x22, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lbz, 0x23, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x24, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x25, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x26, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_stb, 0x27, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x28, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x29, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x2A, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lhz, 0x2B, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2C, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2D, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2E, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_sth, 0x2F, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x30, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x31, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x32, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_lwz, 0x33, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x34, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x35, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x36, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_stw, 0x37, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_bc, 0x38, 0xFF, 0xFF),
+GEN_SIMPLE_SHORT_HANDLER(se_bc, 0x39, 0xFF, 0xFF),
+
+GEN_SIMPLE_SHORT_HANDLER(se_b, 0x3A, 0xFF, 0xFF),
+};
+
 #include "translate_init.inc"
 #include "helper_regs.h"
+
+// This function decodes a VLE instruction and returns its 3 opcodes.
+static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t *op2, uint32_t *op3)
+{
+    uint32_t opcode = ctxp->opcode;;
+    uint32_t o1 = (opcode >> 26) & ((1 << 6) - 1);
+    uint32_t op2_shift = 0, op2_len = 0, op3_shift = 0, op3_len = 0;
+
+    switch(o1)
+    {
+    case 0x00:
+	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
+	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
+	    op3_len = 4;
+	    op3_shift = 16;
+	    break;
+    case 0x01:
+    case 0x03:
+    case 0x10:
+    case 0x11:
+	    op2_len = 2;
+	    op2_shift = 24;
+	    break;
+    case 0x06:
+	    op2_len = 4; //this will allow more sensible grouping than 6-2
+	    op2_shift = 12;
+	    op3_len = 4;
+	    op3_shift = 8;
+	    break;
+    case 0x08:
+    case 0x0A:
+    case 0x0B:
+    case 0x18:
+    case 0x19:
+    case 0x1A:
+    case 0x1B:
+    case 0x1E: //this might cause problems, as the docs suggest op2_len = 4 for e_bc.
+               //For this table it does not matter though.
+	    op2_len = 1;
+	    op2_shift = 25;
+        break;
+	case 0x1C:
+	    op2_len = 1;
+	    op2_shift = 15;
+	    op3_len = 4;
+	    op3_shift = 11;
+	    break;
+    case 0x1D:
+        op2_len = 1;
+        op2_shift = 0;
+        break;
+	case 0x1F:
+	    op2_len = 6;
+	    op2_shift = 5;
+	    op3_len = 4;
+	    op3_shift = 1;
+	    break;
+    default: //other instructions are verified to have no other opodes.
+        break;
+    }
+
+    if(op1)
+        *op1 = o1;
+    if(op2)
+        *op2 = (opcode >> op2_shift) & ((1 << op2_len) - 1);
+    if(op3)
+        *op3 = (opcode >> op3_shift) & ((1 << op3_len) - 1);
+}
 
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
@@ -8795,6 +9682,7 @@ void gen_intermediate_code(CPUState *env,
     int j, lj = -1;
     int num_insns;
     int max_insns;
+    uint32_t op1, op2, op3;
 
     pc_start = tb->pc;
     gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
@@ -8810,6 +9698,7 @@ void gen_intermediate_code(CPUState *env,
     dc->has_cfar = !!(env->flags & POWERPC_FLAG_CFAR);
 #endif
     dc->fpu_enabled = msr_fp;
+    dc->vle_enabled = tlib_is_vle_enabled();
     if ((env->flags & POWERPC_FLAG_SPE) && msr_spe)
         dc->spe_enabled = msr_spe;
     else
@@ -8874,18 +9763,38 @@ void gen_intermediate_code(CPUState *env,
         } else {
             dc->opcode = ldl_code(dc->nip);
         }
-        dc->nip += 4;
-        table = env->opcodes;
+
+        if(dc->vle_enabled) // use the vle decoding function to obtain the opcodes
+        {
+            decode_vle_instruction(dc, &op1, &op2, &op3);
+        }
+        else // use standard decoding macros
+        {
+            op1 = opc1(dc->opcode);
+            op2 = opc2(dc->opcode);
+            op3 = opc3(dc->opcode);
+        }
+        if(dc->vle_enabled)
+        {
+            table = env->vle_opcodes;
+        }
+        else
+        {
+            table = env->opcodes;
+        }
+
         num_insns++;
-        handler = table[opc1(dc->opcode)];
+        handler = table[op1];
         if (is_indirect_opcode(handler)) {
             table = ind_table(handler);
-            handler = table[opc2(dc->opcode)];
+            handler = table[op2];
             if (is_indirect_opcode(handler)) {
                 table = ind_table(handler);
-                handler = table[opc3(dc->opcode)];
+                handler = table[op3];
             }
         }
+        dc->nip += handler->length;
+
         /* Is opcode *REALLY* valid ? */
         if (likely(handler->handler != &gen_invalid)) {
             uint32_t inval;

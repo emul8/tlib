@@ -1014,6 +1014,7 @@ struct CPUState {
     /* Those resources are used only during code translation */
     /* opcode handlers */
     opc_handler_t *opcodes[0x40];
+    opc_handler_t *vle_opcodes[0x40];
 
     int (*check_pow)(CPUState *env);
 
