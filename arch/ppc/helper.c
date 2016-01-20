@@ -2653,6 +2653,8 @@ CPUState *cpu_init (const char *cpu_model)
     return env;
 }
 
+void dispose_opcodes(opc_handler_t **array);
+
 void tlib_arch_dispose()
 {
   switch (cpu->tlb_type)
@@ -2667,4 +2669,6 @@ void tlib_arch_dispose()
       tlib_free(cpu->tlb.tlbm);
       break;
   }
+  dispose_opcodes(cpu->opcodes);
+  dispose_opcodes(cpu->vle_opcodes);
 }

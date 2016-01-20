@@ -27,6 +27,9 @@
 /* Generic callbacks:
  * do nothing but store/retrieve spr value
  */
+
+const int opcode_table_size = 0x40;
+
 static void spr_read_generic (void *opaque, int gprn, int sprn)
 {
     gen_load_spr(cpu_gpr[gprn], sprn);
@@ -8036,8 +8039,8 @@ static int create_new_table (opc_handler_t **table, unsigned char idx)
 {
     opc_handler_t **tmp;
 
-    tmp = malloc(0x40 * sizeof(opc_handler_t));
-    fill_new_table(tmp, 0x40);
+    tmp = tlib_malloc(opcode_table_size * sizeof(opc_handler_t));
+    fill_new_table(tmp, opcode_table_size);
     table[idx] = (opc_handler_t *)((unsigned long)tmp | PPC_INDIRECT);
 
     return 0;
@@ -8170,7 +8173,7 @@ static int test_opcode_table (opc_handler_t **table, int len)
 
 static void fix_opcode_tables (opc_handler_t **ppc_opcodes)
 {
-    if (test_opcode_table(ppc_opcodes, 0x40) == 0)
+    if (test_opcode_table(ppc_opcodes, opcode_table_size) == 0)
         tlib_printf(LOG_LEVEL_WARNING, "no opcode defined !\n");
 }
 
@@ -8178,7 +8181,7 @@ static void fix_opcode_tables (opc_handler_t **ppc_opcodes)
 static int create_ppc_opcodes (opc_handler_t **table, const ppc_def_t *def, opcode_t *opc, int length)
 {
     opcode_t *base = opc;
-    fill_new_table(table, 0x40);
+    fill_new_table(table, opcode_table_size);
     for (; opc < &base[length]; opc++) {
         if (((opc->handler.type & def->insns_flags) != 0) ||
             ((opc->handler.type2 & def->insns_flags2) != 0)) {
@@ -8283,3 +8286,16 @@ const ppc_def_t *cpu_ppc_find_by_name (const char *name)
     return ret;
 }
 
+void dispose_opcodes(opc_handler_t **array)
+{
+  int i;
+
+  for(i = 0; i < opcode_table_size; i++)
+  {
+    if(is_indirect_opcode(array[i]))
+    {
+      dispose_opcodes(ind_table(array[i]));
+      tlib_free(ind_table(array[i]));
+    }
+  }
+}
