@@ -406,7 +406,7 @@ CPUState *cpu_init(const char *cpu_model)
     env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
 
-    gen_intermediate_code_init(env);
+    translate_init(env);
 
     if (cpu_sparc_register(env, cpu_model) < 0) {
         return NULL;

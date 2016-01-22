@@ -2646,7 +2646,7 @@ CPUState *cpu_init (const char *cpu_model)
 
     env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
-    ppc_translate_init();
+    translate_init();
     /* Adjust cpu index for SMT */
     cpu_ppc_register_internal(env, def);
 

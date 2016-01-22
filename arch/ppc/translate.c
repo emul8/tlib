@@ -75,7 +75,7 @@ static TCGv_i32 cpu_access_type;
 
 #include "tb-helper.h"
 
-void ppc_translate_init(void)
+void translate_init(void)
 {
     int i;
     char* p;

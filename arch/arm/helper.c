@@ -362,7 +362,7 @@ CPUState *cpu_init(const char *cpu_model)
     cpu_exec_init(env);
     if (!inited) {
         inited = 1;
-        arm_translate_init();
+        translate_init();
     }
 
     env->cp15.c0_cpuid = id;

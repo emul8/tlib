@@ -1060,7 +1060,7 @@ struct mmu_ctx_t {
 
 /*****************************************************************************/
 CPUState *cpu_init (const char *cpu_model);
-void ppc_translate_init(void);
+void translate_init(void);
 int cpu_exec (CPUState *s);
 int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx);
