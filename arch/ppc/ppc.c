@@ -24,18 +24,6 @@
 #include "ppc.h"
 #include "infrastructure.h"
 
-void ppc_set_irq(CPUState *env, int n_IRQ, int level)
-{
-    if (level) {
-        env->pending_interrupts |= 1 << n_IRQ;
-        cpu_interrupt(env, CPU_INTERRUPT_HARD);
-    } else {
-        env->pending_interrupts &= ~(1 << n_IRQ);
-        if (env->pending_interrupts == 0)
-            cpu_reset_interrupt(env, CPU_INTERRUPT_HARD);
-    }
-}
-
 // returns 1 if one should clear CPU's interrupt
 int ppc_set_pending_interrupt(int n_IRQ, int level)
 {
@@ -52,6 +40,18 @@ int ppc_set_pending_interrupt(int n_IRQ, int level)
 }
 
 #if defined(TARGET_PPC64)
+void ppc_set_irq(CPUState *env, int n_IRQ, int level)
+{
+    if (level) {
+        env->pending_interrupts |= 1 << n_IRQ;
+        cpu_interrupt(env, CPU_INTERRUPT_HARD);
+    } else {
+        env->pending_interrupts &= ~(1 << n_IRQ);
+        if (env->pending_interrupts == 0)
+            cpu_reset_interrupt(env, CPU_INTERRUPT_HARD);
+    }
+}
+
 /* PowerPC 970 internal IRQ controller */
 static void ppc970_set_irq (void *opaque, int pin, int level)
 {
