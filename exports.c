@@ -48,6 +48,7 @@ static void init_tcg()
   set_TARGET_PAGE_BITS(TARGET_PAGE_BITS);
   attach_malloc(tlib_malloc);
   attach_realloc(tlib_realloc);
+  attach_free(tlib_free);
 }
 
 int32_t tlib_init(char *cpu_name)
@@ -63,9 +64,20 @@ int32_t tlib_init(char *cpu_name)
   return 0;
 }
 
+static void free_phys_dirty()
+{
+  tlib_free(dirty_ram.phys_dirty);
+}
+
+
 void tlib_dispose()
 {
+  tlib_arch_dispose();
   code_gen_free();
+  free_all_page_descriptors();
+  free_phys_dirty();
+  tlib_free(cpu);
+  tcg_dispose();
 }
 
 void tlib_reset()

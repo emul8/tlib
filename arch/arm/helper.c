@@ -428,11 +428,6 @@ static uint32_t cpu_arm_find_by_name(const char *name)
     return id;
 }
 
-void cpu_close(CPUState *env)
-{
-    tlib_free(env);
-}
-
 uint32_t cpsr_read(CPUState *env)
 {
     int ZF;

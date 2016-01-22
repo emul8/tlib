@@ -394,10 +394,9 @@ static int cpu_sparc_register(CPUState *env, const char *cpu_model)
     return 0;
 }
 
-static void cpu_close(CPUState *env)
+void tlib_arch_dispose()
 {
-    free(env->def);
-    free(env);
+    tlib_free(cpu->def);
 }
 
 CPUState *cpu_init(const char *cpu_model)
@@ -410,7 +409,6 @@ CPUState *cpu_init(const char *cpu_model)
     gen_intermediate_code_init(env);
 
     if (cpu_sparc_register(env, cpu_model) < 0) {
-        cpu_close(env);
         return NULL;
     }
     cpu_reset(env);

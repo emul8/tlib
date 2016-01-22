@@ -169,6 +169,70 @@ static void page_init(void)
     tlib_host_page_mask = ~(tlib_host_page_size - 1);
 }
 
+typedef void (*visitor_function)(void* opaque, int page_number);
+
+static void free_page_code_bitmap(void *opaque, int page_number)
+{
+  PageDesc *page;
+
+  page = ((PageDesc*)opaque) + page_number;
+  if(page->code_bitmap)
+  {
+    tlib_free(page->code_bitmap);
+  }
+}
+
+static void free_all_page_descriptors_inner(void **lp, int level, visitor_function visitor)
+{
+  int i;
+
+  if(!level)
+  {
+    // why the pointer below does not have to be of type
+    // PageDesc/PhysPageDesc? because it does not change anything from the
+    // free() point of view
+    void *pd = *lp;
+    if(pd)
+    {
+      for(i = 0; i < L2_SIZE; i++)
+      {
+        if(visitor)
+        {
+          visitor(pd, i);
+        }
+      }
+      tlib_free(pd);
+    }
+  }
+  else
+  {
+    void **pp = *lp;
+    if(!pp)
+    {
+      return;
+    }
+    for(i = 0; i < L2_SIZE; i++)
+    {
+      free_all_page_descriptors_inner(pp + i, level - 1, visitor);
+    }
+    tlib_free(pp);
+  }
+}
+
+void free_all_page_descriptors()
+{
+    int i;
+
+    for(i = 0; i < P_L1_SIZE; i++)
+    {
+      free_all_page_descriptors_inner(l1_phys_map + i, P_L1_SHIFT / L2_BITS - 1, NULL);
+    }
+    for(i = 0; i < V_L1_SIZE; i++)
+    {
+      free_all_page_descriptors_inner(l1_map + i, V_L1_SHIFT / L2_BITS - 1, free_page_code_bitmap);
+    }
+}
+
 static PageDesc *page_find_alloc(tb_page_addr_t index, int alloc)
 {
     PageDesc *pd;
@@ -331,6 +395,7 @@ void code_gen_free(void) {
     tlib_abort("Could not free dynamic translator buffer\n");
   }
 #endif
+  tlib_free(tbs);
 }
 
 /* Must be called before using the QEMU cpus.*/
@@ -2122,6 +2187,13 @@ void stq_be_phys(target_phys_addr_t addr, uint64_t val)
 {
     val = cpu_to_be64(val);
     cpu_physical_memory_write(addr, &val, 8);
+}
+
+void tlib_arch_dispose(void) __attribute__((weak));
+
+void tlib_arch_dispose()
+{
+
 }
 
 

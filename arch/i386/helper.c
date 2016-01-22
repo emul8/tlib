@@ -94,11 +94,6 @@ void cpu_reset(CPUState *env)
     cpu_watchpoint_remove_all(env, BP_CPU);
 }
 
-void cpu_close(CPUState *env)
-{
-    tlib_free(env);
-}
-
 static void cpu_x86_version(CPUState *env, int *family, int *model)
 {
     int cpuver = env->cpuid_version;
@@ -741,7 +736,6 @@ CPUState *cpu_init(const char *cpu_model)
             cpu_set_debug_excp_handler(breakpoint_handler);
     }
     if (cpu_x86_register(env, cpu_model) < 0) {
-        cpu_close(env);
         return NULL;
     }
     mce_init(env);
