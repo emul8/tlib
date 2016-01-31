@@ -20,7 +20,25 @@
 #ifndef _EXEC_ALL_H_
 #define _EXEC_ALL_H_
 
-#include "tlib-common.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <limits.h>
+
+#include "compiler.h"
+
+#include <stdlib.h>
+
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
+#include "compiler.h"
+
+#include "cpu.h"
+
+void cpu_exec_init_all();
 
 /* Page tracking code uses ram addresses in system mode, and virtual
    addresses in userspace mode.  Define tb_page_addr_t to be an appropriate

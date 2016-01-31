@@ -21,7 +21,8 @@
 
 #define TARGET_LONG_BITS 32
 
-#include "tlib-common.h"
+#include <stdbool.h>
+#include <stdlib.h>
 #include "cpu-defs.h"
 
 #include "softfloat.h"

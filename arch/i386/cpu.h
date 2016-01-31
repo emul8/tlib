@@ -19,7 +19,8 @@
 #ifndef CPU_I386_H
 #define CPU_I386_H
 
-#include "tlib-common.h"
+#include <stdbool.h>
+#include "compiler.h"
 
 #ifdef TARGET_X86_64
 #define TARGET_LONG_BITS 64
