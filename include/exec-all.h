@@ -20,25 +20,11 @@
 #ifndef _EXEC_ALL_H_
 #define _EXEC_ALL_H_
 
-#include <stdbool.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <limits.h>
-
 #include "compiler.h"
-
-#include <stdlib.h>
-
-#ifndef MAP_ANONYMOUS
-#define MAP_ANONYMOUS MAP_ANON
-#endif
-
-#include "compiler.h"
-
-#include "cpu.h"
-
-void cpu_exec_init_all();
 
 /* Page tracking code uses ram addresses in system mode, and virtual
    addresses in userspace mode.  Define tb_page_addr_t to be an appropriate
@@ -66,6 +52,7 @@ TranslationBlock *tb_gen_code(CPUState *env,
                               target_ulong pc, target_ulong cs_base, int flags,
                               int cflags);
 void cpu_exec_init(CPUState *env);
+void cpu_exec_init_all();
 void TLIB_NORETURN cpu_loop_exit(CPUState *env1);
 void tb_invalidate_phys_page_range(tb_page_addr_t start, tb_page_addr_t end,
                                    int is_cpu_write_access);
