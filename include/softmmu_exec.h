@@ -151,3 +151,17 @@
 #define stw(p, v) stw_data(p, v)
 #define stl(p, v) stl_data(p, v)
 #define stq(p, v) stq_data(p, v)
+
+#define MMUSUFFIX _mmu
+
+#define SHIFT 0
+#include "softmmu_template.h"
+
+#define SHIFT 1
+#include "softmmu_template.h"
+
+#define SHIFT 2
+#include "softmmu_template.h"
+
+#define SHIFT 3
+#include "softmmu_template.h"
