@@ -755,8 +755,7 @@ typedef struct CPUState {
 
     union {
         CPUBreakpoint *cpu_breakpoint[4];
-        CPUWatchpoint *cpu_watchpoint[4];
-    }; /* break/watchpoints for dr[0..3] */
+    }; /* breakpoints for dr[0..3] */
 
     /* in order to simplify APIC support, we leave this pointer to the
        user */

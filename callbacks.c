@@ -43,6 +43,8 @@ DEFAULT_VOID_HANDLER2(void tlib_write_word, uint32_t address, uint32_t value)
 
 DEFAULT_VOID_HANDLER2(void tlib_write_double_word, uint32_t address, uint32_t value)
 
+DEFAULT_INT_HANDLER1(int32_t tlib_is_io_accessed, uint32_t address)
+
 DEFAULT_VOID_HANDLER2(void tlib_on_block_begin, uint32_t address, uint32_t size)
 
 DEFAULT_INT_HANDLER1(uint32_t tlib_is_block_begin_event_enabled, void)

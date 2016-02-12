@@ -414,7 +414,6 @@ void cpu_exec_init(CPUState *env)
 {
     cpu = env;
     QTAILQ_INIT(&cpu->breakpoints);
-    QTAILQ_INIT(&cpu->watchpoints);
 }
 
 /* Allocate a new translation block. Flush the translation buffer if
@@ -959,75 +958,6 @@ static void breakpoint_invalidate(CPUState *env, target_ulong pc)
     tb_invalidate_phys_page_range(ram_addr, ram_addr + 1, 0);
 }
 
-/* Add a watchpoint.  */
-int cpu_watchpoint_insert(CPUState *env, target_ulong addr, target_ulong len,
-                          int flags, CPUWatchpoint **watchpoint)
-{
-    target_ulong len_mask = ~(len - 1);
-    CPUWatchpoint *wp;
-
-    /* sanity checks: allow power-of-2 lengths, deny unaligned watchpoints */
-    if ((len != 1 && len != 2 && len != 4 && len != 8) || (addr & ~len_mask)) {
-        tlib_printf(LOG_LEVEL_ERROR, "Tried to set invalid watchpoint at "
-                TARGET_FMT_lx ", len=" TARGET_FMT_lu "\n", addr, len);
-        return -EINVAL;
-    }
-    wp = tlib_malloc(sizeof(*wp));
-
-    wp->vaddr = addr;
-    wp->len_mask = len_mask;
-    wp->flags = flags;
-
-    /* keep all GDB-injected watchpoints in front */
-    if (flags & BP_GDB)
-        QTAILQ_INSERT_HEAD(&env->watchpoints, wp, entry);
-    else
-        QTAILQ_INSERT_TAIL(&env->watchpoints, wp, entry);
-
-    tlb_flush_page(env, addr);
-
-    if (watchpoint)
-        *watchpoint = wp;
-    return 0;
-}
-
-/* Remove a specific watchpoint.  */
-int cpu_watchpoint_remove(CPUState *env, target_ulong addr, target_ulong len,
-                          int flags)
-{
-    target_ulong len_mask = ~(len - 1);
-    CPUWatchpoint *wp;
-
-    QTAILQ_FOREACH(wp, &env->watchpoints, entry) {
-        if (addr == wp->vaddr && len_mask == wp->len_mask
-                && flags == (wp->flags & ~BP_WATCHPOINT_HIT)) {
-            cpu_watchpoint_remove_by_ref(env, wp);
-            return 0;
-        }
-    }
-    return -ENOENT;
-}
-
-/* Remove a specific watchpoint by reference.  */
-void cpu_watchpoint_remove_by_ref(CPUState *env, CPUWatchpoint *watchpoint)
-{
-    QTAILQ_REMOVE(&env->watchpoints, watchpoint, entry);
-
-    tlb_flush_page(env, watchpoint->vaddr);
-
-    tlib_free(watchpoint);
-}
-
-/* Remove all matching watchpoints.  */
-void cpu_watchpoint_remove_all(CPUState *env, int mask)
-{
-    CPUWatchpoint *wp, *next;
-
-    QTAILQ_FOREACH_SAFE(wp, &env->watchpoints, entry, next) {
-        if (wp->flags & mask)
-            cpu_watchpoint_remove_by_ref(env, wp);
-    }
-}
 
 /* Add a breakpoint.  */
 int cpu_breakpoint_insert(CPUState *env, target_ulong pc, int flags,
@@ -1363,7 +1293,6 @@ void tlb_set_page(CPUState *env, target_ulong vaddr,
     target_ulong code_address;
     unsigned long addend;
     CPUTLBEntry *te;
-    CPUWatchpoint *wp;
     target_phys_addr_t iotlb;
 
     assert(size >= TARGET_PAGE_SIZE);
@@ -1408,17 +1337,11 @@ void tlb_set_page(CPUState *env, target_ulong vaddr,
     }
 
     code_address = address;
-    /* Make accesses to pages with watchpoints go via the
-       watchpoint trap routines.  */
-    QTAILQ_FOREACH(wp, &env->watchpoints, entry) {
-        if (vaddr == (wp->vaddr & TARGET_PAGE_MASK)) {
-            /* Avoid trapping reads of pages with a write breakpoint. */
-            if ((prot & PAGE_WRITE) || (wp->flags & BP_MEM_READ)) {
-                iotlb = paddr;
-                address |= TLB_MMIO;
-                break;
-            }
-        }
+
+    if(tlib_is_io_accessed(vaddr))
+    {
+      iotlb = paddr;
+      address |= TLB_MMIO;
     }
 
     index = (vaddr >> TARGET_PAGE_BITS) & (CPU_TLB_SIZE - 1);

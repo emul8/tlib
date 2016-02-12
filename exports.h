@@ -23,8 +23,6 @@ void tlib_set_irq(int32_t interrupt, int32_t state);
 int32_t tlib_is_irq_set(void);
 void tlib_add_breakpoint(uint32_t address);
 void tlib_remove_breakpoint(uint32_t address);
-void tlib_add_watchpoint(uint32_t address, uint32_t length);
-void tlib_remove_watchpoint(uint32_t address, uint32_t length);
 void tlib_set_translation_cache_size(unsigned long size);
 void tlib_invalidate_translation_cache(void);
 uint32_t tlib_set_maximum_block_size(uint32_t size);

@@ -90,7 +90,6 @@ void cpu_reset(CPUState *env)
     env->dr[6] = DR6_FIXED_1;
     env->dr[7] = DR7_FIXED_1;
     cpu_breakpoint_remove_all(env, BP_CPU);
-    cpu_watchpoint_remove_all(env, BP_CPU);
 }
 
 static void cpu_x86_version(CPUState *env, int *family, int *model)
@@ -492,7 +491,7 @@ int cpu_x86_handle_mmu_fault(CPUState *env, target_ulong addr,
         error_code |= PG_ERROR_I_D_MASK;
     if (env->intercept_exceptions & (1 << EXCP0E_PAGE)) {
         /* cr2 is not modified in case of exceptions */
-        stq_phys(env->vm_vmcb + offsetof(struct vmcb, control.exit_info_2), 
+        stq_phys(env->vm_vmcb + offsetof(struct vmcb, control.exit_info_2),
                  addr);
     } else {
         env->cr[2] = addr;
@@ -598,27 +597,12 @@ target_phys_addr_t cpu_get_phys_page_debug(CPUState *env, target_ulong addr)
 
 void hw_breakpoint_insert(CPUState *env, int index)
 {
-    int type, err = 0;
+    int err = 0;
 
-    switch (hw_breakpoint_type(env->dr[7], index)) {
-    case 0:
+    if (!hw_breakpoint_type(env->dr[7], index)) {
         if (hw_breakpoint_enabled(env->dr[7], index))
             err = cpu_breakpoint_insert(env, env->dr[index], BP_CPU,
                                         &env->cpu_breakpoint[index]);
-        break;
-    case 1:
-        type = BP_CPU | BP_MEM_WRITE;
-        goto insert_wp;
-    case 2:
-         /* No support for I/O watchpoints yet */
-        break;
-    case 3:
-        type = BP_CPU | BP_MEM_ACCESS;
-    insert_wp:
-        err = cpu_watchpoint_insert(env, env->dr[index],
-                                    hw_breakpoint_len(env->dr[7], index),
-                                    type, &env->cpu_watchpoint[index]);
-        break;
     }
     if (err)
         env->cpu_breakpoint[index] = NULL;
@@ -628,18 +612,9 @@ void hw_breakpoint_remove(CPUState *env, int index)
 {
     if (!env->cpu_breakpoint[index])
         return;
-    switch (hw_breakpoint_type(env->dr[7], index)) {
-    case 0:
+    if (!hw_breakpoint_type(env->dr[7], index)) {
         if (hw_breakpoint_enabled(env->dr[7], index))
             cpu_breakpoint_remove_by_ref(env, env->cpu_breakpoint[index]);
-        break;
-    case 1:
-    case 3:
-        cpu_watchpoint_remove_by_ref(env, env->cpu_watchpoint[index]);
-        break;
-    case 2:
-        /* No support for I/O watchpoints yet */
-        break;
     }
 }
 
@@ -652,9 +627,7 @@ int check_hw_breakpoints(CPUState *env, int force_dr6_update)
     dr6 = env->dr[6] & ~0xf;
     for (reg = 0; reg < 4; reg++) {
         type = hw_breakpoint_type(env->dr[7], reg);
-        if ((type == 0 && env->dr[reg] == env->eip) ||
-            ((type & 1) && env->cpu_watchpoint[reg] &&
-             (env->cpu_watchpoint[reg]->flags & BP_WATCHPOINT_HIT))) {
+        if ((type == 0 && env->dr[reg] == env->eip)) {
             dr6 |= 1 << reg;
             if (hw_breakpoint_enabled(env->dr[7], reg))
                 hit_enabled = 1;
@@ -671,26 +644,14 @@ static void breakpoint_handler(CPUState *env)
 {
     CPUBreakpoint *bp;
 
-    if (env->watchpoint_hit) {
-        if (env->watchpoint_hit->flags & BP_CPU) {
-            env->watchpoint_hit = NULL;
-            if (check_hw_breakpoints(env, 0))
+    QTAILQ_FOREACH(bp, &env->breakpoints, entry)
+        if (bp->pc == env->eip) {
+            if (bp->flags & BP_CPU) {
+                check_hw_breakpoints(env, 1);
                 raise_exception_env(EXCP01_DB, env);
-            else {
-                env->exception_index = -1;
-                longjmp(env->jmp_env, 1);
             }
+            break;
         }
-    } else {
-        QTAILQ_FOREACH(bp, &env->breakpoints, entry)
-            if (bp->pc == env->eip) {
-                if (bp->flags & BP_CPU) {
-                    check_hw_breakpoints(env, 1);
-                    raise_exception_env(EXCP01_DB, env);
-                }
-                break;
-            }
-    }
     if (prev_debug_excp_handler)
         prev_debug_excp_handler(env);
 }
