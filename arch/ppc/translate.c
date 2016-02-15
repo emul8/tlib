@@ -29,7 +29,6 @@
 #include "ppc.h"
 #include "cpu.h"
 #include "tcg-op.h"
-#include "tlib-common.h"
 #include "host-utils.h"
 
 #include "helper.h"

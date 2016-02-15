@@ -1,7 +1,7 @@
 #ifndef CPU_SPARC_H
 #define CPU_SPARC_H
 
-#include "tlib-common.h"
+#include <stdbool.h>
 
 #ifdef TARGET_PHYS_ADDR_BITS
 #undef TARGET_PHYS_ADDR_BITS

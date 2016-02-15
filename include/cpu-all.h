@@ -21,7 +21,6 @@
 
 #include <stdint.h>
 
-#include "tlib-common.h"
 #include "cpu-common.h"
 
 /* some important defines:

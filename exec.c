@@ -26,7 +26,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
-#include "tlib-common.h"
 #include "cpu.h"
 #include "tcg.h"
 
