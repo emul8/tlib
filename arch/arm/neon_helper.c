@@ -3099,130 +3099,70 @@ void HELPER(neon_qunzip32)(CPUState *env, uint32_t da0Num, uint32_t db0Num)
 
 uint32_t HELPER(neon_abd_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    float_status *_fpstatus = fpstatus;
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-
-    const float result = fabsf(af - bf);
-    uint32_t *res_addr = (uint32_t*) &result;
-
-    if(isinf(result) && !isinf(af) && !isinf(bf)) {
-        _fpstatus->float_exception_flags |= float_flag_overflow | float_flag_inexact;
-    }
-
-    if(isnan(result) && !isnan(af) && !isnan(bf)) {
-        _fpstatus->float_exception_flags |= float_flag_invalid;
-    }
-
-    return *res_addr;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    float32 diff = float32_sub(af, bf, (float_status *)fpstatus);
+    float32 diff_abs = float32_abs(diff);
+    return float32_val(diff_abs);
 }
 
 uint32_t HELPER(neon_min_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    float result;
-    uint32_t *res_addr = (uint32_t*) &result;
-
-    if(isnan(af) || isnan(bf)) {
-        result = NAN;
-    }
-    else {
-        result = af < bf ? af : bf;
-    }
-
-    return *res_addr;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    float32 min = float32_min(af, bf, (float_status *)fpstatus);
+    return float32_val(min);
 }
 
 uint32_t HELPER(neon_max_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    float result;
-    uint32_t *res_addr = (uint32_t*) &result;
-
-    if(isnan(af) || isnan(bf)) {
-        result = NAN;
-    }
-    else {
-        result = af > bf ? af : bf;
-    }
-
-    return *res_addr;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    float32 max = float32_max(af, bf, (float_status *)fpstatus);
+    return float32_val(max);
 }
 
 uint32_t HELPER(neon_ceq_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    return af == bf ? UINT32_MAX : 0;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    int32_t res = float32_eq_quiet(af, bf, (float_status *)fpstatus);
+    return res ? -1 : 0;
 }
 
 uint32_t HELPER(neon_cge_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    float_status *_fpstatus = fpstatus;
-
-    if(isnan(af) || isnan(bf)) {
-        _fpstatus->float_exception_flags |= float_flag_invalid;
-    }
-
-    return af >= bf ? UINT32_MAX : 0;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    int32_t res = float32_le(bf, af, (float_status *)fpstatus);
+    return res ? -1 : 0;
 }
 
 uint32_t HELPER(neon_cgt_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    float_status *_fpstatus = fpstatus;
-
-    if(isnan(af) || isnan(bf)) {
-        _fpstatus->float_exception_flags |= float_flag_invalid;
-    }
-
-    return af > bf ? UINT32_MAX : 0;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    int32_t res = float32_lt(bf, af, (float_status *)fpstatus);
+    return res ? -1 : 0;
 }
 
 uint32_t HELPER(neon_acge_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    float_status *_fpstatus = fpstatus;
-
-    if(isnan(af) || isnan(bf)) {
-        _fpstatus->float_exception_flags |= float_flag_invalid;
-    }
-
-    return fabsf(af) >= fabsf(bf) ? UINT32_MAX : 0;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    float32 af_abs = float32_abs(af);
+    float32 bf_abs = float32_abs(bf);
+    int32_t res = float32_le(bf_abs, af_abs, (float_status *)fpstatus);
+    return res ? -1 : 0;
 }
 
 uint32_t HELPER(neon_acgt_f32)(uint32_t a, uint32_t b, void *fpstatus)
 {
-    const float *afp = (float*)&a;
-    const float *bfp = (float*)&b;
-    const float af = *afp;
-    const float bf = *bfp;
-    float_status *_fpstatus = fpstatus;
-
-    if(isnan(af) || isnan(bf)) {
-        _fpstatus->float_exception_flags |= float_flag_invalid;
-    }
-
-    return fabsf(af) > fabsf(bf) ? UINT32_MAX : 0;
+    float32 af = make_float32(a);
+    float32 bf = make_float32(b);
+    float32 af_abs = float32_abs(af);
+    float32 bf_abs = float32_abs(bf);
+    int32_t res = float32_lt(bf_abs, af_abs, (float_status *)fpstatus);
+    return res ? -1 : 0;
 }
 
