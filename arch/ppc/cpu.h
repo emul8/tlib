@@ -1644,6 +1644,8 @@ enum {
 #define PPC_RES     PPC_INSNS_BASE
     /*   spr/msr access instructions                                         */
 #define PPC_MISC    PPC_INSNS_BASE
+    /*   VLE encoded instruction                                             */
+#define PPC_VLE     PPC_INSNS_BASE
     /* Deprecated instruction sets                                           */
     /*   Original POWER instruction set                                      */
     PPC_POWER          = 0x0000000000000002ULL,
