@@ -23,28 +23,6 @@
 
 //#define PPC_EMULATE_32BITS_HYPV
 
-#if defined (TARGET_PPC64)
-/* PowerPC 64 definitions */
-#define TARGET_LONG_BITS 64
-#define TARGET_PAGE_BITS 12
-
-/* Note that the official physical address space bits is 62-M where M
-   is implementation dependent.  I've not looked up M for the set of
-   cpus we emulate at the system level.  */
-#define TARGET_PHYS_ADDR_SPACE_BITS 62
-
-/* Note that the PPC environment architecture talks about 80 bit virtual
-   addresses, with segmentation.  Obviously that's not all visible to a
-   single process, which is all we're concerned with here.  */
-#ifdef TARGET_ABI32
-# define TARGET_VIRT_ADDR_SPACE_BITS 32
-#else
-# define TARGET_VIRT_ADDR_SPACE_BITS 64
-#endif
-
-#define TARGET_PAGE_BITS_16M 24
-
-#else /* defined (TARGET_PPC64) */
 /* PowerPC 32 definitions */
 #define TARGET_LONG_BITS 32
 
@@ -60,8 +38,6 @@
 
 #define TARGET_PHYS_ADDR_SPACE_BITS 36
 #define TARGET_VIRT_ADDR_SPACE_BITS 32
-
-#endif /* defined (TARGET_PPC64) */
 
 #include "cpu-defs.h"
 
@@ -92,16 +68,6 @@ enum powerpc_mmu_t {
     POWERPC_MMU_BOOKE206   = 0x00000009,
     /* PowerPC 601 MMU model (specific BATs format)            */
     POWERPC_MMU_601        = 0x0000000A,
-#if defined(TARGET_PPC64)
-#define POWERPC_MMU_64       0x00010000
-#define POWERPC_MMU_1TSEG    0x00020000
-    /* 64 bits PowerPC MMU                                     */
-    POWERPC_MMU_64B        = POWERPC_MMU_64 | 0x00000001,
-    /* 620 variant (no segment exceptions)                     */
-    POWERPC_MMU_620        = POWERPC_MMU_64 | 0x00000002,
-    /* Architecture 2.06 variant                               */
-    POWERPC_MMU_2_06       = POWERPC_MMU_64 | POWERPC_MMU_1TSEG | 0x00000003,
-#endif /* defined(TARGET_PPC64) */
 };
 
 /*****************************************************************************/
@@ -133,12 +99,6 @@ enum powerpc_excp_t {
     POWERPC_EXCP_74xx,
     /* BookE exception model            */
     POWERPC_EXCP_BOOKE,
-#if defined(TARGET_PPC64)
-    /* PowerPC 970 exception model      */
-    POWERPC_EXCP_970,
-    /* POWER7 exception model           */
-    POWERPC_EXCP_POWER7,
-#endif /* defined(TARGET_PPC64) */
 };
 
 /*****************************************************************************/
@@ -359,11 +319,6 @@ union ppc_tlb_t {
 #define SDR_32_HTABORG         0xFFFF0000UL
 #define SDR_32_HTABMASK        0x000001FFUL
 
-#if defined(TARGET_PPC64)
-#define SDR_64_HTABORG         0xFFFFFFFFFFFC0000ULL
-#define SDR_64_HTABSIZE        0x000000000000001FULL
-#endif /* defined(TARGET_PPC64 */
-
 #define HASH_PTE_SIZE_32       8
 #define HASH_PTE_SIZE_64       16
 
@@ -480,17 +435,12 @@ struct ppc_slb_t {
 #define msr_ri   ((env->msr >> MSR_RI)   & 1)
 #define msr_le   ((env->msr >> MSR_LE)   & 1)
 /* Hypervisor bit is more specific */
-#if defined(TARGET_PPC64)
-#define MSR_HVB (1ULL << MSR_SHV)
-#define msr_hv  msr_shv
-#else
 #if defined(PPC_EMULATE_32BITS_HYPV)
 #define MSR_HVB (1ULL << MSR_THV)
 #define msr_hv  msr_thv
 #else
 #define MSR_HVB (0ULL)
 #define msr_hv  (0)
-#endif
 #endif
 
 /* Exception state register bits definition                                  */
@@ -863,20 +813,14 @@ struct CPUState {
      */
     /* general purpose registers */
     target_ulong gpr[32];
-#if !defined(TARGET_PPC64)
     /* Storage for GPR MSB, used by the SPE extension */
     target_ulong gprh[32];
-#endif
     /* LR */
     target_ulong lr;
     /* CTR */
     target_ulong ctr;
     /* condition register */
     uint32_t crf[8];
-#if defined(TARGET_PPC64)
-    /* CFAR */
-    target_ulong cfar;
-#endif
     /* XER */
     target_ulong xer;
     /* Reservation address */
@@ -907,12 +851,6 @@ struct CPUState {
                         type is stored here */
 
     /* MMU context - only relevant for full system emulation */
-#if defined(TARGET_PPC64)
-    /* Address space register */
-    target_ulong asr;
-    /* PowerPC 64 SLB area */
-    int slb_nr;
-#endif
     /* segment registers */
     target_ulong sr[32];
     target_ulong DBAT[2][8];
@@ -965,10 +903,6 @@ struct CPUState {
 
     CPU_COMMON
 
-#if defined(TARGET_PPC64)
-    ppc_slb_t slb[64];
-#endif
-
     target_phys_addr_t htab_base;
     target_phys_addr_t htab_mask;
 
@@ -1001,13 +935,6 @@ struct CPUState {
     uint32_t flags;
     uint64_t insns_flags;
     uint64_t insns_flags2;
-
-#if defined(TARGET_PPC64)
-    target_phys_addr_t vpa;
-    target_phys_addr_t slb_shadow;
-    target_phys_addr_t dispatch_trace_log;
-    uint32_t dtl_size;
-#endif /* TARGET_PPC64 */
 
     void **irq_inputs;
 
@@ -1079,14 +1006,6 @@ void ppc_store_dbatl (CPUState *env, int nr, target_ulong value);
 void ppc_store_ibatu_601 (CPUState *env, int nr, target_ulong value);
 void ppc_store_ibatl_601 (CPUState *env, int nr, target_ulong value);
 void ppc_store_sdr1 (CPUState *env, target_ulong value);
-#if defined(TARGET_PPC64)
-void ppc_store_asr (CPUState *env, target_ulong value);
-target_ulong ppc_load_slb (CPUState *env, int slb_nr);
-target_ulong ppc_load_sr (CPUState *env, int sr_nr);
-int ppc_store_slb (CPUState *env, target_ulong rb, target_ulong rs);
-int ppc_load_slb_esid (CPUState *env, target_ulong rb, target_ulong *rt);
-int ppc_load_slb_vsid (CPUState *env, target_ulong rb, target_ulong *rt);
-#endif /* defined(TARGET_PPC64) */
 void ppc_store_sr (CPUState *env, int srnum, target_ulong value);
 void ppc_store_msr (CPUState *env, target_ulong value);
 
@@ -1105,10 +1024,6 @@ int ppcmas_tlb_check(CPUState *env, ppcmas_tlb_t *tlb,
                      uint32_t pid);
 void ppc_tlb_invalidate_all (CPUState *env);
 void ppc_tlb_invalidate_one (CPUState *env, target_ulong addr);
-#if defined(TARGET_PPC64)
-void ppc_slb_invalidate_all (CPUState *env);
-void ppc_slb_invalidate_one (CPUState *env, uint64_t T0);
-#endif
 int ppcemb_tlb_search (CPUState *env, target_ulong address, uint32_t pid);
 
 /* Device control registers */
@@ -1885,29 +1800,6 @@ enum {
     PPCRCPU_INPUT_IRQ7      = 10,
     PPCRCPU_INPUT_NB,
 };
-
-#if defined(TARGET_PPC64)
-enum {
-    /* PowerPC 970 input pins */
-    PPC970_INPUT_HRESET     = 0,
-    PPC970_INPUT_SRESET     = 1,
-    PPC970_INPUT_CKSTP      = 2,
-    PPC970_INPUT_TBEN       = 3,
-    PPC970_INPUT_MCP        = 4,
-    PPC970_INPUT_INT        = 5,
-    PPC970_INPUT_THINT      = 6,
-    PPC970_INPUT_NB,
-};
-
-enum {
-    /* POWER7 input pins */
-    POWER7_INPUT_INT        = 0,
-    /* POWER7 probably has other inputs, but we don't care about them
-     * for any existing machine.  We can wire these up when we need
-     * them */
-    POWER7_INPUT_NB,
-};
-#endif
 
 /* Hardware exceptions definitions */
 enum {
