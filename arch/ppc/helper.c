@@ -126,11 +126,9 @@ static inline int _pte_check(mmu_ctx_t *ctx, int is_64b, target_ulong pte0,
     pteh = (pte0 >> 6) & 1;
     if (ptev && h == pteh) {
         /* Check vsid & api */
-        {
-            ptem = pte0 & PTE_PTEM_MASK;
-            mmask = PTE_CHECK_MASK;
-            pp = pte1 & 0x00000003;
-        }
+        ptem = pte0 & PTE_PTEM_MASK;
+        mmask = PTE_CHECK_MASK;
+        pp = pte1 & 0x00000003;
         if (ptem == ctx->ptem) {
             if (ctx->raddr != (target_phys_addr_t)-1ULL) {
                 /* all matches should have equal RPN, WIMG & PP */
@@ -409,7 +407,7 @@ static inline target_phys_addr_t get_pteg_offset(CPUState *env,
 }
 
 /* PTE table lookup */
-static inline int _find_pte(CPUState *env, mmu_ctx_t *ctx, int is_64b, int h,
+static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h,
                             int rw, int type, int target_page_bits)
 {
     target_phys_addr_t pteg_off;
@@ -418,8 +416,7 @@ static inline int _find_pte(CPUState *env, mmu_ctx_t *ctx, int is_64b, int h,
     int ret, r;
 
     ret = -1; /* No entry found */
-    pteg_off = get_pteg_offset(env, ctx->hash[h],
-                               is_64b ? HASH_PTE_SIZE_64 : HASH_PTE_SIZE_32);
+    pteg_off = get_pteg_offset(env, ctx->hash[h], HASH_PTE_SIZE_32);
     for (i = 0; i < 8; i++) {
         if (env->external_htab) {
             pte0 = ldl_p(env->external_htab + pteg_off + (i * 8));
@@ -458,25 +455,17 @@ static inline int _find_pte(CPUState *env, mmu_ctx_t *ctx, int is_64b, int h,
         /* Update page flags */
         pte1 = ctx->raddr;
         if (pte_update_flags(ctx, &pte1, ret, rw) == 1) {
-            {
-                if (env->external_htab) {
-                    stl_p(env->external_htab + pteg_off + (good * 8) + 4,
-                          pte1);
-                } else {
-                    stl_phys_notdirty(env->htab_base + pteg_off +
-                                      (good * 8) + 4, pte1);
-                }
+            if (env->external_htab) {
+                stl_p(env->external_htab + pteg_off + (good * 8) + 4,
+                      pte1);
+            } else {
+                stl_phys_notdirty(env->htab_base + pteg_off +
+                                  (good * 8) + 4, pte1);
             }
         }
     }
 
     return ret;
-}
-
-static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h, int rw,
-                           int type, int target_page_bits)
-{
-    return _find_pte(env, ctx, 0, h, rw, type, target_page_bits);
 }
 
 /* Perform segment based translation */
@@ -1629,11 +1618,9 @@ void ppc_store_sdr1 (CPUState *env, target_ulong value)
 {
     if (env->spr[SPR_SDR1] != value) {
         env->spr[SPR_SDR1] = value;
-        {
-            /* FIXME: Should check for valid HTABMASK values */
-            env->htab_mask = ((value & SDR_32_HTABMASK) << 16) | 0xFFFF;
-            env->htab_base = value & SDR_32_HTABORG;
-        }
+        /* FIXME: Should check for valid HTABMASK values */
+        env->htab_mask = ((value & SDR_32_HTABMASK) << 16) | 0xFFFF;
+        env->htab_base = value & SDR_32_HTABORG;
         tlb_flush(env, 1);
     }
 }

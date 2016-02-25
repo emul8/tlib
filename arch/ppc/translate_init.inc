@@ -7058,7 +7058,7 @@ static const ppc_def_t ppc_defs[] = {
     POWERPC_DEF("7447A_v1.2",    CPU_POWERPC_74x7A_v12,              7445),
     /* PowerPC 7457A v1.2 (G4)                                               */
     POWERPC_DEF("7457A_v1.2",    CPU_POWERPC_74x7A_v12,              7455),
-    /* 64 bits PowerPC                                                       */
+    /* Generic PowerPCs                                                      */
     POWERPC_DEF("ppc32",         CPU_POWERPC_PPC32,                  PPC32),
     POWERPC_DEF("ppc",           CPU_POWERPC_DEFAULT,                DEFAULT),
     /* Fallback                                                              */

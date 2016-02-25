@@ -556,35 +556,35 @@ static inline void gen_op_cmpi(TCGv arg0, target_ulong arg1, int s, int crf)
 
 static inline void gen_set_Rc0(DisasContext *s, TCGv reg)
 {
-        gen_op_cmpi(reg, 0, 1, 0);
+    gen_op_cmpi(reg, 0, 1, 0);
 }
 
 /* cmp */
 static void gen_cmp(DisasContext *s)
 {
-        gen_op_cmp(cpu_gpr[rA(s->opcode)], cpu_gpr[rB(s->opcode)],
-                   1, crfD(s->opcode));
+    gen_op_cmp(cpu_gpr[rA(s->opcode)], cpu_gpr[rB(s->opcode)],
+               1, crfD(s->opcode));
 }
 
 /* cmpi */
 static void gen_cmpi(DisasContext *s)
 {
-        gen_op_cmpi(cpu_gpr[rA(s->opcode)], SIMM(s->opcode),
-                    1, crfD(s->opcode));
+    gen_op_cmpi(cpu_gpr[rA(s->opcode)], SIMM(s->opcode),
+                1, crfD(s->opcode));
 }
 
 /* cmpl */
 static void gen_cmpl(DisasContext *s)
 {
-        gen_op_cmp(cpu_gpr[rA(s->opcode)], cpu_gpr[rB(s->opcode)],
-                   0, crfD(s->opcode));
+    gen_op_cmp(cpu_gpr[rA(s->opcode)], cpu_gpr[rB(s->opcode)],
+               0, crfD(s->opcode));
 }
 
 /* cmpli */
 static void gen_cmpli(DisasContext *s)
 {
-        gen_op_cmpi(cpu_gpr[rA(s->opcode)], UIMM(s->opcode),
-                    0, crfD(s->opcode));
+    gen_op_cmpi(cpu_gpr[rA(s->opcode)], UIMM(s->opcode),
+                0, crfD(s->opcode));
 }
 
 /* isel (PowerPC 2.03 specification) */
@@ -1810,7 +1810,7 @@ static inline void gen_addr_register(DisasContext *s, TCGv EA)
     if (rA(s->opcode) == 0) {
         tcg_gen_movi_tl(EA, 0);
     } else {
-            tcg_gen_mov_tl(EA, cpu_gpr[rA(s->opcode)]);
+        tcg_gen_mov_tl(EA, cpu_gpr[rA(s->opcode)]);
     }
 }
 
@@ -2517,10 +2517,6 @@ static inline void gen_qemu_st32fiw(DisasContext *s, TCGv_i64 arg1, TCGv arg2)
 /* stfiwx */
 GEN_STXF(stfiw, st32fiw, 0x17, 0x1E, PPC_FLOAT_STFIWX);
 
-static inline void gen_update_cfar(DisasContext *s, target_ulong nip)
-{
-}
-
 /***                                Branch                                 ***/
 static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 {
@@ -2552,7 +2548,7 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 
 static inline void gen_setlr(DisasContext *s, target_ulong nip)
 {
-        tcg_gen_movi_tl(cpu_lr, nip);
+    tcg_gen_movi_tl(cpu_lr, nip);
 }
 
 /* b ba bl bla */
@@ -2562,14 +2558,13 @@ static void gen_b(DisasContext *s)
 
     s->exception = POWERPC_EXCP_BRANCH;
     /* sign extend LI */
-        li = ((int32_t)LI(s->opcode) << 6) >> 6;
+    li = ((int32_t)LI(s->opcode) << 6) >> 6;
     if (likely(AA(s->opcode) == 0))
         target = s->nip + li - 4;
     else
         target = li;
     if (LK(s->opcode))
         gen_setlr(s, s->nip);
-    gen_update_cfar(s, s->nip);
     gen_goto_tb(s, 0, target);
 }
 
@@ -2604,7 +2599,7 @@ static inline void gen_bcond(DisasContext *s, int type)
             return;
         }
         tcg_gen_subi_tl(cpu_ctr, cpu_ctr, 1);
-            tcg_gen_mov_tl(temp, cpu_ctr);
+        tcg_gen_mov_tl(temp, cpu_ctr);
         if (bo & 0x2) {
             tcg_gen_brcondi_tl(TCG_COND_NE, temp, 0, l1);
         } else {
@@ -2627,7 +2622,6 @@ static inline void gen_bcond(DisasContext *s, int type)
         }
         tcg_temp_free_i32(temp);
     }
-    gen_update_cfar(s, s->nip);
     if (type == BCOND_IM) {
         target_ulong li = (target_long)((int16_t)(BD(s->opcode)));
         if (likely(AA(s->opcode) == 0)) {
@@ -2638,10 +2632,10 @@ static inline void gen_bcond(DisasContext *s, int type)
         gen_set_label(l1);
         gen_goto_tb(s, 1, s->nip);
     } else {
-            tcg_gen_andi_tl(cpu_nip, target, ~3);
+        tcg_gen_andi_tl(cpu_nip, target, ~3);
         tcg_gen_exit_tb(0);
         gen_set_label(l1);
-            tcg_gen_movi_tl(cpu_nip, s->nip);
+        tcg_gen_movi_tl(cpu_nip, s->nip);
         tcg_gen_exit_tb(0);
     }
 }
@@ -2726,7 +2720,6 @@ static void gen_rfi(DisasContext *s)
         gen_inval_exception(s, POWERPC_EXCP_PRIV_OPC);
         return;
     }
-    gen_update_cfar(s, s->nip);
     gen_helper_rfi();
     gen_sync_exception(s);
 }
