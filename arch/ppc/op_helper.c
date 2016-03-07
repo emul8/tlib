@@ -66,13 +66,6 @@ target_ulong helper_load_atbu (void)
     return 0;
 }
 
-#if defined(TARGET_PPC64)
-target_ulong helper_load_purr (void)
-{
-    return 0;
-}
-#endif
-
 target_ulong helper_load_601_rtcl (void)
 {
     return 0;
@@ -82,12 +75,6 @@ target_ulong helper_load_601_rtcu (void)
 {
     return 0;
 }
-
-#if defined (TARGET_PPC64)
-void helper_store_asr (target_ulong val)
-{
-}
-#endif
 
 void helper_store_sdr1 (target_ulong val)
 {
@@ -215,16 +202,6 @@ void helper_store_601_batu (uint32_t nr, target_ulong val)
 /*****************************************************************************/
 /* Memory load and stores */
 
-static inline target_ulong addr_add(target_ulong addr, target_long arg)
-{
-#if defined(TARGET_PPC64)
-        if (!msr_sf)
-            return (uint32_t)(addr + arg);
-        else
-#endif
-            return addr + arg;
-}
-
 void helper_lmw (target_ulong addr, uint32_t reg)
 {
     for (; reg < 32; reg++) {
@@ -232,7 +209,7 @@ void helper_lmw (target_ulong addr, uint32_t reg)
             env->gpr[reg] = bswap32(ldl(addr));
         else
             env->gpr[reg] = ldl(addr);
-	addr = addr_add(addr, 4);
+	addr = addr + 4;
     }
 }
 
@@ -243,7 +220,7 @@ void helper_stmw (target_ulong addr, uint32_t reg)
             stl(addr, bswap32((uint32_t)env->gpr[reg]));
         else
             stl(addr, (uint32_t)env->gpr[reg]);
-	addr = addr_add(addr, 4);
+	addr = addr + 4;
     }
 }
 
@@ -253,13 +230,13 @@ void helper_lsw(target_ulong addr, uint32_t nb, uint32_t reg)
     for (; nb > 3; nb -= 4) {
         env->gpr[reg] = ldl(addr);
         reg = (reg + 1) % 32;
-	addr = addr_add(addr, 4);
+	addr = addr + 4;
     }
     if (unlikely(nb > 0)) {
         env->gpr[reg] = 0;
         for (sh = 24; nb > 0; nb--, sh -= 8) {
             env->gpr[reg] |= ldub(addr) << sh;
-	    addr = addr_add(addr, 1);
+	    addr = addr + 1;
         }
     }
 }
@@ -288,12 +265,12 @@ void helper_stsw(target_ulong addr, uint32_t nb, uint32_t reg)
     for (; nb > 3; nb -= 4) {
         stl(addr, env->gpr[reg]);
         reg = (reg + 1) % 32;
-	addr = addr_add(addr, 4);
+	addr = addr + 4;
     }
     if (unlikely(nb > 0)) {
         for (sh = 24; nb > 0; nb--, sh -= 8) {
             stb(addr, (env->gpr[reg] >> sh) & 0xFF);
-            addr = addr_add(addr, 1);
+            addr = addr + 1;
         }
     }
 }
@@ -340,7 +317,7 @@ target_ulong helper_lscbx (target_ulong addr, uint32_t reg, uint32_t ra, uint32_
     d = 24;
     for (i = 0; i < xer_bc; i++) {
         c = ldub(addr);
-	addr = addr_add(addr, 1);
+	addr = addr + 1;
         /* ra (if not 0) and rb are never modified */
         if (likely(reg != rb && (ra == 0 || reg != ra))) {
             env->gpr[reg] = (env->gpr[reg] & ~(0xFF << d)) | (c << d);
@@ -360,53 +337,11 @@ target_ulong helper_lscbx (target_ulong addr, uint32_t reg, uint32_t ra, uint32_
 
 /*****************************************************************************/
 /* Fixed point operations helpers */
-#if defined(TARGET_PPC64)
-
-/* multiply high word */
-uint64_t helper_mulhd (uint64_t arg1, uint64_t arg2)
-{
-    uint64_t tl, th;
-
-    muls64(&tl, &th, arg1, arg2);
-    return th;
-}
-
-/* multiply high word unsigned */
-uint64_t helper_mulhdu (uint64_t arg1, uint64_t arg2)
-{
-    uint64_t tl, th;
-
-    mulu64(&tl, &th, arg1, arg2);
-    return th;
-}
-
-uint64_t helper_mulldo (uint64_t arg1, uint64_t arg2)
-{
-    int64_t th;
-    uint64_t tl;
-
-    muls64(&tl, (uint64_t *)&th, arg1, arg2);
-    /* If th != 0 && th != -1, then we had an overflow */
-    if (likely((uint64_t)(th + 1) <= 1)) {
-        env->xer &= ~(1 << XER_OV);
-    } else {
-        env->xer |= (1 << XER_OV) | (1 << XER_SO);
-    }
-    return (int64_t)tl;
-}
-#endif
 
 target_ulong helper_cntlzw (target_ulong t)
 {
     return clz32(t);
 }
-
-#if defined(TARGET_PPC64)
-target_ulong helper_cntlzd (target_ulong t)
-{
-    return clz64(t);
-}
-#endif
 
 /* shift right arithmetic helper */
 target_ulong helper_sraw (target_ulong value, target_ulong shift)
@@ -437,68 +372,6 @@ target_ulong helper_sraw (target_ulong value, target_ulong shift)
     return (target_long)ret;
 }
 
-#if defined(TARGET_PPC64)
-target_ulong helper_srad (target_ulong value, target_ulong shift)
-{
-    int64_t ret;
-
-    if (likely(!(shift & 0x40))) {
-        if (likely((uint64_t)shift != 0)) {
-            shift &= 0x3f;
-            ret = (int64_t)value >> shift;
-            if (likely(ret >= 0 || (value & ((1 << shift) - 1)) == 0)) {
-                env->xer &= ~(1 << XER_CA);
-            } else {
-                env->xer |= (1 << XER_CA);
-            }
-        } else {
-            ret = (int64_t)value;
-            env->xer &= ~(1 << XER_CA);
-        }
-    } else {
-        ret = (int64_t)value >> 63;
-        if (ret) {
-            env->xer |= (1 << XER_CA);
-        } else {
-            env->xer &= ~(1 << XER_CA);
-        }
-    }
-    return ret;
-}
-#endif
-
-#if defined(TARGET_PPC64)
-target_ulong helper_popcntb (target_ulong val)
-{
-    val = (val & 0x5555555555555555ULL) + ((val >>  1) &
-                                           0x5555555555555555ULL);
-    val = (val & 0x3333333333333333ULL) + ((val >>  2) &
-                                           0x3333333333333333ULL);
-    val = (val & 0x0f0f0f0f0f0f0f0fULL) + ((val >>  4) &
-                                           0x0f0f0f0f0f0f0f0fULL);
-    return val;
-}
-
-target_ulong helper_popcntw (target_ulong val)
-{
-    val = (val & 0x5555555555555555ULL) + ((val >>  1) &
-                                           0x5555555555555555ULL);
-    val = (val & 0x3333333333333333ULL) + ((val >>  2) &
-                                           0x3333333333333333ULL);
-    val = (val & 0x0f0f0f0f0f0f0f0fULL) + ((val >>  4) &
-                                           0x0f0f0f0f0f0f0f0fULL);
-    val = (val & 0x00ff00ff00ff00ffULL) + ((val >>  8) &
-                                           0x00ff00ff00ff00ffULL);
-    val = (val & 0x0000ffff0000ffffULL) + ((val >> 16) &
-                                           0x0000ffff0000ffffULL);
-    return val;
-}
-
-target_ulong helper_popcntd (target_ulong val)
-{
-    return ctpop64(val);
-}
-#else
 target_ulong helper_popcntb (target_ulong val)
 {
     val = (val & 0x55555555) + ((val >>  1) & 0x55555555);
@@ -516,7 +389,6 @@ target_ulong helper_popcntw (target_ulong val)
     val = (val & 0x0000ffff) + ((val >> 16) & 0x0000ffff);
     return val;
 }
-#endif
 
 /*****************************************************************************/
 /* Floating point operations helpers */
@@ -1137,53 +1009,6 @@ uint64_t helper_fctiwz (uint64_t arg)
     return farg.ll;
 }
 
-#if defined(TARGET_PPC64)
-/* fcfid - fcfid. */
-uint64_t helper_fcfid (uint64_t arg)
-{
-    CPU_DoubleU farg;
-    farg.d = int64_to_float64(arg, &env->fp_status);
-    return farg.ll;
-}
-
-/* fctid - fctid. */
-uint64_t helper_fctid (uint64_t arg)
-{
-    CPU_DoubleU farg;
-    farg.ll = arg;
-
-    if (unlikely(float64_is_signaling_nan(farg.d))) {
-        /* sNaN conversion */
-        farg.ll = fload_invalid_op_excp(POWERPC_EXCP_FP_VXSNAN | POWERPC_EXCP_FP_VXCVI);
-    } else if (unlikely(float64_is_quiet_nan(farg.d) || float64_is_infinity(farg.d))) {
-        /* qNan / infinity conversion */
-        farg.ll = fload_invalid_op_excp(POWERPC_EXCP_FP_VXCVI);
-    } else {
-        farg.ll = float64_to_int64(farg.d, &env->fp_status);
-    }
-    return farg.ll;
-}
-
-/* fctidz - fctidz. */
-uint64_t helper_fctidz (uint64_t arg)
-{
-    CPU_DoubleU farg;
-    farg.ll = arg;
-
-    if (unlikely(float64_is_signaling_nan(farg.d))) {
-        /* sNaN conversion */
-        farg.ll = fload_invalid_op_excp(POWERPC_EXCP_FP_VXSNAN | POWERPC_EXCP_FP_VXCVI);
-    } else if (unlikely(float64_is_quiet_nan(farg.d) || float64_is_infinity(farg.d))) {
-        /* qNan / infinity conversion */
-        farg.ll = fload_invalid_op_excp(POWERPC_EXCP_FP_VXCVI);
-    } else {
-        farg.ll = float64_to_int64_round_to_zero(farg.d, &env->fp_status);
-    }
-    return farg.ll;
-}
-
-#endif
-
 static inline uint64_t do_fri(uint64_t arg, int rounding_mode)
 {
     CPU_DoubleU farg;
@@ -1567,20 +1392,8 @@ void helper_store_msr (target_ulong val)
 static inline void do_rfi(target_ulong nip, target_ulong msr,
                           target_ulong msrm, int keep_msrh)
 {
-#if defined(TARGET_PPC64)
-    if (msr & (1ULL << MSR_SF)) {
-        nip = (uint64_t)nip;
-        msr &= (uint64_t)msrm;
-    } else {
-        nip = (uint32_t)nip;
-        msr = (uint32_t)(msr & msrm);
-        if (keep_msrh)
-            msr |= env->msr & ~((uint64_t)0xFFFFFFFF);
-    }
-#else
     nip = (uint32_t)nip;
     msr &= (uint32_t)msrm;
-#endif
     /* XXX: beware: this is false if VLE is supported */
     env->nip = nip & ~((target_ulong)0x00000003);
     hreg_store_msr(env, msr, 1);
@@ -1596,20 +1409,6 @@ void helper_rfi (void)
            ~((target_ulong)0x783F0000), 1);
 }
 
-#if defined(TARGET_PPC64)
-void helper_rfid (void)
-{
-    do_rfi(env->spr[SPR_SRR0], env->spr[SPR_SRR1],
-           ~((target_ulong)0x783F0000), 0);
-}
-
-void helper_hrfid (void)
-{
-    do_rfi(env->spr[SPR_HSRR0], env->spr[SPR_HSRR1],
-           ~((target_ulong)0x783F0000), 0);
-}
-#endif
-
 void helper_tw (target_ulong arg1, target_ulong arg2, uint32_t flags)
 {
     if (!likely(!(((int32_t)arg1 < (int32_t)arg2 && (flags & 0x10)) ||
@@ -1620,18 +1419,6 @@ void helper_tw (target_ulong arg1, target_ulong arg2, uint32_t flags)
         helper_raise_exception_err(POWERPC_EXCP_PROGRAM, POWERPC_EXCP_TRAP);
     }
 }
-
-#if defined(TARGET_PPC64)
-void helper_td (target_ulong arg1, target_ulong arg2, uint32_t flags)
-{
-    if (!likely(!(((int64_t)arg1 < (int64_t)arg2 && (flags & 0x10)) ||
-                  ((int64_t)arg1 > (int64_t)arg2 && (flags & 0x08)) ||
-                  ((int64_t)arg1 == (int64_t)arg2 && (flags & 0x04)) ||
-                  ((uint64_t)arg1 < (uint64_t)arg2 && (flags & 0x02)) ||
-                  ((uint64_t)arg1 > (uint64_t)arg2 && (flags & 0x01)))))
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM, POWERPC_EXCP_TRAP);
-}
-#endif
 
 /*****************************************************************************/
 /* PowerPC 601 specific instructions (POWER bridge) */
@@ -3678,10 +3465,6 @@ void tlb_fill(CPUState *env1, target_ulong addr, int is_write, int mmu_idx,
 /* Segment registers load and store */
 target_ulong helper_load_sr (target_ulong sr_num)
 {
-#if defined(TARGET_PPC64)
-    if (env->mmu_model & POWERPC_MMU_64)
-        return ppc_load_sr(env, sr_num);
-#endif
     return env->sr[sr_num];
 }
 
@@ -3689,47 +3472,6 @@ void helper_store_sr (target_ulong sr_num, target_ulong val)
 {
     ppc_store_sr(env, sr_num, val);
 }
-
-/* SLB management */
-#if defined(TARGET_PPC64)
-void helper_store_slb (target_ulong rb, target_ulong rs)
-{
-    if (ppc_store_slb(env, rb, rs) < 0) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM, POWERPC_EXCP_INVAL);
-    }
-}
-
-target_ulong helper_load_slb_esid (target_ulong rb)
-{
-    target_ulong rt;
-
-    if (ppc_load_slb_esid(env, rb, &rt) < 0) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM, POWERPC_EXCP_INVAL);
-    }
-    return rt;
-}
-
-target_ulong helper_load_slb_vsid (target_ulong rb)
-{
-    target_ulong rt;
-
-    if (ppc_load_slb_vsid(env, rb, &rt) < 0) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM, POWERPC_EXCP_INVAL);
-    }
-    return rt;
-}
-
-void helper_slbia (void)
-{
-    ppc_slb_invalidate_all(env);
-}
-
-void helper_slbie (target_ulong addr)
-{
-    ppc_slb_invalidate_one(env, addr);
-}
-
-#endif /* defined(TARGET_PPC64) */
 
 /* TLB management */
 void helper_tlbia (void)
@@ -3843,23 +3585,6 @@ static inline int booke_page_size_to_tlb(target_ulong page_size)
     case 0x40000000UL:
         size = 0xA;
         break;
-#if defined (TARGET_PPC64)
-    case 0x000100000000ULL:
-        size = 0xB;
-        break;
-    case 0x000400000000ULL:
-        size = 0xC;
-        break;
-    case 0x001000000000ULL:
-        size = 0xD;
-        break;
-    case 0x004000000000ULL:
-        size = 0xE;
-        break;
-    case 0x010000000000ULL:
-        size = 0xF;
-        break;
-#endif
     default:
         size = -1;
         break;
