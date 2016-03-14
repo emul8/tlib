@@ -253,7 +253,6 @@ typedef struct opc_handler_t opc_handler_t;
 typedef struct CPUState CPUState;
 typedef struct ppc_tb_t ppc_tb_t;
 typedef struct ppc_spr_t ppc_spr_t;
-typedef struct ppc_dcr_t ppc_dcr_t;
 typedef union ppc_avr_t ppc_avr_t;
 typedef union ppc_tlb_t ppc_tlb_t;
 
@@ -923,8 +922,6 @@ struct CPUState {
     float_status vec_status;
 
     /* Internal devices resources */
-    /* Device control registers */
-    ppc_dcr_t *dcr_env;
 
     int dcache_line_size;
     int icache_line_size;
@@ -1026,10 +1023,6 @@ int ppcmas_tlb_check(CPUState *env, ppcmas_tlb_t *tlb,
 void ppc_tlb_invalidate_all (CPUState *env);
 void ppc_tlb_invalidate_one (CPUState *env, target_ulong addr);
 int ppcemb_tlb_search (CPUState *env, target_ulong address, uint32_t pid);
-
-/* Device control registers */
-int ppc_dcr_read (ppc_dcr_t *dcr_env, int dcrn, uint32_t *valp);
-int ppc_dcr_write (ppc_dcr_t *dcr_env, int dcrn, uint32_t val);
 
 /* MMU modes definitions */
 #define MMU_MODE0_SUFFIX _user
@@ -1917,7 +1910,5 @@ static inline void cpu_pc_from_tb(CPUState *env, TranslationBlock *tb)
 {
     env->nip = tb->pc;
 }
-
-int ppc_set_pending_interrupt(int n_IRQ, int level);
 
 #endif /* !defined (__CPU_PPC_H__) */

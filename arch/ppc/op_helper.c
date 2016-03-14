@@ -1559,27 +1559,17 @@ target_ulong helper_602_mfrom (target_ulong arg)
 /* XXX: to be improved to check access rights when in user-mode */
 target_ulong helper_load_dcr (target_ulong dcrn)
 {
-    uint32_t val = 0;
-
-    if (unlikely(env->dcr_env == NULL)) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM,
-                                   POWERPC_EXCP_INVAL | POWERPC_EXCP_INVAL_INVAL);
-    } else if (unlikely(ppc_dcr_read(env->dcr_env, (uint32_t)dcrn, &val) != 0)) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM,
-                                   POWERPC_EXCP_INVAL | POWERPC_EXCP_PRIV_REG);
-    }
-    return val;
+    tlib_printf(LOG_LEVEL_ERROR, "DCR operations not supported.");
+    helper_raise_exception_err(POWERPC_EXCP_PROGRAM,
+                               POWERPC_EXCP_INVAL | POWERPC_EXCP_INVAL_INVAL);
+    return 0;
 }
 
 void helper_store_dcr (target_ulong dcrn, target_ulong val)
 {
-    if (unlikely(env->dcr_env == NULL)) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM,
-                                   POWERPC_EXCP_INVAL | POWERPC_EXCP_INVAL_INVAL);
-    } else if (unlikely(ppc_dcr_write(env->dcr_env, (uint32_t)dcrn, (uint32_t)val) != 0)) {
-        helper_raise_exception_err(POWERPC_EXCP_PROGRAM,
-                                   POWERPC_EXCP_INVAL | POWERPC_EXCP_PRIV_REG);
-    }
+    tlib_printf(LOG_LEVEL_ERROR, "DCR operations not supported.");
+    helper_raise_exception_err(POWERPC_EXCP_PROGRAM,
+                               POWERPC_EXCP_INVAL | POWERPC_EXCP_INVAL_INVAL);
 }
 
 void helper_40x_rfci (void)

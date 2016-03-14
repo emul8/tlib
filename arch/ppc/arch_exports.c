@@ -22,6 +22,15 @@
 
 int32_t tlib_set_pending_interrupt(int32_t interruptNo, int32_t level)
 {
-  return ppc_set_pending_interrupt(interruptNo, level);
+    if (level) {
+        cpu->pending_interrupts |= 1 << n_IRQ;
+    } else {
+        cpu->pending_interrupts &= ~(1 << n_IRQ);
+        if (cpu->pending_interrupts == 0)
+        {
+          return 1;
+        }
+    }
+    return 0;
 }
 
