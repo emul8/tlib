@@ -23,9 +23,9 @@
 int32_t tlib_set_pending_interrupt(int32_t interruptNo, int32_t level)
 {
     if (level) {
-        cpu->pending_interrupts |= 1 << n_IRQ;
+        cpu->pending_interrupts |= 1 << interruptNo;
     } else {
-        cpu->pending_interrupts &= ~(1 << n_IRQ);
+        cpu->pending_interrupts &= ~(1 << interruptNo);
         if (cpu->pending_interrupts == 0)
         {
           return 1;

@@ -21,7 +21,6 @@
 #include "dyngen-exec.h"
 #include "host-utils.h"
 #include "helper.h"
-#include "ppc.h"
 #include "helper_regs.h"
 #include "arch_callbacks.h"
 #include "infrastructure.h"

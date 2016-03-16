@@ -26,7 +26,6 @@
 #include "infrastructure.h"
 #include "arch_callbacks.h"
 
-#include "ppc.h"
 #include "cpu.h"
 #include "tcg-op.h"
 #include "host-utils.h"
