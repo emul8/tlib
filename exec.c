@@ -394,6 +394,8 @@ void code_gen_free(void) {
   if(retval == -1) {
     tlib_abort("Could not free dynamic translator buffer\n");
   }
+#else
+  tlib_free(code_gen_buffer);
 #endif
   tlib_free(tbs);
 }
