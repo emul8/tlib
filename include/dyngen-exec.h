@@ -25,7 +25,7 @@
 typedef void * host_reg_t;
 
 #if defined(__i386__)
-#define AREG0 "ebx"
+#define AREG0 "ebp"
 #elif defined(__x86_64__)
 #define AREG0 "r14"
 #elif defined(__arm__)
