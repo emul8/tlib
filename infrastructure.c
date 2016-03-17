@@ -25,7 +25,7 @@
 
 void *global_retaddr = 0;
 
-#if __x86_64__
+#if defined(__linux__) && defined(__x86_64__)
 
 asm (".symver memcpy, memcpy@GLIBC_2.2.5");
 
