@@ -2527,7 +2527,9 @@ void helper_vsldoi (ppc_avr_t *r, ppc_avr_t *a, ppc_avr_t *b, uint32_t shift)
 }
 
 #pragma GCC push_options
+#ifdef __i386__
 #pragma GCC optimize("O1")
+#endif
 void helper_vslo (ppc_avr_t *r, ppc_avr_t *a, ppc_avr_t *b)
 {
   int sh = (b->u8[LO_IDX*0xf] >> 3) & 0xf;
@@ -2598,7 +2600,9 @@ VSR(w, u32)
 #undef VSR
 
 #pragma GCC push_options
+#ifdef __i386__
 #pragma GCC optimize("O1")
+#endif
 void helper_vsro (ppc_avr_t *r, ppc_avr_t *a, ppc_avr_t *b)
 {
   int sh = (b->u8[LO_IDX*0xf] >> 3) & 0xf;
