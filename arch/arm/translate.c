@@ -96,7 +96,7 @@ static const char *regnames[] =
       "r8", "r9", "r10", "r11", "r12", "r13", "r14", "pc" };
 
 /* initialize TCG globals.  */
-void arm_translate_init(void)
+void translate_init(void)
 {
     int i;
 

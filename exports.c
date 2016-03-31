@@ -213,16 +213,6 @@ void tlib_remove_breakpoint(uint32_t address)
   cpu_breakpoint_remove(cpu, address, BP_GDB);
 }
 
-void tlib_add_watchpoint(uint32_t address, uint32_t length)
-{
-  cpu_watchpoint_insert(cpu, address, length, BP_GDB, NULL);
-}
-
-void tlib_remove_watchpoint(uint32_t address, uint32_t length)
-{
-  cpu_watchpoint_remove(cpu, address, length, BP_GDB);
-}
-
 unsigned long translation_cache_size;
 
 void tlib_set_translation_cache_size(unsigned long size)

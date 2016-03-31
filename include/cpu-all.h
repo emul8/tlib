@@ -21,7 +21,6 @@
 
 #include <stdint.h>
 
-#include "tlib-common.h"
 #include "cpu-common.h"
 
 /* some important defines:
@@ -585,12 +584,7 @@ void cpu_reset_interrupt(CPUState *env, int mask);
 
 void cpu_exit(CPUState *s);
 
-/* Breakpoint/watchpoint flags */
-#define BP_MEM_READ           0x01
-#define BP_MEM_WRITE          0x02
-#define BP_MEM_ACCESS         (BP_MEM_READ | BP_MEM_WRITE)
-#define BP_STOP_BEFORE_ACCESS 0x04
-#define BP_WATCHPOINT_HIT     0x08
+/* Breakpoint flags */
 #define BP_GDB                0x10
 #define BP_CPU                0x20
 
@@ -599,12 +593,6 @@ int cpu_breakpoint_insert(CPUState *env, target_ulong pc, int flags,
 int cpu_breakpoint_remove(CPUState *env, target_ulong pc, int flags);
 void cpu_breakpoint_remove_by_ref(CPUState *env, CPUBreakpoint *breakpoint);
 void cpu_breakpoint_remove_all(CPUState *env, int mask);
-int cpu_watchpoint_insert(CPUState *env, target_ulong addr, target_ulong len,
-                          int flags, CPUWatchpoint **watchpoint);
-int cpu_watchpoint_remove(CPUState *env, target_ulong addr,
-                          target_ulong len, int flags);
-void cpu_watchpoint_remove_by_ref(CPUState *env, CPUWatchpoint *watchpoint);
-void cpu_watchpoint_remove_all(CPUState *env, int mask);
 
 #define SSTEP_ENABLE  0x1  /* Enable simulated HW single stepping */
 #define SSTEP_NOIRQ   0x2  /* Do not use IRQ while single stepping */

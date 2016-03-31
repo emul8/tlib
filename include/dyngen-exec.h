@@ -19,7 +19,7 @@
 #if !defined(__DYNGEN_EXEC_H__)
 #define __DYNGEN_EXEC_H__
 
-#include "tlib-common.h"
+#include "cpu.h"
 
 /* XXX: This may be wrong for 64-bit ILP32 hosts.  */
 typedef void * host_reg_t;

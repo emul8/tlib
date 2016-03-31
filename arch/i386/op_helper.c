@@ -21,7 +21,6 @@
 #include "cpu.h"
 #include "dyngen-exec.h"
 #include "host-utils.h"
-#include "tlib-common.h"
 #include "cpu-defs.h"
 #include "helper.h"
 
@@ -4678,20 +4677,6 @@ void helper_boundl(target_ulong a0, int v)
         raise_exception(EXCP05_BOUND);
     }
 }
-
-#define MMUSUFFIX _mmu
-
-#define SHIFT 0
-#include "softmmu_template.h"
-
-#define SHIFT 1
-#include "softmmu_template.h"
-
-#define SHIFT 2
-#include "softmmu_template.h"
-
-#define SHIFT 3
-#include "softmmu_template.h"
 
 /* try to fill the TLB and return an exception if error. If retaddr is
    NULL, it means that the function was called in C code (i.e. not

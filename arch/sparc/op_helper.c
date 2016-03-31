@@ -1,8 +1,13 @@
 #include "dyngen-exec.h"
-#include "softmmu_exec.h"
 #include "host-utils.h"
 #include "helper.h"
 #include "arch_callbacks.h"
+
+static void do_unaligned_access(target_ulong addr, int is_write, int is_user,
+                                void *retaddr);
+
+#define ALIGNED_ONLY
+#include "softmmu_exec.h"
 
 #define DT0 (env->dt0)
 #define DT1 (env->dt1)
@@ -1667,24 +1672,6 @@ target_ulong helper_rdpsr(void)
 {
     return get_psr();
 }
-
-static void do_unaligned_access(target_ulong addr, int is_write, int is_user,
-                                void *retaddr);
-
-#define MMUSUFFIX _mmu
-#define ALIGNED_ONLY
-
-#define SHIFT 0
-#include "softmmu_template.h"
-
-#define SHIFT 1
-#include "softmmu_template.h"
-
-#define SHIFT 2
-#include "softmmu_template.h"
-
-#define SHIFT 3
-#include "softmmu_template.h"
 
 /* XXX: make it generic ? */
 static void cpu_restore_state2(void *retaddr)

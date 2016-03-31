@@ -1,7 +1,7 @@
 #ifndef CPU_SPARC_H
 #define CPU_SPARC_H
 
-#include "tlib-common.h"
+#include <stdbool.h>
 
 #ifdef TARGET_PHYS_ADDR_BITS
 #undef TARGET_PHYS_ADDR_BITS
@@ -319,7 +319,7 @@ int cpu_sparc_handle_mmu_fault(CPUState *env1, target_ulong address, int rw,
 target_ulong mmu_probe(CPUState *env, target_ulong address, int mmulev);
 
 /* translate.c */
-void gen_intermediate_code_init(CPUState *env);
+void translate_init(CPUState *env);
 
 /* cpu-exec.c */
 int cpu_exec(CPUState *s);

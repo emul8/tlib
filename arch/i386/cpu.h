@@ -19,7 +19,8 @@
 #ifndef CPU_I386_H
 #define CPU_I386_H
 
-#include "tlib-common.h"
+#include <stdbool.h>
+#include "compiler.h"
 
 #ifdef TARGET_X86_64
 #define TARGET_LONG_BITS 64
@@ -754,8 +755,7 @@ typedef struct CPUState {
 
     union {
         CPUBreakpoint *cpu_breakpoint[4];
-        CPUWatchpoint *cpu_watchpoint[4];
-    }; /* break/watchpoints for dr[0..3] */
+    }; /* breakpoints for dr[0..3] */
 
     /* in order to simplify APIC support, we leave this pointer to the
        user */

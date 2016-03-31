@@ -2857,7 +2857,7 @@ void gen_intermediate_code(CPUState *env,
     }
 }
 
-void gen_intermediate_code_init(CPUState *env)
+void translate_init(CPUState *env)
 {
     unsigned int i;
     static int inited;

@@ -118,13 +118,6 @@ typedef struct CPUBreakpoint {
     QTAILQ_ENTRY(CPUBreakpoint) entry;
 } CPUBreakpoint;
 
-typedef struct CPUWatchpoint {
-    target_ulong vaddr;
-    target_ulong len_mask;
-    int flags; /* BP_* */
-    QTAILQ_ENTRY(CPUWatchpoint) entry;
-} CPUWatchpoint;
-
 #define CPU_TEMP_BUF_NLONGS 128
 #define CPU_COMMON                                                      \
     struct TranslationBlock *current_tb; /* currently executing TB  */  \
@@ -148,9 +141,6 @@ typedef struct CPUWatchpoint {
     /* ice debug support */                                             \
     QTAILQ_HEAD(breakpoints_head, CPUBreakpoint) breakpoints;            \
     int singlestep_enabled;                                             \
-                                                                        \
-    QTAILQ_HEAD(watchpoints_head, CPUWatchpoint) watchpoints;            \
-    CPUWatchpoint *watchpoint_hit;                                      \
                                                                         \
     /* Core interrupt code */                                           \
     jmp_buf jmp_env;                                                    \

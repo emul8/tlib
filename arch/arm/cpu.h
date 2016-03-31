@@ -21,7 +21,8 @@
 
 #define TARGET_LONG_BITS 32
 
-#include "tlib-common.h"
+#include <stdbool.h>
+#include <stdlib.h>
 #include "cpu-defs.h"
 
 #include "softfloat.h"
@@ -218,7 +219,7 @@ typedef struct CPUState {
 } CPUState;
 
 CPUState *cpu_init(const char *cpu_model);
-void arm_translate_init(void);
+void translate_init(void);
 int cpu_exec(CPUState *s);
 void do_interrupt(CPUState *);
 void switch_mode(CPUState *, int);
