@@ -90,6 +90,15 @@ void tlib_execute()
   cpu_exec(cpu);
 }
 
+void tlib_restore_context_direction(int forward);
+
+void tlib_stop_execution()
+{
+  tlib_restore_context_direction(1);
+  tb_phys_invalidate(cpu->current_tb, -1);
+  cpu_loop_exit(cpu);
+}
+
 void tlib_set_paused()
 {
   cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
@@ -246,14 +255,19 @@ uint32_t tlib_get_maximum_block_size()
 
 extern void *global_retaddr;
 
-void tlib_restore_context()
+void tlib_restore_context_direction(int forward)
 {
   unsigned long pc;
   TranslationBlock *tb;
 
   pc = (unsigned long)global_retaddr;
   tb = tb_find_pc(pc);
-  cpu_restore_state(cpu, tb, pc);
+  cpu_restore_state_direction(cpu, tb, pc, forward);
+}
+
+void tlib_restore_context()
+{
+  tlib_restore_context_direction(0);
 }
 
 void* tlib_export_state()

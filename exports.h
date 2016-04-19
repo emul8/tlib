@@ -8,6 +8,7 @@ void tlib_dispose(void);
 void tlib_reset(void);
 
 void tlib_execute(void);
+void tlib_stop_execution(void);
 void tlib_set_paused(void);
 void tlib_clear_paused(void);
 int32_t tlib_is_wfi(void);
@@ -27,6 +28,7 @@ void tlib_set_translation_cache_size(unsigned long size);
 void tlib_invalidate_translation_cache(void);
 uint32_t tlib_set_maximum_block_size(uint32_t size);
 uint32_t tlib_get_maximum_block_size(void);
+void tlib_restore_context_direction(int forward);
 void tlib_restore_context();
 void* tlib_export_state();
 int32_t tlib_get_state_size();

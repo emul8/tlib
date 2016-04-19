@@ -52,11 +52,11 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 
 /* The cpu state corresponding to 'searched_pc' is restored.
  */
-int cpu_restore_state(CPUState *env,
-		TranslationBlock *tb, unsigned long searched_pc)
+int cpu_restore_state_direction(CPUState *env,
+		TranslationBlock *tb, unsigned long searched_pc, int forward)
 {
     TCGContext *s = ctx->tcg_ctx;
-    int j;
+    int j, addend;
     unsigned long tc_ptr;
 
     tcg_func_start(s);
@@ -74,11 +74,20 @@ int cpu_restore_state(CPUState *env,
     j = tcg_gen_code_search_pc(s, (uint8_t *)tc_ptr, searched_pc - tc_ptr);
     if (j < 0)
         return -1;
-    /* now find start of instruction before */
+    /* now find start of instruction before (or after) */
+
+    addend = forward ? 1 : -1;
     while (ctx->gen_opc_instr_start[j] == 0)
-        j--;
+        j += addend;
 
     restore_state_to_opc(env, tb, j);
 
     return 0;
 }
+
+int cpu_restore_state(CPUState *env,
+		TranslationBlock *tb, unsigned long searched_pc)
+{
+   return cpu_restore_state_direction(env, tb, searched_pc, 0);
+}
+
