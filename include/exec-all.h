@@ -46,8 +46,6 @@ void restore_state_to_opc(CPUState *env, struct TranslationBlock *tb,
 
 void cpu_gen_code(CPUState *env, struct TranslationBlock *tb,
                  int *gen_code_size_ptr);
-int cpu_restore_state_direction(CPUState *env, struct TranslationBlock *tb,
-		unsigned long searched_pc, int forward);
 int cpu_restore_state(CPUState *env, struct TranslationBlock *tb,
 		unsigned long searched_pc);
 TranslationBlock *tb_gen_code(CPUState *env,

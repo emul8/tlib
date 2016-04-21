@@ -90,13 +90,18 @@ void tlib_execute()
   cpu_exec(cpu);
 }
 
-void tlib_restore_context_direction(int forward);
+void tlib_restore_context(void);
 
-void tlib_stop_execution()
+void tlib_restart_translation_block()
 {
-  tlib_restore_context_direction(1);
+  target_ulong pc, cs_base;
+  int cpu_flags;
+
+  tlib_restore_context();
+  cpu_get_tb_cpu_state(cpu, &pc, &cs_base, &cpu_flags);
   tb_phys_invalidate(cpu->current_tb, -1);
-  cpu_loop_exit(cpu);
+  tb_gen_code(cpu, pc, cs_base, cpu_flags, 1);
+  longjmp(cpu->jmp_env, 1);
 }
 
 void tlib_set_paused()
@@ -255,19 +260,14 @@ uint32_t tlib_get_maximum_block_size()
 
 extern void *global_retaddr;
 
-void tlib_restore_context_direction(int forward)
+void tlib_restore_context()
 {
   unsigned long pc;
   TranslationBlock *tb;
 
   pc = (unsigned long)global_retaddr;
   tb = tb_find_pc(pc);
-  cpu_restore_state_direction(cpu, tb, pc, forward);
-}
-
-void tlib_restore_context()
-{
-  tlib_restore_context_direction(0);
+  cpu_restore_state(cpu, tb, pc);
 }
 
 void* tlib_export_state()
