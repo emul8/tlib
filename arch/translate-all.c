@@ -74,8 +74,7 @@ int cpu_restore_state(CPUState *env,
     j = tcg_gen_code_search_pc(s, (uint8_t *)tc_ptr, searched_pc - tc_ptr);
     if (j < 0)
         return -1;
-    /* now find start of instruction before (or after) */
-
+    /* now find start of instruction before */
     while (ctx->gen_opc_instr_start[j] == 0)
         j--;
 
@@ -83,4 +82,3 @@ int cpu_restore_state(CPUState *env,
 
     return 0;
 }
-
