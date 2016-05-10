@@ -29,7 +29,6 @@ void tlib_invalidate_translation_cache(void);
 uint32_t tlib_set_maximum_block_size(uint32_t size);
 uint32_t tlib_get_maximum_block_size(void);
 void tlib_restore_context(void);
-void tlib_restore_context(void);
 void* tlib_export_state(void);
 int32_t tlib_get_state_size(void);
 
