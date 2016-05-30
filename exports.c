@@ -85,9 +85,9 @@ void tlib_reset()
   cpu_reset(cpu);
 }
 
-void tlib_execute()
+int32_t tlib_execute()
 {
-  cpu_exec(cpu);
+  return cpu_exec(cpu);
 }
 
 void tlib_restore_context(void);

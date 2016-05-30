@@ -7,7 +7,7 @@ int32_t tlib_init(char *cpu_name);
 void tlib_dispose(void);
 void tlib_reset(void);
 
-void tlib_execute(void);
+int32_t tlib_execute(void);
 void tlib_restart_translation_block(void);
 void tlib_set_paused(void);
 void tlib_clear_paused(void);
