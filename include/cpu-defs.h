@@ -120,6 +120,11 @@ typedef struct CPUBreakpoint {
 
 #define CPU_TEMP_BUF_NLONGS 128
 #define CPU_COMMON                                                      \
+    /* instruction counting is used to execute callback after given     \
+       number of instructions */                                        \
+    int32_t instructions_count_threshold;                               \
+    int32_t instructions_count_value;                                   \
+    /* STARTING FROM HERE FIELDS ARE NOT SERIALIZED */                  \
     struct TranslationBlock *current_tb; /* currently executing TB  */  \
     /* soft mmu support */                                              \
     /* in order to avoid passing too many arguments to the MMIO         \
