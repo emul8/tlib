@@ -688,6 +688,13 @@ static void do_interrupt_v7m(CPUState *env)
         return; /* Never happens.  Keep compiler happy.  */
     }
 
+#ifndef NO_INTERRUPTS_IN_IT_BLOCK
+    if(env->condexec_bits)
+    {
+      env->condexec_bits = 0;
+    }
+#endif
+
     /* Align stack pointer.  */
     /* ??? Should only do this if Configuration Control Register
        STACKALIGN bit is set.  */
