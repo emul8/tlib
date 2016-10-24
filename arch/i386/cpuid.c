@@ -512,7 +512,7 @@ static int64_t strtosz_suffix_unit(const char *nptr, char **end,
      */
     if (c != 0) {
         endptr++;
-        if (!isspace(*endptr) && *endptr != ',' && *endptr != 0) {
+        if (!isspace((unsigned char)*endptr) && *endptr != ',' && *endptr != 0) {
             goto fail;
         }
     }
