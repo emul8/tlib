@@ -23,7 +23,6 @@
  */
 #include "infrastructure.h"
 #include <stdint.h>
-#include <arpa/inet.h>
 
 extern void *global_retaddr;
 
@@ -56,6 +55,8 @@ extern void *global_retaddr;
 #define READ_ACCESS_TYPE 0
 #define ADDR_READ addr_read
 #endif
+
+uint32_t local_ntohl(uint32_t n);
 
 void notdirty_mem_writeb(void *opaque, target_phys_addr_t ram_addr,
                                     uint32_t val);
@@ -203,6 +204,7 @@ static DATA_TYPE glue(glue(slow_ld, SUFFIX), MMUSUFFIX)(target_ulong addr,
 
 #ifndef SOFTMMU_CODE_ACCESS
 
+#define SWAP_BYTES(n) (((n & 0xFF) << 24) | ((n & 0xFF00) << 8) | ((n & 0xFF0000) >> 8) | ((n & 0xFF000000) >> 24))
 static void glue(glue(slow_st, SUFFIX), MMUSUFFIX)(target_ulong addr,
                                                    DATA_TYPE val,
                                                    int mmu_idx,
@@ -238,10 +240,10 @@ static inline void glue(io_write, SUFFIX)(target_phys_addr_t physaddr,
     tlib_write_double_word(physaddr, val);
 #else
 #ifdef TARGET_WORDS_BIGENDIAN
-    uint32_t temp_val = ntohl((uint32_t)(val >> 32));
-    tlib_write_double_word(physaddr, /*(uint32_t)(val >> 32)*/ temp_val);
-    temp_val = ntohl((uint32_t)(val));	
-    tlib_write_double_word(physaddr + 4, (uint32_t)temp_val);
+    uint32_t temp_val = (uint32_t)(val >> 32);
+    tlib_write_double_word(physaddr, SWAP_BYTES(temp_val));
+    temp_val = (uint32_t)val;
+    tlib_write_double_word(physaddr + 4, SWAP_BYTES(temp_val));
 #else
     tlib_write_double_word(physaddr, (uint32_t)val);
     tlib_write_double_word(physaddr + 4, (uint32_t)(val >> 32));
