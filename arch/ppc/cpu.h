@@ -44,6 +44,10 @@
 
 #include "softfloat.h"
 
+#ifdef __MINGW32__
+#define ffs __builtin_ffs
+#endif
+
 /*****************************************************************************/
 /* MMU model                                                                 */
 typedef enum powerpc_mmu_t powerpc_mmu_t;
