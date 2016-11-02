@@ -2502,11 +2502,15 @@ static void gen_push_T1(DisasContext *s)
         if (s->ss32 && !s->addseg)
             gen_op_mov_reg_A0(1, R_ESP);
         else
+#if __GNUC__ >= 6
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshift-negative-value"
+#endif
             //since s->dflag may equal 0, 1 or 2, this seems to be ok
             gen_stack_update(s, (-2) << s->dflag);
+#if __GNUC__ >= 6
 #pragma GCC diagnostic pop
+#endif
     }
 }
 
@@ -2559,11 +2563,15 @@ static void gen_pusha(DisasContext *s)
 {
     int i;
     gen_op_movl_A0_reg(R_ESP);
+#if __GNUC__ >= 6
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshift-negative-value"
+#endif
     //since s->dflag may equal 0, 1 or 2, this seems to be ok
     gen_op_addl_A0_im(-16 <<  s->dflag);
+#if __GNUC__ >= 6
 #pragma GCC diagnostic pop
+#endif
     if (!s->ss32)
         gen_op_andl_A0_ffff();
     tcg_gen_mov_tl(cpu_T[1], cpu_A0);
