@@ -29,7 +29,7 @@ uint32_t* get_reg_pointer_32(int reg)
         case R_0_32 ... R_7_32: /* R0-R7 aka Global0-7 */
             return &(cpu->gregs[reg]);
         case R_8_32 ... R_31_32: /* R8 to 31 : Out0-7, Local0-7, In0-7 */
-            return &(cpu->regwptr[reg-8]);
+            return &(cpu->regwptr[reg-R_8_32]);
         case PSR_32:
                 /* Compute PSR before exposing state.  */
                 if (cpu->cc_op != CC_OP_FLAGS) {
@@ -45,7 +45,7 @@ uint32_t* get_reg_pointer_32(int reg)
         case NPC_32:
             return &(cpu->npc);
         case ASR_16_32 ... ASR_31_32:
-            return &(cpu->asr[reg-527]);
+            return &(cpu->asr[reg-ASR_16_32]);
         case WIM_32:
             return &(cpu->wim);
         default:
