@@ -544,7 +544,8 @@ static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
     uint32_t minus_ext2_features = 0, minus_ext3_features = 0;
     uint32_t minus_svm_features = 0;
     uint32_t numvalue;
-    x86_defs = builtin_x86_defs; // TODO: HACK
+    x86_defs = NULL;
+    x86_cpudef_setup();
     for (def = x86_defs; def; def = def->next) {
         if (name && !strcmp(name, def->name))
             break;
@@ -755,7 +756,6 @@ void cpu_clear_apic_feature(CPUState *env)
 void x86_cpudef_setup(void)
 {
     int i;
-
     for (i = 0; i < ARRAY_SIZE(builtin_x86_defs); ++i) {
         builtin_x86_defs[i].next = x86_defs;
         builtin_x86_defs[i].flags = 1;
