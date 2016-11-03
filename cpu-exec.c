@@ -197,15 +197,12 @@ int cpu_exec(CPUState *env)
                 } else {
                     do_interrupt(env);
                     if(env->exception_index != -1) {
+                        if (env->exception_index == EXCP_WFI) {
+                            env->exception_index = -1;
+                            ret = 0;
+                            break;
+                        }
                         env->exception_index = -1;
-#if defined(TARGET_SPARC)
-                        //if exception_index is not -1, then we must have
-                        //reached cpu_abort or tlib_on_cpu_power_down.
-                        //This happens only if psret == 0.
-                        //Then we want to break the loop.
-                        ret = 0;
-                        break;
-#endif
                     }
                 }
             }
