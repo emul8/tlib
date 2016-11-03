@@ -1080,21 +1080,19 @@ void cpu_abort(CPUState *env, const char *fmt, ...)
 {
     va_list ap;
     va_list ap2;
-
-
-	char s[1024];
+    int i;
+    char s[1024];
     va_start(ap, fmt);
     va_copy(ap2, ap);
-      vsprintf(s, fmt, ap);
+    vsprintf(s, fmt, ap);
 	
-	// ** trim CRLF at the end
-	int i;
-	for (i = strlen(s)-1; i > 0; i--) {
-		if ((s[i] != 10) && (s[i] != 13)) break;
-		s[i] = 0;
-	}
-	// **
-  tlib_abort(s);
+    // ** trim CRLF at the end
+    for (i = strlen(s)-1; i > 0; i--) {
+        if ((s[i] != 10) && (s[i] != 13)) break;
+        s[i] = 0;
+    }
+    // **
+    tlib_abort(s);
 }
 
 static inline void tlb_flush_jmp_cache(CPUState *env, target_ulong addr)
