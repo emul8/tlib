@@ -223,14 +223,6 @@ int cpu_exec(CPUState *env)
                         env->exception_index = EXCP_DEBUG;
                         cpu_loop_exit(env);
                     }
-#if defined(TARGET_ARM) || defined(TARGET_SPARC) || defined(TARGET_PPC)
-                    if (interrupt_request & CPU_INTERRUPT_HALT) {
-                        env->interrupt_request &= ~CPU_INTERRUPT_HALT;
-                        env->wfi = 1;
-                        env->exception_index = EXCP_WFI;
-                        cpu_loop_exit(env);
-                    }
-#endif
 #if defined(TARGET_I386)
                     if (interrupt_request & CPU_INTERRUPT_INIT) {
                             svm_check_intercept(env, SVM_EXIT_INIT);
@@ -314,6 +306,12 @@ int cpu_exec(CPUState *env)
                         cpu_reset(env);
                     }
 #elif defined(TARGET_ARM)
+                    if (interrupt_request & CPU_INTERRUPT_HALT) {
+                        env->interrupt_request &= ~CPU_INTERRUPT_HALT;
+                        env->wfi = 1;
+                        env->exception_index = EXCP_WFI;
+                        cpu_loop_exit(env);
+                    }
                     if (interrupt_request & CPU_INTERRUPT_FIQ
                         && !(env->uncached_cpsr & CPSR_F)) {
                         env->exception_index = EXCP_FIQ;
