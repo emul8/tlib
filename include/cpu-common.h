@@ -14,12 +14,6 @@
 #include "bswap.h"
 #include "tlib-queue.h"
 
-enum device_endian {
-    DEVICE_NATIVE_ENDIAN,
-    DEVICE_BIG_ENDIAN,
-    DEVICE_LITTLE_ENDIAN,
-};
-
 /* address in the RAM (different from a physical address) */
 typedef unsigned long ram_addr_t;
 
@@ -89,19 +83,7 @@ struct CPUPhysMemoryClient {
 };
 
 uint32_t ldub_phys(target_phys_addr_t addr);
-uint32_t lduw_le_phys(target_phys_addr_t addr);
-uint32_t lduw_be_phys(target_phys_addr_t addr);
-uint32_t ldl_le_phys(target_phys_addr_t addr);
-uint32_t ldl_be_phys(target_phys_addr_t addr);
-uint64_t ldq_le_phys(target_phys_addr_t addr);
-uint64_t ldq_be_phys(target_phys_addr_t addr);
 void stb_phys(target_phys_addr_t addr, uint32_t val);
-void stw_le_phys(target_phys_addr_t addr, uint32_t val);
-void stw_be_phys(target_phys_addr_t addr, uint32_t val);
-void stl_le_phys(target_phys_addr_t addr, uint32_t val);
-void stl_be_phys(target_phys_addr_t addr, uint32_t val);
-void stq_le_phys(target_phys_addr_t addr, uint64_t val);
-void stq_be_phys(target_phys_addr_t addr, uint64_t val);
 
 uint32_t lduw_phys(target_phys_addr_t addr);
 uint32_t ldl_phys(target_phys_addr_t addr);
