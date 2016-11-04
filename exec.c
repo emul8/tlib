@@ -1085,7 +1085,7 @@ void cpu_abort(CPUState *env, const char *fmt, ...)
     va_start(ap, fmt);
     va_copy(ap2, ap);
     vsprintf(s, fmt, ap);
-	
+
     // ** trim CRLF at the end
     for (i = strlen(s)-1; i > 0; i--) {
         if ((s[i] != 10) && (s[i] != 13)) break;
