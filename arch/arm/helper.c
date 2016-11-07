@@ -2866,3 +2866,8 @@ void HELPER(set_teecr)(CPUState *env, uint32_t val)
         tb_flush(env);
     }
 }
+
+void tlib_arch_dispose()
+{
+}
+
