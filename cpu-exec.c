@@ -139,8 +139,6 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
 
 /* main execution loop */
 
-volatile sig_atomic_t exit_request;
-
 int process_interrupt(int interrupt_request, CPUState *env)
 {
 #if defined(TARGET_I386)
@@ -292,10 +290,6 @@ int cpu_exec(CPUState *env)
         }
 
         env->wfi = 0;
-    }
-
-    if (unlikely(exit_request)) {
-        env->exit_request = 1;
     }
 
 #if defined(TARGET_I386)
