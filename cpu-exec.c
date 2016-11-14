@@ -18,7 +18,6 @@
  */
 #include "cpu.h"
 #include "tcg.h"
-#include "infrastructure.h"
 
 #ifdef TARGET_SPARC
 #include "arch/sparc/arch_callbacks.h"
