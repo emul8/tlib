@@ -718,6 +718,7 @@ static void do_interrupt_v7m(CPUState *env)
 
     env->regs[14] = lr;
     addr = ldl_phys(env->v7m.vecbase + env->v7m.exception * 4);
+    env->interrupt_request |= CPU_INTERRUPT_M_IRQ_EXIT;
     env->regs[15] = addr & 0xfffffffe;
     env->thumb = addr & 1;
 }

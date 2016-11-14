@@ -149,9 +149,6 @@ static void cpu_handle_debug_exception(CPUState *env)
 
 volatile sig_atomic_t exit_request;
 
-// it looks like cpu_exec is aware of possible problems and restores `env`, so the warning is not necessary
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wclobbered"
 int process_interrupt(int interrupt_request, CPUState *env)
 {
 #if defined(TARGET_I386)
@@ -269,15 +266,27 @@ int process_interrupt(int interrupt_request, CPUState *env)
 #else
         !(env->uncached_cpsr & CPSR_I))
 #endif
-        {
+     {
             env->exception_index = EXCP_IRQ;
             do_interrupt(env);
             return 1;
-        }
+     }
+#ifdef TARGET_PROTO_ARM_M
+    if (interrupt_request & CPU_INTERRUPT_M_IRQ_EXIT) {
+        if(env->regs[15] >= 0xfffffff0) {
+            env->interrupt_request &= ~CPU_INTERRUPT_M_IRQ_EXIT;
+            do_v7m_exception_exit(env);
+            return 1;
+	}
+    }
+#endif
 #endif
     return 0;
 }
 
+// it looks like cpu_exec is aware of possible problems and restores `env`, so the warning is not necessary
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclobbered"
 int cpu_exec(CPUState *env)
 {
     int ret, interrupt_request;
@@ -363,13 +372,6 @@ int cpu_exec(CPUState *env)
                     env->exception_index = EXCP_INTERRUPT;
                     cpu_loop_exit(env);
                 }
-#ifdef TARGET_PROTO_ARM_M
-                if(env->regs[15] >= 0xfffffff0)
-                {
-                    do_v7m_exception_exit(env);
-                    next_tb = 0;
-                }
-#endif
                 tb = tb_find_fast(env);
                 /* Note: we do it here to avoid a gcc bug on Mac OS X when
                    doing it in tb_find_slow */
