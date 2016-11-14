@@ -137,13 +137,6 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
     return old_handler;
 }
 
-static void cpu_handle_debug_exception(CPUState *env)
-{
-    if (debug_excp_handler) {
-        debug_excp_handler(env);
-    }
-}
-
 /* main execution loop */
 
 volatile sig_atomic_t exit_request;
@@ -324,8 +317,8 @@ int cpu_exec(CPUState *env)
                 if (env->exception_index >= EXCP_INTERRUPT) {
                     /* exit request from the cpu execution loop */
                     ret = env->exception_index;
-                    if (ret == EXCP_DEBUG) {
-                        cpu_handle_debug_exception(env);
+                    if ((ret == EXCP_DEBUG) && debug_excp_handler) {
+                        debug_excp_handler(env);
                     }
                     break;
                 } else {
