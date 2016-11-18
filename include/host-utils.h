@@ -63,3 +63,43 @@ static inline int clz32(uint32_t val)
     return cnt;
 #endif
 }
+
+static inline int ctz32(uint32_t val)
+{
+#if defined(__GNUC__)
+    if (val)
+        return __builtin_ctz(val);
+    else
+        return 32;
+#else
+    int cnt;
+
+    cnt = 0;
+    if (!(val & 0x0000FFFFUL)) {
+        cnt += 16;
+        val >>= 16;
+    }
+    if (!(val & 0x000000FFUL)) {
+        cnt += 8;
+        val >>= 8;
+    }
+    if (!(val & 0x0000000FUL)) {
+        cnt += 4;
+        val >>= 4;
+    }
+    if (!(val & 0x00000003UL)) {
+        cnt += 2;
+        val >>= 2;
+    }
+    if (!(val & 0x00000001UL)) {
+        cnt++;
+        val >>= 1;
+    }
+    if (!(val & 0x00000001UL)) {
+        cnt++;
+    }
+
+    return cnt;
+#endif
+}
+
