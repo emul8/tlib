@@ -256,11 +256,11 @@ int process_interrupt(int interrupt_request, CPUState *env)
 #else
         !(env->uncached_cpsr & CPSR_I))
 #endif
-     {
-            env->exception_index = EXCP_IRQ;
-            do_interrupt(env);
-            return 1;
-     }
+    {
+        env->exception_index = EXCP_IRQ;
+        do_interrupt(env);
+        return 1;
+    }
 #ifdef TARGET_PROTO_ARM_M
     if (interrupt_request & CPU_INTERRUPT_M_IRQ_EXIT) {
         if(env->regs[15] >= 0xfffffff0) {
