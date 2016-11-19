@@ -7,10 +7,7 @@
 #define WORDS_ALIGNED
 #endif
 
-#ifdef TARGET_PHYS_ADDR_BITS
 #include "targphys.h"
-#endif
-
 #include "bswap.h"
 #include "tlib-queue.h"
 

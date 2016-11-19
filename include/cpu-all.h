@@ -600,7 +600,6 @@ void cpu_breakpoint_remove_all(CPUState *env, int mask);
 
 void cpu_single_step(CPUState *env, int enabled);
 void cpu_reset(CPUState *s);
-void run_on_cpu(CPUState *env, void (*func)(void *data), void *data);
 
 /* Return the physical page corresponding to a virtual one. Use it
    only for debugging because no protection checks are done. Return -1
