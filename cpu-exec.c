@@ -139,7 +139,7 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
 
 /* main execution loop */
 
-int process_interrupt(int interrupt_request, CPUState *env)
+int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env)
 {
 #if defined(TARGET_I386)
     if (interrupt_request & CPU_INTERRUPT_INIT) {
