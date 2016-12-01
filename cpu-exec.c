@@ -274,25 +274,8 @@ int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env
     return 0;
 }
 
-void __attribute__((weak)) cpu_exec_prologue(CPUState *env) {
-#if defined(TARGET_I386)
-    /* put eflags in CPU temporary format */
-    CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-    DF = 1 - (2 * ((env->eflags >> 10) & 1));
-    CC_OP = CC_OP_EFLAGS;
-    env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-#elif defined(TARGET_PPC)
-    env->reserve_addr = -1;
-#endif
-}
-
-void __attribute__((weak)) cpu_exec_epilogue(CPUState *env) {
-#if defined(TARGET_I386)
-    /* restore flags in standard format */
-    env->eflags = env->eflags | cpu_cc_compute_all(env, CC_OP)
-        | (DF & DF_MASK);
-#endif
-}
+void __attribute__((weak)) cpu_exec_prologue(CPUState *env) { }
+void __attribute__((weak)) cpu_exec_epilogue(CPUState *env) { }
 
 // it looks like cpu_exec is aware of possible problems and restores `env`, so the warning is not necessary
 #pragma GCC diagnostic push
