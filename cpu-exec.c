@@ -137,64 +137,14 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
 
 int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env)
 {
-#if defined(TARGET_I386)
-    if (interrupt_request & CPU_INTERRUPT_INIT) {
-        svm_check_intercept(env, SVM_EXIT_INIT);
-        do_cpu_init(env);
-        env->exception_index = EXCP_HALTED;
-        cpu_loop_exit(env);
-    } else if (interrupt_request & CPU_INTERRUPT_SIPI) {
-        do_cpu_sipi(env);
-    } else if (env->hflags2 & HF2_GIF_MASK) {
-        if ((interrupt_request & CPU_INTERRUPT_SMI) &&
-                !(env->hflags & HF_SMM_MASK)) {
-            svm_check_intercept(env, SVM_EXIT_SMI);
-            env->interrupt_request &= ~CPU_INTERRUPT_SMI;
-            do_smm_enter(env);
-            return 1;
-        } else if ((interrupt_request & CPU_INTERRUPT_NMI) &&
-                !(env->hflags2 & HF2_NMI_MASK)) {
-            env->interrupt_request &= ~CPU_INTERRUPT_NMI;
-            env->hflags2 |= HF2_NMI_MASK;
-            do_interrupt_x86_hardirq(env, EXCP02_NMI, 1);
-            return 1;
-        } else if (interrupt_request & CPU_INTERRUPT_MCE) {
-            env->interrupt_request &= ~CPU_INTERRUPT_MCE;
-            do_interrupt_x86_hardirq(env, EXCP12_MCHK, 0);
-            return 1;
-        } else if ((interrupt_request & CPU_INTERRUPT_HARD) &&
-                (((env->hflags2 & HF2_VINTR_MASK) &&
-                  (env->hflags2 & HF2_HIF_MASK)) ||
-                 (!(env->hflags2 & HF2_VINTR_MASK) &&
-                  (env->eflags & IF_MASK &&
-                   !(env->hflags & HF_INHIBIT_IRQ_MASK))))) {
-            int intno;
-            svm_check_intercept(env, SVM_EXIT_INTR);
-            env->interrupt_request &= ~(CPU_INTERRUPT_HARD | CPU_INTERRUPT_VIRQ);
-            intno = cpu_get_pic_interrupt(env);
-            do_interrupt_x86_hardirq(env, intno, 1);
-            /* ensure that no TB jump will be modified as
-               the program flow was changed */
-            return 1;
-        } else if ((interrupt_request & CPU_INTERRUPT_VIRQ) &&
-                (env->eflags & IF_MASK) &&
-                !(env->hflags & HF_INHIBIT_IRQ_MASK)) {
-            int intno;
-            /* FIXME: this should respect TPR */
-            svm_check_intercept(env, SVM_EXIT_VINTR);
-            intno = ldl_phys(env->vm_vmcb + offsetof(struct vmcb, control.int_vector));
-            do_interrupt_x86_hardirq(env, intno, 1);
-            env->interrupt_request &= ~CPU_INTERRUPT_VIRQ;
-            return 1;
-        }
-    }
-#elif defined(TARGET_PPC)
+#if defined(TARGET_PPC)
     if (interrupt_request & CPU_INTERRUPT_HARD) {
         ppc_hw_interrupt(env);
         if (env->pending_interrupts == 0)
             env->interrupt_request &= ~CPU_INTERRUPT_HARD;
         return 1;
     }
+#endif
     return 0;
 }
 
