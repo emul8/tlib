@@ -8197,3 +8197,14 @@ void cpu_exec_prologue(CPUState *env)
 {
     env->reserve_addr = -1;
 }
+
+int process_interrupt(int interrupt_request, CPUState *env)
+{
+    if (interrupt_request & CPU_INTERRUPT_HARD) {
+        ppc_hw_interrupt(env);
+        if (env->pending_interrupts == 0)
+            env->interrupt_request &= ~CPU_INTERRUPT_HARD;
+        return 1;
+    }
+    return 0;
+}

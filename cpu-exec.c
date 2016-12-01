@@ -135,19 +135,7 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
 
 /* main execution loop */
 
-int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env)
-{
-#if defined(TARGET_PPC)
-    if (interrupt_request & CPU_INTERRUPT_HARD) {
-        ppc_hw_interrupt(env);
-        if (env->pending_interrupts == 0)
-            env->interrupt_request &= ~CPU_INTERRUPT_HARD;
-        return 1;
-    }
-#endif
-    return 0;
-}
-
+int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env) { return 0; }
 void __attribute__((weak)) cpu_exec_prologue(CPUState *env) { }
 void __attribute__((weak)) cpu_exec_epilogue(CPUState *env) { }
 
