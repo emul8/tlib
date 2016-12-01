@@ -19,10 +19,6 @@
 #include "cpu.h"
 #include "tcg.h"
 
-#ifdef TARGET_SPARC
-#include "arch/sparc/arch_callbacks.h"
-#endif
-
 target_ulong virt_to_phys(target_ulong virt) {
         #define MASK2 (0xFFFFFFFF - MASK1)
         #define MASK1 (0xFFFFFFFF >> (32-TARGET_PAGE_BITS))
@@ -199,31 +195,6 @@ int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env
             env->interrupt_request &= ~CPU_INTERRUPT_HARD;
         return 1;
     }
-#elif defined(TARGET_SPARC)
-    if (interrupt_request & CPU_INTERRUPT_HARD) {
-        if ( cpu_interrupts_enabled(env) )
-        {
-            env->interrupt_index = tlib_find_best_interrupt();
-            if(env->interrupt_index > 0) {
-                int pil = env->interrupt_index & 0xf;
-                int type = env->interrupt_index & 0xf0;
-
-                if (((type == TT_EXTINT) &&
-                            cpu_pil_allowed(env, pil)) ||
-                        type != TT_EXTINT) {
-                    env->exception_index = env->interrupt_index;
-                    do_interrupt(env);
-                    return 1;
-                }
-            }
-        }
-    } else if ((interrupt_request & CPU_INTERRUPT_RESET)) {
-        cpu_reset(env);
-    } else if ((interrupt_request & CPU_INTERRUPT_RUN)) {
-        /* SMP systems only, start after reset */
-        cpu_reset(env);
-    }
-#endif
     return 0;
 }
 
