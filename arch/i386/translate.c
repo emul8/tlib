@@ -7814,3 +7814,19 @@ void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
     if (cc_op != CC_OP_DYNAMIC)
         env->cc_op = cc_op;
 }
+
+void cpu_exec_prologue(CPUState *env)
+{
+    /* put eflags in CPU temporary format */
+    CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+    DF = 1 - (2 * ((env->eflags >> 10) & 1));
+    CC_OP = CC_OP_EFLAGS;
+    env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+}
+
+void cpu_exec_epilogue(CPUState *env)
+{
+    /* restore flags in standard format */
+    env->eflags = env->eflags | cpu_cc_compute_all(env, CC_OP)
+        | (DF & DF_MASK);
+}

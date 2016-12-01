@@ -8192,3 +8192,8 @@ void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
     env->nip = ctx->gen_opc_pc[pc_pos];
 }
+
+void cpu_exec_prologue(CPUState *env)
+{
+    env->reserve_addr = -1;
+}
