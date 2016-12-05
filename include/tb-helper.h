@@ -28,6 +28,11 @@ static inline void gen_block_header(void)
         gen_helper_update_insn_count(instruction_count);
         tcg_temp_free_i32(instruction_count);
     }
+
+    flag = tcg_temp_local_new_i32();
+    tcg_gen_ld_i32(flag, cpu_env, offsetof(CPUState, tb_restart_request));
+    tcg_gen_brcondi_i32(TCG_COND_NE, flag, 0, stopflag_label);
+    tcg_temp_free_i32(flag);
 }
 
 static void gen_block_footer(TranslationBlock *tb, int num_insns)

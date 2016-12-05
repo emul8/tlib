@@ -56,8 +56,9 @@ int cpu_restore_state(CPUState *env,
 		TranslationBlock *tb, unsigned long searched_pc)
 {
     TCGContext *s = ctx->tcg_ctx;
-    int j;
+    int j, k;
     unsigned long tc_ptr;
+    int instructions_executed_so_far = 0;
 
     tcg_func_start(s);
 
@@ -77,6 +78,14 @@ int cpu_restore_state(CPUState *env,
     /* now find start of instruction before */
     while (ctx->gen_opc_instr_start[j] == 0)
         j--;
+
+    k = j;
+    while (k > 0)
+    {
+      instructions_executed_so_far += ctx->gen_opc_instr_start[k];
+      k--;
+    }
+    cpu->instructions_count_value -= (tb->icount - instructions_executed_so_far);
 
     restore_state_to_opc(env, tb, j);
 

@@ -74,6 +74,7 @@ void tlb_set_page(CPUState *env, target_ulong vaddr,
    according to the host CPU */
 #define CODE_GEN_AVG_BLOCK_SIZE 128
 
+extern uint32_t size_of_next_block_to_translate;
 uint32_t maximum_block_size;
 
 struct TranslationBlock {
@@ -253,6 +254,7 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler);
 
 /* cpu-exec.c */
 extern volatile sig_atomic_t exit_request;
+extern int tb_restart_request;
 
 PhysPageDesc *phys_page_find(target_phys_addr_t index);
 

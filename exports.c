@@ -243,6 +243,7 @@ void tlib_invalidate_translation_cache()
 }
 
 uint32_t maximum_block_size;
+uint32_t size_of_next_block_to_translate;
 
 uint32_t tlib_set_maximum_block_size(uint32_t size)
 {

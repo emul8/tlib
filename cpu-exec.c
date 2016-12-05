@@ -94,7 +94,8 @@ static TranslationBlock *tb_find_slow(CPUState *env,
     }
  not_found:
    /* if no translated code available, then translate it now */
-    tb = tb_gen_code(env, pc, cs_base, flags, 0);
+    tb = tb_gen_code(env, pc, cs_base, flags, size_of_next_block_to_translate);
+    size_of_next_block_to_translate = 0;
 
  found:
     /* Move the last found TB to the head of the list */
@@ -361,6 +362,10 @@ int cpu_exec(CPUState *env)
                 if (unlikely(env->exit_request)) {
                     env->exit_request = 0;
                     env->exception_index = EXCP_INTERRUPT;
+                    cpu_loop_exit(env);
+                }
+                if (unlikely(env->tb_restart_request)) {
+                    env->tb_restart_request = 0;
                     cpu_loop_exit(env);
                 }
 #ifdef TARGET_PROTO_ARM_M
