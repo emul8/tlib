@@ -92,9 +92,6 @@ typedef struct model_features_t {
     uint32_t cpuid;
     } model_features_t;
 
-int check_cpuid = 0;
-int enforce_cpuid = 0;
-
 #define iswhite(c) ((c) && ((c) <= ' ' || '~' < (c)))
 
 /* general substring compare of *[s1..e1) and *[s2..e2).  sx is start of
@@ -334,207 +331,10 @@ static x86_def_t builtin_x86_defs[] = {
     },
 };
 
-static int cpu_x86_fill_model_id(char *str)
-{
-    uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
-    int i;
-
-    for (i = 0; i < 3; i++) {
-        memcpy(str + i * 16 +  0, &eax, 4);
-        memcpy(str + i * 16 +  4, &ebx, 4);
-        memcpy(str + i * 16 +  8, &ecx, 4);
-        memcpy(str + i * 16 + 12, &edx, 4);
-    }
-    return 0;
-}
-
-static int cpu_x86_fill_host(x86_def_t *x86_cpu_def)
-{
-    uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
-
-    x86_cpu_def->name = "host";
-    x86_cpu_def->level = eax;
-    x86_cpu_def->vendor1 = ebx;
-    x86_cpu_def->vendor2 = edx;
-    x86_cpu_def->vendor3 = ecx;
-
-    x86_cpu_def->family = ((eax >> 8) & 0x0F) + ((eax >> 20) & 0xFF);
-    x86_cpu_def->model = ((eax >> 4) & 0x0F) | ((eax & 0xF0000) >> 12);
-    x86_cpu_def->stepping = eax & 0x0F;
-    x86_cpu_def->ext_features = ecx;
-    x86_cpu_def->features = edx;
-
-    x86_cpu_def->xlevel = eax;
-
-    x86_cpu_def->ext2_features = edx;
-    x86_cpu_def->ext3_features = ecx;
-    cpu_x86_fill_model_id(x86_cpu_def->model_id);
-    x86_cpu_def->vendor_override = 0;
-
-    /* Call Centaur's CPUID instruction. */
-    if (x86_cpu_def->vendor1 == CPUID_VENDOR_VIA_1 &&
-        x86_cpu_def->vendor2 == CPUID_VENDOR_VIA_2 &&
-        x86_cpu_def->vendor3 == CPUID_VENDOR_VIA_3) {
-        if (eax >= 0xC0000001) {
-            /* Support VIA max extended level */
-            x86_cpu_def->xlevel2 = eax;
-            x86_cpu_def->ext4_features = edx;
-        }
-    }
-
-    /*
-     * Every SVM feature requires emulation support in KVM - so we can't just
-     * read the host features here. KVM might even support SVM features not
-     * available on the host hardware. Just set all bits and mask out the
-     * unsupported ones later.
-     */
-    x86_cpu_def->svm_features = -1;
-
-    return 0;
-}
-
-static int unavailable_host_feature(struct model_features_t *f, uint32_t mask)
-{
-    int i;
-
-    for (i = 0; i < 32; ++i)
-        if (1 << i & mask) {
-            tlib_printf(LOG_LEVEL_WARNING, "host cpuid %04x_%04x lacks requested"
-                " flag '%s' [0x%08x]\n",
-                f->cpuid >> 16, f->cpuid & 0xffff,
-                f->flag_names[i] ? f->flag_names[i] : "[reserved]", mask);
-            break;
-        }
-    return 0;
-}
-
-/* best effort attempt to inform user requested cpu flags aren't making
- * their way to the guest.  Note: ft[].check_feat ideally should be
- * specified via a guest_def field to suppress report of extraneous flags.
- */
-static int check_features_against_host(x86_def_t *guest_def)
-{
-    x86_def_t host_def;
-    uint32_t mask;
-    int rv, i;
-    struct model_features_t ft[] = {
-        {&guest_def->features, &host_def.features,
-            ~0, feature_name, 0x00000000},
-        {&guest_def->ext_features, &host_def.ext_features,
-            ~CPUID_EXT_HYPERVISOR, ext_feature_name, 0x00000001},
-        {&guest_def->ext2_features, &host_def.ext2_features,
-            ~PPRO_FEATURES, ext2_feature_name, 0x80000000},
-        {&guest_def->ext3_features, &host_def.ext3_features,
-            ~CPUID_EXT3_SVM, ext3_feature_name, 0x80000001}};
-
-    cpu_x86_fill_host(&host_def);
-    for (rv = 0, i = 0; i < ARRAY_SIZE(ft); ++i)
-        for (mask = 1; mask; mask <<= 1)
-            if (ft[i].check_feat & mask && *ft[i].guest_feat & mask &&
-                !(*ft[i].host_feat & mask)) {
-                    unavailable_host_feature(&ft[i], mask);
-                    rv = 1;
-                }
-    return rv;
-}
-
-/*
- * Convert string to bytes, allowing either B/b for bytes, K/k for KB,
- * M/m for MB, G/g for GB or T/t for TB. Default without any postfix
- * is MB. End pointer will be returned in *end, if not NULL. A valid
- * value must be terminated by whitespace, ',' or '\0'. Return -1 on
- * error.
- */
-static int64_t strtosz_suffix_unit(const char *nptr, char **end,
-                            const char default_suffix, int64_t unit)
-{
-    int64_t retval = -1;
-    char *endptr;
-    unsigned char c, d;
-    int mul_required = 0;
-    double val, mul, integral, fraction;
-
-    errno = 0;
-    val = strtod(nptr, &endptr);
-    if (isnan(val) || endptr == nptr || errno != 0) {
-        goto fail;
-    }
-    fraction = modf(val, &integral);
-    if (fraction != 0) {
-        mul_required = 1;
-    }
-    /*
-     * Any whitespace character is fine for terminating the number,
-     * in addition we accept ',' to handle strings where the size is
-     * part of a multi token argument.
-     */
-    c = *endptr;
-    d = c;
-    if (isspace(c) || c == '\0' || c == ',') {
-        c = 0;
-        if (default_suffix) {
-            d = default_suffix;
-        } else {
-            d = c;
-        }
-    }
-    switch (toupper(d)) {
-    case 'B':
-        mul = 1;
-        if (mul_required) {
-            goto fail;
-        }
-        break;
-    case 'K':
-        mul = unit;
-        break;
-    case 0:
-        if (mul_required) {
-            goto fail;
-        }
-    case 'M':
-        mul = unit * unit;
-        break;
-    case 'G':
-        mul = unit * unit * unit;
-        break;
-    case 'T':
-        mul = unit * unit * unit * unit;
-        break;
-    default:
-        goto fail;
-    }
-    /*
-     * If not terminated by whitespace, ',', or \0, increment endptr
-     * to point to next character, then check that we are terminated
-     * by an appropriate separating character, ie. whitespace, ',', or
-     * \0. If not, we are seeing trailing garbage, thus fail.
-     */
-    if (c != 0) {
-        endptr++;
-        if (!isspace((unsigned char)*endptr) && *endptr != ',' && *endptr != 0) {
-            goto fail;
-        }
-    }
-    if ((val * mul >= INT64_MAX) || val < 0) {
-        goto fail;
-    }
-    retval = val * mul;
-
-fail:
-    if (end) {
-        *end = endptr;
-    }
-
-    return retval;
-}
-
 static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
 {
-    unsigned int i;
     x86_def_t *def;
-    char *s = tlib_strdup(cpu_model);
-    char *featurestr, *name = strtok(s, ",");
+    char *name = tlib_strdup(cpu_model);
     /* Features to be added*/
     uint32_t plus_features = 0, plus_ext_features = 0;
     uint32_t plus_ext2_features = 0, plus_ext3_features = 0;
@@ -543,7 +343,6 @@ static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
     uint32_t minus_features = 0, minus_ext_features = 0;
     uint32_t minus_ext2_features = 0, minus_ext3_features = 0;
     uint32_t minus_svm_features = 0;
-    uint32_t numvalue;
     x86_defs = NULL;
     x86_cpudef_setup();
     for (def = x86_defs; def; def = def->next) {
@@ -560,106 +359,6 @@ static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
         &plus_ext_features, &plus_ext2_features, &plus_ext3_features,
         &plus_svm_features);
 
-    featurestr = strtok(NULL, ",");
-
-    while (featurestr) {
-        char *val;
-        if (featurestr[0] == '+') {
-            add_flagname_to_bitmaps(featurestr + 1, &plus_features,
-                            &plus_ext_features, &plus_ext2_features,
-                            &plus_ext3_features, 
-                            &plus_svm_features);
-        } else if (featurestr[0] == '-') {
-            add_flagname_to_bitmaps(featurestr + 1, &minus_features,
-                            &minus_ext_features, &minus_ext2_features,
-                            &minus_ext3_features,
-                            &minus_svm_features);
-        } else if ((val = strchr(featurestr, '='))) {
-            *val = 0; val++;
-            if (!strcmp(featurestr, "family")) {
-                char *err;
-                numvalue = strtoul(val, &err, 0);
-                if (!*val || *err) {
-                    tlib_printf(LOG_LEVEL_ERROR, "bad numerical value %s\n", val);
-                    goto error;
-                }
-                x86_cpu_def->family = numvalue;
-            } else if (!strcmp(featurestr, "model")) {
-                char *err;
-                numvalue = strtoul(val, &err, 0);
-                if (!*val || *err || numvalue > 0xff) {
-                    tlib_printf(LOG_LEVEL_ERROR, "bad numerical value %s\n", val);
-                    goto error;
-                }
-                x86_cpu_def->model = numvalue;
-            } else if (!strcmp(featurestr, "stepping")) {
-                char *err;
-                numvalue = strtoul(val, &err, 0);
-                if (!*val || *err || numvalue > 0xf) {
-                    tlib_printf(LOG_LEVEL_ERROR, "bad numerical value %s\n", val);
-                    goto error;
-                }
-                x86_cpu_def->stepping = numvalue ;
-            } else if (!strcmp(featurestr, "level")) {
-                char *err;
-                numvalue = strtoul(val, &err, 0);
-                if (!*val || *err) {
-                    tlib_printf(LOG_LEVEL_ERROR, "bad numerical value %s\n", val);
-                    goto error;
-                }
-                x86_cpu_def->level = numvalue;
-            } else if (!strcmp(featurestr, "xlevel")) {
-                char *err;
-                numvalue = strtoul(val, &err, 0);
-                if (!*val || *err) {
-                    tlib_printf(LOG_LEVEL_ERROR, "bad numerical value %s\n", val);
-                    goto error;
-                }
-                if (numvalue < 0x80000000) {
-                    numvalue += 0x80000000;
-                }
-                x86_cpu_def->xlevel = numvalue;
-            } else if (!strcmp(featurestr, "vendor")) {
-                if (strlen(val) != 12) {
-                    tlib_printf(LOG_LEVEL_ERROR, "vendor string must be 12 chars long\n");
-                    goto error;
-                }
-                x86_cpu_def->vendor1 = 0;
-                x86_cpu_def->vendor2 = 0;
-                x86_cpu_def->vendor3 = 0;
-                for(i = 0; i < 4; i++) {
-                    x86_cpu_def->vendor1 |= ((uint8_t)val[i    ]) << (8 * i);
-                    x86_cpu_def->vendor2 |= ((uint8_t)val[i + 4]) << (8 * i);
-                    x86_cpu_def->vendor3 |= ((uint8_t)val[i + 8]) << (8 * i);
-                }
-                x86_cpu_def->vendor_override = 1;
-            } else if (!strcmp(featurestr, "model_id")) {
-                strncpy(x86_cpu_def->model_id, val, sizeof(x86_cpu_def->model_id));
-            } else if (!strcmp(featurestr, "tsc_freq")) {
-                int64_t tsc_freq;
-                char *err;
-
-                tsc_freq = strtosz_suffix_unit(val, &err,
-                                               'B', 1000);
-                if (!*val || *err) {
-                    tlib_printf(LOG_LEVEL_ERROR, "bad numerical value %s\n", val);
-                    goto error;
-                }
-                x86_cpu_def->tsc_khz = tsc_freq / 1000;
-            } else {
-                tlib_printf(LOG_LEVEL_ERROR, "unrecognized feature %s\n", featurestr);
-                goto error;
-            }
-        } else if (!strcmp(featurestr, "check")) {
-            check_cpuid = 1;
-        } else if (!strcmp(featurestr, "enforce")) {
-            check_cpuid = enforce_cpuid = 1;
-        } else {
-            tlib_printf(LOG_LEVEL_ERROR, "feature string `%s' not in format (+feature|-feature|feature=xyz)\n", featurestr);
-            goto error;
-        }
-        featurestr = strtok(NULL, ",");
-    }
     x86_cpu_def->features |= plus_features;
     x86_cpu_def->ext_features |= plus_ext_features;
     x86_cpu_def->ext2_features |= plus_ext2_features;
@@ -670,15 +369,11 @@ static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
     x86_cpu_def->ext2_features &= ~minus_ext2_features;
     x86_cpu_def->ext3_features &= ~minus_ext3_features;
     x86_cpu_def->svm_features &= ~minus_svm_features;
-    if (check_cpuid) {
-        if (check_features_against_host(x86_cpu_def) && enforce_cpuid)
-            goto error;
-    }
-    tlib_free(s);
+    tlib_free(name);
     return 0;
 
 error:
-    tlib_free(s);
+    tlib_free(name);
     return -1;
 }
 
