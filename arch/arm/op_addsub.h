@@ -4,12 +4,13 @@
 #define GE_ARG
 #endif
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || __GNUC__ >= 6
 // Using inline directive on Windows without O2 optimization causes code not to compile with message:
 // - undefined reference to `unit_add16_q` etc.
-#define _INLINE
+// The same happens on Linux with gcc6
+#define CONDITIONAL_INLINE
 #else
-#define _INLINE inline
+#define CONDITIONAL_INLINE inline
 #endif
 
 #define clamp(x, low, high) \
@@ -17,7 +18,7 @@
 
 #ifdef PFX_Q
 #define PFX q
-_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     int32_t sa, sb, sr;
     uint16_t result;
@@ -29,7 +30,7 @@ _INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return result;
 }
 
-_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     int32_t sa, sb, sr;
     uint8_t result;
@@ -41,7 +42,7 @@ _INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
     return result;
 }
 
-_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     int32_t sa, sb, sr;
     uint16_t result;
@@ -53,7 +54,7 @@ _INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return result;
 }
 
-_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     int32_t sa, sb, sr;
     uint8_t result;
@@ -67,7 +68,7 @@ _INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 #endif
 #ifdef PFX_UQ
 #define PFX uq
-_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     uint32_t result = (uint32_t)a + (uint32_t)b;
     if(result > 65535)
@@ -76,7 +77,7 @@ _INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)result;
 }
 
-_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     uint32_t result = (uint32_t)a + (uint32_t)b;
     if(result > 255)
@@ -85,7 +86,7 @@ _INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
     return (uint8_t)result;
 }
 
-_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     uint32_t result = (uint32_t)a + (uint32_t)b;
     if(result > 65535)
@@ -94,7 +95,7 @@ _INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)result;
 }
 
-_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     uint32_t result = (uint32_t)a + (uint32_t)b;
     if(result > 255)
@@ -105,7 +106,7 @@ _INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 #endif
 #ifdef PFX_S
 #define PFX s
-_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     int32_t result;
     int32_t sa, sb;
@@ -119,7 +120,7 @@ _INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)((int16_t)result);
 }
 
-_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     int32_t result;
     int32_t sa, sb;
@@ -133,7 +134,7 @@ _INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
     return (uint8_t)((int8_t)result);
 }
 
-_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     int32_t result;
     int32_t sa, sb;
@@ -147,7 +148,7 @@ _INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)(int16_t)result;
 }
 
-_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     int32_t result;
     int32_t sa, sb;
@@ -163,7 +164,7 @@ _INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 #endif
 #ifdef PFX_U
 #define PFX u
-_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     uint32_t result;
     result = (uint32_t)a + (uint32_t)b;
@@ -174,7 +175,7 @@ _INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)result;
 }
 
-_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     uint32_t result;
     result = (uint32_t)a + (uint32_t)b;
@@ -185,7 +186,7 @@ _INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
     return (uint8_t)result;
 }
 
-_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     uint32_t result;
     result = (uint32_t)a - (uint32_t)b;
@@ -196,7 +197,7 @@ _INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)result;
 }
 
-_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     uint32_t result;
     result = (uint32_t)a - (uint32_t)b;
@@ -209,7 +210,7 @@ _INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 #endif
 #ifdef PFX_SH
 #define PFX sh
-_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     uint32_t result;
     int32_t sa, sb;
@@ -219,7 +220,7 @@ _INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)result;
 }
 
-_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     uint32_t result;
     int32_t sa, sb;
@@ -229,7 +230,7 @@ _INLINE uint8_t glue(unit_add8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
     return (uint8_t)result;
 }
 
-_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     uint32_t result;
     int32_t sa, sb;
@@ -239,7 +240,7 @@ _INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
     return (uint16_t)result;
 }
 
-_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 {
     uint32_t result;
     int32_t sa, sb;
@@ -251,22 +252,22 @@ _INLINE uint8_t glue(unit_sub8_, PFX)(uint8_t a, uint8_t b, uint16_t *ovf)
 #endif
 #ifdef PFX_UH
 #define PFX uh
-_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_add16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     return (uint16_t)(((uint32_t)a + (uint32_t)b) >> 1);
 }
 
-_INLINE uint8_t glue(unit_add8_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_add8_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     return (uint8_t)(((uint32_t)a + (uint32_t)b) >> 1);
 }
 
-_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint16_t glue(unit_sub16_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     return (uint16_t)(((uint32_t)a - (uint32_t)b) >> 1);
 }
 
-_INLINE uint8_t glue(unit_sub8_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
+CONDITIONAL_INLINE uint8_t glue(unit_sub8_, PFX)(uint16_t a, uint16_t b, uint16_t *ovf)
 {
     return (uint8_t)(((uint32_t)a - (uint32_t)b) >> 1);
 }
