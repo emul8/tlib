@@ -10196,3 +10196,12 @@ int process_interrupt(int interrupt_request, CPUState *env)
     return 0;
 }
 
+//TODO: These empty implementations are required due to problems with weak attribute.
+//Remove this after #7035.
+void cpu_exec_epilogue(CPUState *env)
+{
+}
+
+void cpu_exec_prologue(CPUState *env)
+{
+}

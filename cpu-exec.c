@@ -135,9 +135,9 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
 
 /* main execution loop */
 
-int __attribute__((weak)) process_interrupt(int interrupt_request, CPUState *env) { return 0; }
-void __attribute__((weak)) cpu_exec_prologue(CPUState *env) { }
-void __attribute__((weak)) cpu_exec_epilogue(CPUState *env) { }
+int process_interrupt(int interrupt_request, CPUState *env);
+void cpu_exec_prologue(CPUState *env);
+void cpu_exec_epilogue(CPUState *env);
 
 // it looks like cpu_exec is aware of possible problems and restores `env`, so the warning is not necessary
 #pragma GCC diagnostic push
