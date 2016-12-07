@@ -361,10 +361,7 @@ CPUState *cpu_init(const char *cpu_model)
         return NULL;
     env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
-    if (!inited) {
-        inited = 1;
-        translate_init();
-    }
+    translate_init();
 
     env->cp15.c0_cpuid = id;
     cpu_reset(env);

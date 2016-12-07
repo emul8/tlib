@@ -71,10 +71,6 @@ void translate_init(void)
     int i;
     char* p;
     size_t cpu_reg_names_size;
-    static int done_init = 0;
-
-    if (done_init)
-        return;
 
     cpu_env = tcg_global_reg_new_ptr(TCG_AREG0, "env");
 
@@ -159,8 +155,6 @@ void translate_init(void)
     /* register helpers */
 #define GEN_HELPER 2
 #include "helper.h"
-
-    done_init = 1;
 }
 
 /* internal defines */

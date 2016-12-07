@@ -2890,55 +2890,44 @@ void translate_init()
     };
 
     /* init various static tables */
-    if (!inited) {
-        inited = 1;
-
-        cpu_env = tcg_global_reg_new_ptr(TCG_AREG0, "env");
-        cpu_regwptr = tcg_global_mem_new_ptr(TCG_AREG0,
-                                             offsetof(CPUState, regwptr),
-                                             "regwptr");
-        cpu_wim = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, wim),
-                                     "wim");
-        cpu_cond = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cond),
-                                      "cond");
-        cpu_cc_src = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cc_src),
-                                        "cc_src");
-        cpu_cc_src2 = tcg_global_mem_new(TCG_AREG0,
-                                         offsetof(CPUState, cc_src2),
-                                         "cc_src2");
-        cpu_cc_dst = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cc_dst),
-                                        "cc_dst");
-        cpu_cc_op = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, cc_op),
-                                           "cc_op");
-        cpu_psr = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, psr),
-                                         "psr");
-        cpu_fsr = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, fsr),
-                                     "fsr");
-        cpu_pc = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, pc),
-                                    "pc");
-        cpu_npc = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, npc),
-                                     "npc");
-        cpu_y = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, y), "y");
-        cpu_tbr = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, tbr),
-                                     "tbr");
-        for (i = 0; i < 16; i++)
-            cpu_asr[i] = tcg_global_mem_new(TCG_AREG0,
-                                              offsetof(CPUState, asr[i]),
-                                              asrnames[i]);
-        for (i = 1; i < 8; i++)
-            cpu_gregs[i] = tcg_global_mem_new(TCG_AREG0,
-                                              offsetof(CPUState, gregs[i]),
-                                              gregnames[i]);
-        for (i = 0; i < TARGET_FPREGS; i++)
-            cpu_fpr[i] = tcg_global_mem_new_i32(TCG_AREG0,
-                                                offsetof(CPUState, fpr[i]),
-                                                fregnames[i]);
-
+    cpu_env = tcg_global_reg_new_ptr(TCG_AREG0, "env");
+    cpu_regwptr = tcg_global_mem_new_ptr(TCG_AREG0, offsetof(CPUState, regwptr),
+                                         "regwptr");
+    cpu_wim = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, wim),
+                                 "wim");
+    cpu_cond = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cond),
+                                  "cond");
+    cpu_cc_src = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cc_src),
+                                    "cc_src");
+    cpu_cc_src2 = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cc_src2),
+                                     "cc_src2");
+    cpu_cc_dst = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, cc_dst),
+                                    "cc_dst");
+    cpu_cc_op = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, cc_op),
+                                       "cc_op");
+    cpu_psr = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, psr),
+                                     "psr");
+    cpu_fsr = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, fsr),
+                                 "fsr");
+    cpu_pc = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, pc),
+                                "pc");
+    cpu_npc = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, npc),
+                                 "npc");
+    cpu_y = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, y), "y");
+    cpu_tbr = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, tbr),
+                                 "tbr");
+    for (i = 0; i < 16; i++)
+        cpu_asr[i] = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, asr[i]),
+                                          asrnames[i]);
+    for (i = 1; i < 8; i++)
+        cpu_gregs[i] = tcg_global_mem_new(TCG_AREG0, offsetof(CPUState, gregs[i]),
+                                          gregnames[i]);
+    for (i = 0; i < TARGET_FPREGS; i++)
+        cpu_fpr[i] = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, fpr[i]),
+                                            fregnames[i]);
         /* register helpers */
-
 #define GEN_HELPER 2
 #include "helper.h"
-    }
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
