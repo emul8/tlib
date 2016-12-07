@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 include (ExternalProject)
 
-ExternalProject_Add (tcglib
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/tcg
-    PREFIX tcg
-    CMAKE_ARGS -DBIG_ENDIAN:BOOL=${TARGET_BIG_ENDIAN} -DHOST_LONG_BITS:INT=${HOST_WORD_SIZE} -DTARGET_LONG_BITS:INT=${TARGET_WORD_SIZE}
-    INSTALL_COMMAND "")
-
 project (tlib)
 
 option (DEBUG "Debug mode" OFF)
@@ -18,6 +12,14 @@ set (HOST_WORD_SIZE "64" CACHE STRING "Host word size")
 option (TARGET_BIG_ENDIAN "Target big endian" OFF)
 set (TARGET_ARCH "" CACHE STRING "Target architecture")
 set (TARGET_WORD_SIZE "32" CACHE STRING "Target word size")
+
+# this must be placed after setting default values for:
+# TARGET_BIG_ENDIAN, HOST_WORD_SIZE, TARGET_WORD_SIZE
+ExternalProject_Add (tcglib
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/tcg
+    PREFIX tcg
+    CMAKE_ARGS -DBIG_ENDIAN:BOOL=${TARGET_BIG_ENDIAN} -DHOST_LONG_BITS:INT=${HOST_WORD_SIZE} -DTARGET_LONG_BITS:INT=${TARGET_WORD_SIZE}
+    INSTALL_COMMAND "")
 
 set_property (CACHE HOST_ARCH PROPERTY STRINGS i386 arm)
 set_property (CACHE TARGET_ARCH PROPERTY STRINGS i386 arm arm-m sparc ppc)
