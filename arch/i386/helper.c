@@ -684,17 +684,13 @@ static void mce_init(CPUState *cenv)
 CPUState *cpu_init(const char *cpu_model)
 {
     CPUState *env;
-    static int inited;
     env = tlib_mallocz(sizeof(CPUState));
     cpu_exec_init(env);
+    translate_init();
 
-    /* init various static tables used in TCG mode */
-    if (!inited) {
-        inited = 1;
-        optimize_flags_init();
-        prev_debug_excp_handler =
+    prev_debug_excp_handler =
             cpu_set_debug_excp_handler(breakpoint_handler);
-    }
+
     if (cpu_x86_register(env, cpu_model) < 0) {
         return NULL;
     }
