@@ -25,7 +25,9 @@
 //#define PPC_EMULATE_32BITS_HYPV
 
 /* PowerPC 32 definitions */
-#define TARGET_LONG_BITS 32
+#if (TARGET_LONG_BITS != 32)
+#error "Only 32-bit target is supported."
+#endif
 
 #if defined(TARGET_PPCEMB)
 /* Specific definitions for PowerPC embedded */

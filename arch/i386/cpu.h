@@ -22,10 +22,11 @@
 #include <stdbool.h>
 #include "compiler.h"
 
-#ifdef TARGET_X86_64
-#define TARGET_LONG_BITS 64
+#if (TARGET_LONG_BITS == 64)
+#define TARGET_X86_64
+#elif (TARGET_LONG_BITS == 32)
 #else
-#define TARGET_LONG_BITS 32
+#error "Only 32-bit and 64-bit target is supported."
 #endif
 
 /* target supports implicit self modifying code */

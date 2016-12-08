@@ -19,7 +19,9 @@
 #ifndef CPU_ARM_H
 #define CPU_ARM_H
 
-#define TARGET_LONG_BITS 32
+#if (TARGET_LONG_BITS != 32)
+#error "Only 32-bit target is supported."
+#endif
 
 #include <stdbool.h>
 #include <stdlib.h>

@@ -3,12 +3,15 @@
 
 #include <stdbool.h>
 
+#if (TARGET_LONG_BITS == 32)
 #ifdef TARGET_PHYS_ADDR_BITS
 #undef TARGET_PHYS_ADDR_BITS
+#endif
 #define TARGET_PHYS_ADDR_BITS 36
+#else
+#error "Only 32-bit target is supported."
 #endif
 
-#define TARGET_LONG_BITS 32
 #define TARGET_FPREGS 32
 #define TARGET_PAGE_BITS 12 /* 4k */
 #define TARGET_PHYS_ADDR_SPACE_BITS 36
