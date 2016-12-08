@@ -379,7 +379,7 @@ static void code_gen_alloc()
     code_gen_buffer = tlib_malloc(code_gen_buffer_size);
     map_exec(code_gen_buffer, code_gen_buffer_size);
 #endif
-    map_exec(ctx->code_gen_prologue, 1024);
+    map_exec(tcg->code_gen_prologue, 1024);
     code_gen_buffer_max_size = code_gen_buffer_size -
         (TCG_MAX_OP_SIZE * OPC_BUF_SIZE);
     code_gen_max_blocks = code_gen_buffer_size / CODE_GEN_AVG_BLOCK_SIZE;

@@ -1035,16 +1035,16 @@ static inline void tcg_out_qemu_ld(TCGContext *s, const TCGArg *args, int opc)
 # endif
     switch (s_bits) {
     case 0:
-        tcg_out_call(s, (tcg_target_long)ctx->ldb);
+        tcg_out_call(s, (tcg_target_long)tcg->ldb);
         break;
     case 1:
-        tcg_out_call(s, (tcg_target_long)ctx->ldw);
+        tcg_out_call(s, (tcg_target_long)tcg->ldw);
         break;
     case 2:
-        tcg_out_call(s, (tcg_target_long)ctx->ldl);
+        tcg_out_call(s, (tcg_target_long)tcg->ldl);
         break;
     case 3:
-        tcg_out_call(s, (tcg_target_long)ctx->ldq);
+        tcg_out_call(s, (tcg_target_long)tcg->ldq);
         break;
     default:
         tcg_abort();
@@ -1252,16 +1252,16 @@ static inline void tcg_out_qemu_st(TCGContext *s, const TCGArg *args, int opc)
 
     switch (s_bits) {
     case 0:
-        tcg_out_call(s, (tcg_target_long)ctx->stb);
+        tcg_out_call(s, (tcg_target_long)tcg->stb);
         break;
     case 1:
-        tcg_out_call(s, (tcg_target_long)ctx->stw);
+        tcg_out_call(s, (tcg_target_long)tcg->stw);
         break;
     case 2:
-        tcg_out_call(s, (tcg_target_long)ctx->stl);
+        tcg_out_call(s, (tcg_target_long)tcg->stl);
         break;
     case 3:
-        tcg_out_call(s, (tcg_target_long)ctx->stq);
+        tcg_out_call(s, (tcg_target_long)tcg->stq);
         break;
     default:
         tcg_abort();

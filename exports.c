@@ -23,19 +23,19 @@
 #include "tcg-additional.h"
 #include "exec-all.h"
 
-static tcg_context_t sctx;
+static tcg_t stcg;
 
 static void init_tcg()
 {
-  sctx.ldb = __ldb_mmu;
-  sctx.ldw = __ldw_mmu;
-  sctx.ldl = __ldl_mmu;
-  sctx.ldq = __ldq_mmu;
-  sctx.stb = __stb_mmu;
-  sctx.stw = __stw_mmu;
-  sctx.stl = __stl_mmu;
-  sctx.stq = __stq_mmu;
-  tcg_attach_context(&sctx);
+  stcg.ldb = __ldb_mmu;
+  stcg.ldw = __ldw_mmu;
+  stcg.ldl = __ldl_mmu;
+  stcg.ldq = __ldq_mmu;
+  stcg.stb = __stb_mmu;
+  stcg.stw = __stw_mmu;
+  stcg.stl = __stl_mmu;
+  stcg.stq = __stq_mmu;
+  tcg_attach(&stcg);
   set_temp_buf_offset(offsetof(CPUState, temp_buf));
   int i;
   for (i = 0; i < 7; i++)

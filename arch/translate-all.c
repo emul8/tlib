@@ -30,7 +30,7 @@
 */
 void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 {
-    TCGContext *s = ctx->tcg_ctx;
+    TCGContext *s = tcg->ctx;
     uint8_t *gen_code_buf;
     int gen_code_size;
 
@@ -55,7 +55,7 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 int cpu_restore_state(CPUState *env,
 		TranslationBlock *tb, unsigned long searched_pc)
 {
-    TCGContext *s = ctx->tcg_ctx;
+    TCGContext *s = tcg->ctx;
     int j, k;
     unsigned long tc_ptr;
     int instructions_executed_so_far = 0;
@@ -76,13 +76,13 @@ int cpu_restore_state(CPUState *env,
     if (j < 0)
         return -1;
     /* now find start of instruction before */
-    while (ctx->gen_opc_instr_start[j] == 0)
+    while (tcg->gen_opc_instr_start[j] == 0)
         j--;
 
     k = j;
     while (k > 0)
     {
-      instructions_executed_so_far += ctx->gen_opc_instr_start[k];
+      instructions_executed_so_far += tcg->gen_opc_instr_start[k];
       k--;
     }
     cpu->instructions_count_value -= (tb->icount - instructions_executed_so_far);

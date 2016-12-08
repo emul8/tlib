@@ -246,7 +246,7 @@ int cpu_exec(CPUState *env)
                 if (likely(!env->exit_request)) {
                     tc_ptr = tb->tc_ptr;
                     /* execute the generated code */
-                    next_tb = tcg_qemu_tb_exec(env, tc_ptr);
+                    next_tb = tcg_tb_exec(env, tc_ptr);
                     if ((next_tb & 3) == 2) {
                         tb = (TranslationBlock *)(long)(next_tb & ~3);
                         /* Restore PC.  */

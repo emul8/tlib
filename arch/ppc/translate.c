@@ -8024,7 +8024,7 @@ void gen_intermediate_code(CPUState *env,
     uint32_t op1, op2, op3;
 
     pc_start = tb->pc;
-    gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
+    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
     dc->nip = pc_start;
     dc->tb = tb;
     dc->exception = POWERPC_EXCP_NONE;
@@ -8083,14 +8083,14 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (unlikely(search_pc)) {
-            j = gen_opc_ptr - ctx->gen_opc_buf;
+            j = gen_opc_ptr - tcg->gen_opc_buf;
             if (lj < j) {
                 lj++;
                 while (lj < j)
-                    ctx->gen_opc_instr_start[lj++] = 0;
+                    tcg->gen_opc_instr_start[lj++] = 0;
             }
-            ctx->gen_opc_pc[lj] = dc->nip;
-            ctx->gen_opc_instr_start[lj] = 1;
+            tcg->gen_opc_pc[lj] = dc->nip;
+            tcg->gen_opc_instr_start[lj] = 1;
         }
 
         if (unlikely(dc->le_mode)) {
@@ -8174,10 +8174,10 @@ void gen_intermediate_code(CPUState *env,
     gen_block_footer(tb, num_insns);
     *gen_opc_ptr = INDEX_op_end;
     if (unlikely(search_pc)) {
-        j = gen_opc_ptr - ctx->gen_opc_buf;
+        j = gen_opc_ptr - tcg->gen_opc_buf;
         lj++;
         while (lj <= j)
-            ctx->gen_opc_instr_start[lj++] = 0;
+            tcg->gen_opc_instr_start[lj++] = 0;
     } else {
         tb->size = dc->nip - pc_start;
         tb->icount = num_insns;
@@ -8190,7 +8190,7 @@ void gen_intermediate_code(CPUState *env,
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
-    env->nip = ctx->gen_opc_pc[pc_pos];
+    env->nip = tcg->gen_opc_pc[pc_pos];
 }
 
 void cpu_exec_prologue(CPUState *env)

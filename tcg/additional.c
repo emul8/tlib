@@ -25,7 +25,7 @@
 #include <string.h>
 #include "tcg.h"
 
-tcg_context_t *ctx;
+tcg_t *tcg;
 
 void *(*_TCG_malloc)(size_t);
 

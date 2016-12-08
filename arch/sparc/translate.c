@@ -2757,7 +2757,7 @@ void gen_intermediate_code(CPUState *env,
     dc->fpu_enabled = tb_fpu_enabled(tb->flags);
     dc->address_mask_32bit = tb_am_enabled(tb->flags);
     dc->singlestep_enabled = (env->singlestep_enabled);
-    gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
+    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     cpu_tmp0 = tcg_temp_new();
     cpu_tmp32 = tcg_temp_new_i32();
@@ -2788,14 +2788,14 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - ctx->gen_opc_buf;
+            j = gen_opc_ptr - tcg->gen_opc_buf;
             if (lj < j) {
                 lj++;
                 while (lj < j)
-                    ctx->gen_opc_instr_start[lj++] = 0;
-                ctx->gen_opc_pc[lj] = dc->pc;
+                    tcg->gen_opc_instr_start[lj++] = 0;
+                tcg->gen_opc_pc[lj] = dc->pc;
                 gen_opc_npc[lj] = dc->npc;
-                ctx->gen_opc_instr_start[lj] = 1;
+                tcg->gen_opc_instr_start[lj] = 1;
             }
         }
 
@@ -2843,10 +2843,10 @@ void gen_intermediate_code(CPUState *env,
     gen_block_footer(tb, num_insns);
     *gen_opc_ptr = INDEX_op_end;
     if (search_pc) {
-        j = gen_opc_ptr - ctx->gen_opc_buf;
+        j = gen_opc_ptr - tcg->gen_opc_buf;
         lj++;
         while (lj <= j)
-            ctx->gen_opc_instr_start[lj++] = 0;
+            tcg->gen_opc_instr_start[lj++] = 0;
         gen_opc_jump_pc[0] = dc->jump_pc[0];
         gen_opc_jump_pc[1] = dc->jump_pc[1];
     } else {
@@ -2944,7 +2944,7 @@ void translate_init(CPUState *env)
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
     target_ulong npc;
-    env->pc = ctx->gen_opc_pc[pc_pos];
+    env->pc = tcg->gen_opc_pc[pc_pos];
     npc = gen_opc_npc[pc_pos];
     if (npc == 1) {
         /* dynamic NPC: already stored */

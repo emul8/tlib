@@ -2,7 +2,7 @@
 #define TCG_ADDITIONAL_H
 
 void attach_gen_opc_buf(void*buf);
-void attach_tcg_ctx(void*tcg_c);
+void attach_tcg(void*tcg_c);
 void attach_code_gen_prologue(void *prol);
 void attach_gen_opparam_buf(void *buf);
 void attach_ld_helpers(void*__ldb, void*__ldw, void*__ldl, void*__ldq);

@@ -7720,7 +7720,7 @@ void gen_intermediate_code(CPUState *env,
     cpu_ptr0 = tcg_temp_new_ptr();
     cpu_ptr1 = tcg_temp_new_ptr();
 
-    gen_opc_end = ctx->gen_opc_buf + OPC_MAX_SIZE;
+    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     dc->is_jmp = DISAS_NEXT;
     pc_ptr = pc_start;
@@ -7742,15 +7742,15 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - ctx->gen_opc_buf;
+            j = gen_opc_ptr - tcg->gen_opc_buf;
             if (lj < j) {
                 lj++;
                 while (lj < j)
-                    ctx->gen_opc_instr_start[lj++] = 0;
+                    tcg->gen_opc_instr_start[lj++] = 0;
             }
-            ctx->gen_opc_pc[lj] = pc_ptr;
+            tcg->gen_opc_pc[lj] = pc_ptr;
             gen_opc_cc_op[lj] = dc->cc_op;
-            ctx->gen_opc_instr_start[lj] = 1;
+            tcg->gen_opc_instr_start[lj] = 1;
         }
 
         pc_ptr = disas_insn(dc, pc_ptr);
@@ -7782,10 +7782,10 @@ void gen_intermediate_code(CPUState *env,
     *gen_opc_ptr = INDEX_op_end;
     /* we don't forget to fill the last values */
     if (search_pc) {
-        j = gen_opc_ptr - ctx->gen_opc_buf;
+        j = gen_opc_ptr - tcg->gen_opc_buf;
         lj++;
         while (lj <= j)
-            ctx->gen_opc_instr_start[lj++] = 0;
+            tcg->gen_opc_instr_start[lj++] = 0;
     }
 
     if (tlib_is_on_block_translation_enabled) {
@@ -7809,7 +7809,7 @@ void gen_intermediate_code(CPUState *env,
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
 {
     int cc_op;
-    env->eip = ctx->gen_opc_pc[pc_pos] - tb->cs_base;
+    env->eip = tcg->gen_opc_pc[pc_pos] - tb->cs_base;
     cc_op = gen_opc_cc_op[pc_pos];
     if (cc_op != CC_OP_DYNAMIC)
         env->cc_op = cc_op;

@@ -296,7 +296,7 @@ static inline int ppc6xx_tlb_check(CPUState *env, mmu_ctx_t *mmu_ctx,
     if (best != -1) {
     done:
         /* Update page flags */
-        pte_update_flags(ctx, &env->tlb.tlb6[best].pte1, ret, rw);
+        pte_update_flags(mmu_ctx, &env->tlb.tlb6[best].pte1, ret, rw);
     }
 
     return ret;
@@ -1128,7 +1128,7 @@ target_phys_addr_t cpu_get_phys_page_debug (CPUState *env, target_ulong addr)
     if (unlikely(get_physical_address(env, &mmu_ctx, addr, 0, ACCESS_INT) != 0))
         return -1;
 
-    return ctx.raddr & TARGET_PAGE_MASK;
+    return mmu_ctx.raddr & TARGET_PAGE_MASK;
 }
 
 static void booke206_update_mas_tlb_miss(CPUState *env, target_ulong address,
