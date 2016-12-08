@@ -113,7 +113,7 @@ static inline int check_prot(int prot, int rw, int access_type)
     return ret;
 }
 
-static inline int _pte_check(mmu_ctx_t *ctx, int is_64b, target_ulong pte0,
+static inline int _pte_check(mmu_ctx_t *mmu_ctx, int is_64b, target_ulong pte0,
                              target_ulong pte1, int h, int rw, int type)
 {
     target_ulong ptem, mmask;
@@ -128,32 +128,32 @@ static inline int _pte_check(mmu_ctx_t *ctx, int is_64b, target_ulong pte0,
         ptem = pte0 & PTE_PTEM_MASK;
         mmask = PTE_CHECK_MASK;
         pp = pte1 & 0x00000003;
-        if (ptem == ctx->ptem) {
-            if (ctx->raddr != (target_phys_addr_t)-1ULL) {
+        if (ptem == mmu_ctx->ptem) {
+            if (mmu_ctx->raddr != (target_phys_addr_t)-1ULL) {
                 /* all matches should have equal RPN, WIMG & PP */
-                if ((ctx->raddr & mmask) != (pte1 & mmask)) {
+                if ((mmu_ctx->raddr & mmask) != (pte1 & mmask)) {
                     return -3;
                 }
             }
             /* Compute access rights */
-            access = pp_check(ctx->key, pp, ctx->nx);
+            access = pp_check(mmu_ctx->key, pp, mmu_ctx->nx);
             /* Keep the matching PTE informations */
-            ctx->raddr = pte1;
-            ctx->prot = access;
-            ret = check_prot(ctx->prot, rw, type);
+            mmu_ctx->raddr = pte1;
+            mmu_ctx->prot = access;
+            ret = check_prot(mmu_ctx->prot, rw, type);
         }
     }
 
     return ret;
 }
 
-static inline int pte32_check(mmu_ctx_t *ctx, target_ulong pte0,
+static inline int pte32_check(mmu_ctx_t *mmu_ctx, target_ulong pte0,
                               target_ulong pte1, int h, int rw, int type)
 {
-    return _pte_check(ctx, 0, pte0, pte1, h, rw, type);
+    return _pte_check(mmu_ctx, 0, pte0, pte1, h, rw, type);
 }
 
-static inline int pte_update_flags(mmu_ctx_t *ctx, target_ulong *pte1p,
+static inline int pte_update_flags(mmu_ctx_t *mmu_ctx, target_ulong *pte1p,
                                    int ret, int rw)
 {
     int store = 0;
@@ -171,7 +171,7 @@ static inline int pte_update_flags(mmu_ctx_t *ctx, target_ulong *pte1p,
             store = 1;
         } else {
             /* Force page fault for first write access */
-            ctx->prot &= ~PAGE_WRITE;
+            mmu_ctx->prot &= ~PAGE_WRITE;
         }
     }
 
@@ -252,7 +252,7 @@ void ppc6xx_tlb_store (CPUState *env, target_ulong EPN, int way, int is_code,
     env->last_way = way;
 }
 
-static inline int ppc6xx_tlb_check(CPUState *env, mmu_ctx_t *ctx,
+static inline int ppc6xx_tlb_check(CPUState *env, mmu_ctx_t *mmu_ctx,
                                    target_ulong eaddr, int rw, int access_type)
 {
     ppc6xx_tlb_t *tlb;
@@ -269,7 +269,7 @@ static inline int ppc6xx_tlb_check(CPUState *env, mmu_ctx_t *ctx,
         if ((eaddr & TARGET_PAGE_MASK) != tlb->EPN) {
             continue;
         }
-        switch (pte32_check(ctx, tlb->pte0, tlb->pte1, 0, rw, access_type)) {
+        switch (pte32_check(mmu_ctx, tlb->pte0, tlb->pte1, 0, rw, access_type)) {
         case -3:
             /* TLB inconsistency */
             return -1;
@@ -351,7 +351,7 @@ static inline void bat_601_size_prot(CPUState *env, target_ulong *blp,
     *protp = prot;
 }
 
-static inline int get_bat(CPUState *env, mmu_ctx_t *ctx, target_ulong virtual,
+static inline int get_bat(CPUState *env, mmu_ctx_t *mmu_ctx, target_ulong virtual,
                           int rw, int type)
 {
     target_ulong *BATlt, *BATut, *BATu, *BATl;
@@ -384,12 +384,12 @@ static inline int get_bat(CPUState *env, mmu_ctx_t *ctx, target_ulong virtual,
             /* BAT matches */
             if (valid != 0) {
                 /* Get physical address */
-                ctx->raddr = (*BATl & 0xF0000000) |
+                mmu_ctx->raddr = (*BATl & 0xF0000000) |
                     ((virtual & 0x0FFE0000 & bl) | (*BATl & 0x0FFE0000)) |
                     (virtual & 0x0001F000);
                 /* Compute access rights */
-                ctx->prot = prot;
-                ret = check_prot(ctx->prot, rw, type);
+                mmu_ctx->prot = prot;
+                ret = check_prot(mmu_ctx->prot, rw, type);
                 break;
             }
         }
@@ -406,7 +406,7 @@ static inline target_phys_addr_t get_pteg_offset(CPUState *env,
 }
 
 /* PTE table lookup */
-static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h,
+static inline int find_pte(CPUState *env, mmu_ctx_t *mmu_ctx, int h,
                             int rw, int type, int target_page_bits)
 {
     target_phys_addr_t pteg_off;
@@ -415,7 +415,7 @@ static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h,
     int ret, r;
 
     ret = -1; /* No entry found */
-    pteg_off = get_pteg_offset(env, ctx->hash[h], HASH_PTE_SIZE_32);
+    pteg_off = get_pteg_offset(env, mmu_ctx->hash[h], HASH_PTE_SIZE_32);
     for (i = 0; i < 8; i++) {
         if (env->external_htab) {
             pte0 = ldl_p(env->external_htab + pteg_off + (i * 8));
@@ -424,7 +424,7 @@ static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h,
             pte0 = ldl_phys(env->htab_base + pteg_off + (i * 8));
             pte1 = ldl_phys(env->htab_base + pteg_off + (i * 8) + 4);
         }
-        r = pte32_check(ctx, pte0, pte1, h, rw, type);
+        r = pte32_check(mmu_ctx, pte0, pte1, h, rw, type);
         switch (r) {
         case -3:
             /* PTE inconsistency */
@@ -452,8 +452,8 @@ static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h,
     if (good != -1) {
     done:
         /* Update page flags */
-        pte1 = ctx->raddr;
-        if (pte_update_flags(ctx, &pte1, ret, rw) == 1) {
+        pte1 = mmu_ctx->raddr;
+        if (pte_update_flags(mmu_ctx, &pte1, ret, rw) == 1) {
             if (env->external_htab) {
                 stl_p(env->external_htab + pteg_off + (good * 8) + 4,
                       pte1);
@@ -468,7 +468,7 @@ static inline int find_pte(CPUState *env, mmu_ctx_t *ctx, int h,
 }
 
 /* Perform segment based translation */
-static inline int get_segment(CPUState *env, mmu_ctx_t *ctx,
+static inline int get_segment(CPUState *env, mmu_ctx_t *mmu_ctx,
                               target_ulong eaddr, int rw, int type)
 {
     target_phys_addr_t hash;
@@ -477,42 +477,42 @@ static inline int get_segment(CPUState *env, mmu_ctx_t *ctx,
     int ret, ret2 = 0;
 
     pr = msr_pr;
-    ctx->eaddr = eaddr;
+    mmu_ctx->eaddr = eaddr;
     {
         target_ulong sr, pgidx;
 
         sr = env->sr[eaddr >> 28];
-        ctx->key = (((sr & 0x20000000) && (pr != 0)) ||
+        mmu_ctx->key = (((sr & 0x20000000) && (pr != 0)) ||
                     ((sr & 0x40000000) && (pr == 0))) ? 1 : 0;
         ds = sr & 0x80000000 ? 1 : 0;
-        ctx->nx = sr & 0x10000000 ? 1 : 0;
+        mmu_ctx->nx = sr & 0x10000000 ? 1 : 0;
         vsid = sr & 0x00FFFFFF;
         target_page_bits = TARGET_PAGE_BITS;
         pgidx = (eaddr & ~SEGMENT_MASK_256M) >> target_page_bits;
         hash = vsid ^ pgidx;
-        ctx->ptem = (vsid << 7) | (pgidx >> 10);
+        mmu_ctx->ptem = (vsid << 7) | (pgidx >> 10);
     }
     ret = -1;
     if (!ds) {
         /* Check if instruction fetch is allowed, if needed */
-        if (type != ACCESS_CODE || ctx->nx == 0) {
+        if (type != ACCESS_CODE || mmu_ctx->nx == 0) {
             /* Page address translation */
-            ctx->hash[0] = hash;
-            ctx->hash[1] = ~hash;
+            mmu_ctx->hash[0] = hash;
+            mmu_ctx->hash[1] = ~hash;
 
             /* Initialize real address with an invalid value */
-            ctx->raddr = (target_phys_addr_t)-1ULL;
+            mmu_ctx->raddr = (target_phys_addr_t)-1ULL;
             if (unlikely(env->mmu_model == POWERPC_MMU_SOFT_6xx ||
                          env->mmu_model == POWERPC_MMU_SOFT_74xx)) {
                 /* Software TLB search */
-                ret = ppc6xx_tlb_check(env, ctx, eaddr, rw, type);
+                ret = ppc6xx_tlb_check(env, mmu_ctx, eaddr, rw, type);
             } else {
                 /* Primary table lookup */
-                ret = find_pte(env, ctx, 0, rw, type, target_page_bits);
+                ret = find_pte(env, mmu_ctx, 0, rw, type, target_page_bits);
                 if (ret < 0) {
                     /* Secondary table lookup */
                     if (eaddr != 0xEFFFFFFF)
-                    ret2 = find_pte(env, ctx, 1, rw, type,
+                    ret2 = find_pte(env, mmu_ctx, 1, rw, type,
                                     target_page_bits);
                     if (ret2 != -1)
                         ret = ret2;
@@ -534,8 +534,8 @@ static inline int get_segment(CPUState *env, mmu_ctx_t *ctx,
             /* If T=1 and BUID=x'07F', the 601 performs a memory access
              * to SR[28-31] LA[4-31], bypassing all protection mechanisms.
              */
-            ctx->raddr = ((sr & 0xF) << 28) | (eaddr & 0x0FFFFFFF);
-            ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
+            mmu_ctx->raddr = ((sr & 0xF) << 28) | (eaddr & 0x0FFFFFFF);
+            mmu_ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
             return 0;
         }
 
@@ -557,7 +557,7 @@ static inline int get_segment(CPUState *env, mmu_ctx_t *ctx,
             /* Should make the instruction do no-op.
              * As it already do no-op, it's quite easy :-)
              */
-            ctx->raddr = eaddr;
+            mmu_ctx->raddr = eaddr;
             return 0;
         case ACCESS_EXT:
             /* eciwx or ecowx */
@@ -565,8 +565,8 @@ static inline int get_segment(CPUState *env, mmu_ctx_t *ctx,
         default:
             return -4;
         }
-        if ((rw == 1 || ctx->key != 1) && (rw == 0 || ctx->key != 0)) {
-            ctx->raddr = eaddr;
+        if ((rw == 1 || mmu_ctx->key != 1) && (rw == 0 || mmu_ctx->key != 0)) {
+            mmu_ctx->raddr = eaddr;
             ret = 2;
         } else {
             ret = -2;
@@ -659,7 +659,7 @@ static inline void ppc4xx_tlb_invalidate_virt(CPUState *env,
     }
 }
 
-static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
+static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *mmu_ctx,
                                  target_ulong address, int rw, int access_type)
 {
     ppcemb_tlb_t *tlb;
@@ -684,14 +684,14 @@ static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
             /* No break here */
         case 0x3:
             /* All accesses granted */
-            ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
+            mmu_ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
             ret = 0;
             break;
         case 0x0:
             if (pr != 0) {
                 /* Raise Zone protection fault.  */
                 env->spr[SPR_40x_ESR] = 1 << 22;
-                ctx->prot = 0;
+                mmu_ctx->prot = 0;
                 ret = -2;
                 break;
             }
@@ -699,14 +699,14 @@ static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
         case 0x1:
         check_perms:
             /* Check from TLB entry */
-            ctx->prot = tlb->prot;
-            ret = check_prot(ctx->prot, rw, access_type);
+            mmu_ctx->prot = tlb->prot;
+            ret = check_prot(mmu_ctx->prot, rw, access_type);
             if (ret == -2)
                 env->spr[SPR_40x_ESR] = 0;
             break;
         }
         if (ret >= 0) {
-            ctx->raddr = raddr;
+            mmu_ctx->raddr = raddr;
             return 0;
         }
     }
@@ -786,7 +786,7 @@ found_tlb:
     return ret;
 }
 
-static int mmubooke_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
+static int mmubooke_get_physical_address (CPUState *env, mmu_ctx_t *mmu_ctx,
                                           target_ulong address, int rw,
                                           int access_type)
 {
@@ -798,7 +798,7 @@ static int mmubooke_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
     raddr = (target_phys_addr_t)-1ULL;
     for (i = 0; i < env->nb_tlb; i++) {
         tlb = &env->tlb.tlbe[i];
-        ret = mmubooke_check_tlb(env, tlb, &raddr, &ctx->prot, address, rw,
+        ret = mmubooke_check_tlb(env, tlb, &raddr, &mmu_ctx->prot, address, rw,
                                  access_type, i);
         if (!ret) {
             break;
@@ -806,7 +806,7 @@ static int mmubooke_get_physical_address (CPUState *env, mmu_ctx_t *ctx,
     }
 
     if (ret >= 0) {
-        ctx->raddr = raddr;
+        mmu_ctx->raddr = raddr;
     }
 
     return ret;
@@ -960,7 +960,7 @@ found_tlb:
     return ret;
 }
 
-static int mmubooke206_get_physical_address(CPUState *env, mmu_ctx_t *ctx,
+static int mmubooke206_get_physical_address(CPUState *env, mmu_ctx_t *mmu_ctx,
                                             target_ulong address, int rw,
                                             int access_type)
 {
@@ -975,7 +975,7 @@ static int mmubooke206_get_physical_address(CPUState *env, mmu_ctx_t *ctx,
 
         for (j = 0; j < ways; j++) {
             tlb = booke206_get_tlbm(env, i, address, j);
-            ret = mmubooke206_check_tlb(env, tlb, &raddr, &ctx->prot, address,
+            ret = mmubooke206_check_tlb(env, tlb, &raddr, &mmu_ctx->prot, address,
                                         rw, access_type);
             if (ret != -1) {
                 goto found_tlb;
@@ -986,29 +986,29 @@ static int mmubooke206_get_physical_address(CPUState *env, mmu_ctx_t *ctx,
 found_tlb:
 
     if (ret >= 0) {
-        ctx->raddr = raddr;
+        mmu_ctx->raddr = raddr;
     } else {
         if (address < 0x600000) {
-                    ctx->raddr = (address & 0xFFFFFFFF);
-                    ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
+                    mmu_ctx->raddr = (address & 0xFFFFFFFF);
+                    mmu_ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
                     ret = 0;
         }
         if (address > 0x700000) {
-          ctx->raddr = (address & 0xFFFFFFFF);
-          ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
+          mmu_ctx->raddr = (address & 0xFFFFFFFF);
+          mmu_ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
           ret = 0;
         }
     }
     return ret;
 }
 
-static inline int check_physical(CPUState *env, mmu_ctx_t *ctx,
+static inline int check_physical(CPUState *env, mmu_ctx_t *mmu_ctx,
                                  target_ulong eaddr, int rw)
 {
     int in_plb, ret;
 
-    ctx->raddr = eaddr;
-    ctx->prot = PAGE_READ | PAGE_EXEC;
+    mmu_ctx->raddr = eaddr;
+    mmu_ctx->prot = PAGE_READ | PAGE_EXEC;
     ret = 0;
     switch (env->mmu_model) {
     case POWERPC_MMU_32B:
@@ -1018,7 +1018,7 @@ static inline int check_physical(CPUState *env, mmu_ctx_t *ctx,
     case POWERPC_MMU_SOFT_4xx:
     case POWERPC_MMU_REAL:
     case POWERPC_MMU_BOOKE:
-        ctx->prot |= PAGE_WRITE;
+        mmu_ctx->prot |= PAGE_WRITE;
         break;
     case POWERPC_MMU_SOFT_4xx_Z:
         if (unlikely(msr_pe != 0)) {
@@ -1040,7 +1040,7 @@ static inline int check_physical(CPUState *env, mmu_ctx_t *ctx,
                 }
             } else {
                 /* Read-write access is allowed */
-                ctx->prot |= PAGE_WRITE;
+                mmu_ctx->prot |= PAGE_WRITE;
             }
         }
         break;
@@ -1059,7 +1059,7 @@ static inline int check_physical(CPUState *env, mmu_ctx_t *ctx,
     return ret;
 }
 
-int get_physical_address (CPUState *env, mmu_ctx_t *ctx, target_ulong eaddr,
+int get_physical_address (CPUState *env, mmu_ctx_t *mmu_ctx, target_ulong eaddr,
                           int rw, int access_type)
 {
     int ret;
@@ -1069,14 +1069,14 @@ int get_physical_address (CPUState *env, mmu_ctx_t *ctx, target_ulong eaddr,
         if (env->mmu_model == POWERPC_MMU_BOOKE) {
             /* The BookE MMU always performs address translation. The
                IS and DS bits only affect the address space.  */
-            ret = mmubooke_get_physical_address(env, ctx, eaddr,
+            ret = mmubooke_get_physical_address(env, mmu_ctx, eaddr,
                                                 rw, access_type);
         } else if (env->mmu_model == POWERPC_MMU_BOOKE206) {
-            ret = mmubooke206_get_physical_address(env, ctx, eaddr, rw,
+            ret = mmubooke206_get_physical_address(env, mmu_ctx, eaddr, rw,
                                                    access_type);
         } else {
             /* No address translation.  */
-            ret = check_physical(env, ctx, eaddr, rw);
+            ret = check_physical(env, mmu_ctx, eaddr, rw);
         }
     } else {
         ret = -1;
@@ -1087,23 +1087,23 @@ int get_physical_address (CPUState *env, mmu_ctx_t *ctx, target_ulong eaddr,
         case POWERPC_MMU_SOFT_74xx:
             /* Try to find a BAT */
             if (env->nb_BATs != 0)
-                ret = get_bat(env, ctx, eaddr, rw, access_type);
+                ret = get_bat(env, mmu_ctx, eaddr, rw, access_type);
             if (ret < 0) {
                 /* We didn't match any BAT entry or don't have BATs */
-                ret = get_segment(env, ctx, eaddr, rw, access_type);
+                ret = get_segment(env, mmu_ctx, eaddr, rw, access_type);
             }
             break;
         case POWERPC_MMU_SOFT_4xx:
         case POWERPC_MMU_SOFT_4xx_Z:
-            ret = mmu40x_get_physical_address(env, ctx, eaddr,
+            ret = mmu40x_get_physical_address(env, mmu_ctx, eaddr,
                                               rw, access_type);
             break;
         case POWERPC_MMU_BOOKE:
-            ret = mmubooke_get_physical_address(env, ctx, eaddr,
+            ret = mmubooke_get_physical_address(env, mmu_ctx, eaddr,
                                                 rw, access_type);
             break;
         case POWERPC_MMU_BOOKE206:
-            ret = mmubooke206_get_physical_address(env, ctx, eaddr, rw,
+            ret = mmubooke206_get_physical_address(env, mmu_ctx, eaddr, rw,
                                                access_type);
             break;
         case POWERPC_MMU_MPC8xx:
@@ -1123,9 +1123,9 @@ int get_physical_address (CPUState *env, mmu_ctx_t *ctx, target_ulong eaddr,
 
 target_phys_addr_t cpu_get_phys_page_debug (CPUState *env, target_ulong addr)
 {
-    mmu_ctx_t ctx;
+    mmu_ctx_t mmu_ctx;
 
-    if (unlikely(get_physical_address(env, &ctx, addr, 0, ACCESS_INT) != 0))
+    if (unlikely(get_physical_address(env, &mmu_ctx, addr, 0, ACCESS_INT) != 0))
         return -1;
 
     return ctx.raddr & TARGET_PAGE_MASK;
@@ -1176,7 +1176,7 @@ static void booke206_update_mas_tlb_miss(CPUState *env, target_ulong address,
 int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                               int mmu_idx)
 {
-    mmu_ctx_t ctx;
+    mmu_ctx_t mmu_ctx;
     int access_type;
     int ret = 0;
 
@@ -1188,10 +1188,10 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
         /* data access */
         access_type = env->access_type;
     }
-    ret = get_physical_address(env, &ctx, address, rw, access_type);
+    ret = get_physical_address(env, &mmu_ctx, address, rw, access_type);
     if (ret == 0) {
         tlb_set_page(env, address & TARGET_PAGE_MASK,
-                     ctx.raddr & TARGET_PAGE_MASK, ctx.prot,
+                     mmu_ctx.raddr & TARGET_PAGE_MASK, mmu_ctx.prot,
                      mmu_idx, TARGET_PAGE_SIZE);
         ret = 0;
     } else if (ret < 0) {
@@ -1206,7 +1206,7 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                     env->exception_index = POWERPC_EXCP_IFTLB;
                     env->error_code = 1 << 18;
                     env->spr[SPR_IMISS] = address;
-                    env->spr[SPR_ICMP] = 0x80000000 | ctx.ptem;
+                    env->spr[SPR_ICMP] = 0x80000000 | mmu_ctx.ptem;
                     goto tlb_miss;
                 case POWERPC_MMU_SOFT_74xx:
                     env->exception_index = POWERPC_EXCP_IFTLB;
@@ -1279,13 +1279,13 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                         env->error_code = 0;
                     }
                     env->spr[SPR_DMISS] = address;
-                    env->spr[SPR_DCMP] = 0x80000000 | ctx.ptem;
+                    env->spr[SPR_DCMP] = 0x80000000 | mmu_ctx.ptem;
                 tlb_miss:
-                    env->error_code |= ctx.key << 19;
+                    env->error_code |= mmu_ctx.key << 19;
                     env->spr[SPR_HASH1] = env->htab_base +
-                        get_pteg_offset(env, ctx.hash[0], HASH_PTE_SIZE_32);
+                        get_pteg_offset(env, mmu_ctx.hash[0], HASH_PTE_SIZE_32);
                     env->spr[SPR_HASH2] = env->htab_base +
-                        get_pteg_offset(env, ctx.hash[1], HASH_PTE_SIZE_32);
+                        get_pteg_offset(env, mmu_ctx.hash[1], HASH_PTE_SIZE_32);
                     break;
                 case POWERPC_MMU_SOFT_74xx:
                     if (rw == 1) {
@@ -1295,10 +1295,10 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                     }
                 tlb_miss_74xx:
                     /* Implement LRU algorithm */
-                    env->error_code = ctx.key << 19;
+                    env->error_code = mmu_ctx.key << 19;
                     env->spr[SPR_TLBMISS] = (address & ~((target_ulong)0x3)) |
                         ((env->last_way + 1) & (env->nb_ways - 1));
-                    env->spr[SPR_PTEHI] = 0x80000000 | ctx.ptem;
+                    env->spr[SPR_PTEHI] = 0x80000000 | mmu_ctx.ptem;
                     break;
                 case POWERPC_MMU_SOFT_4xx:
                 case POWERPC_MMU_SOFT_4xx_Z:
