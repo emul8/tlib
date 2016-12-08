@@ -681,23 +681,17 @@ static void mce_init(CPUState *cenv)
     }
 }
 
-CPUState *cpu_init(const char *cpu_model)
+int cpu_init(const char *cpu_model)
 {
-    CPUState *env;
-    env = tlib_mallocz(sizeof(CPUState));
-    cpu_exec_init(env);
-    translate_init();
-
     prev_debug_excp_handler =
             cpu_set_debug_excp_handler(breakpoint_handler);
 
-    if (cpu_x86_register(env, cpu_model) < 0) {
-        return NULL;
+    if (cpu_x86_register(cpu, cpu_model) < 0) {
+        return -1;
     }
-    mce_init(env);
-    cpu_reset(env);
-
-    return env;
+    mce_init(cpu);
+    cpu_reset(cpu);
+    return 0;
 }
 
 void do_cpu_init(CPUState *env)

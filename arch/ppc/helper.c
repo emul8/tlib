@@ -2247,22 +2247,14 @@ void cpu_reset(CPUState *env)
     tlb_flush(env, 1);
 }
 
-CPUState *cpu_init (const char *cpu_model)
+int cpu_init (const char *cpu_model)
 {
-    CPUState *env;
     const ppc_def_t *def;
-
     def = cpu_ppc_find_by_name(cpu_model);
     if (!def)
-        return NULL;
-
-    env = tlib_mallocz(sizeof(CPUState));
-    cpu_exec_init(env);
-    translate_init();
-    /* Adjust cpu index for SMT */
-    cpu_ppc_register_internal(env, def);
-
-    return env;
+        return -1;
+    cpu_ppc_register_internal(cpu, def);
+    return 0;
 }
 
 void dispose_opcodes(opc_handler_t **array);

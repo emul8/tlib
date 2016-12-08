@@ -350,22 +350,17 @@ void cpu_reset(CPUState *env)
     tb_flush(env);
 }
 
-CPUState *cpu_init(const char *cpu_model)
+int cpu_init(const char *cpu_model)
 {
-    CPUState *env;
     uint32_t id;
-    static int inited = 0;
 
     id = cpu_arm_find_by_name(cpu_model);
     if (id == 0)
-        return NULL;
-    env = tlib_mallocz(sizeof(CPUState));
-    cpu_exec_init(env);
-    translate_init();
+        return -1;
 
-    env->cp15.c0_cpuid = id;
-    cpu_reset(env);
-    return env;
+    cpu->cp15.c0_cpuid = id;
+    cpu_reset(cpu);
+    return 0;
 }
 
 struct arm_cpu_t {
