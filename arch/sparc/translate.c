@@ -2861,7 +2861,6 @@ void gen_intermediate_code(CPUState *env,
 void translate_init()
 {
     unsigned int i;
-    static int inited = 0;
     static const char * const gregnames[8] = {
         "g0",
         "g1",

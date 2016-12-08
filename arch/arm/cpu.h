@@ -221,7 +221,6 @@ typedef struct CPUState {
 } CPUState;
 
 int cpu_init(const char *cpu_model);
-void translate_init(void);
 int cpu_exec(CPUState *s);
 void do_interrupt(CPUState *);
 void switch_mode(CPUState *, int);

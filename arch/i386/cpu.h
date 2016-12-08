@@ -956,9 +956,6 @@ static inline int cpu_mmu_index (CPUState *env)
 #define ST(n)  (env->fpregs[(env->fpstt + (n)) & 7].d)
 #define ST1    ST(1)
 
-/* translate.c */
-void optimize_flags_init(void);
-
 #include "cpu-all.h"
 #include "svm.h"
 

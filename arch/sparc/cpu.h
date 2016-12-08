@@ -318,9 +318,6 @@ int cpu_sparc_handle_mmu_fault(CPUState *env1, target_ulong address, int rw,
 #define cpu_handle_mmu_fault cpu_sparc_handle_mmu_fault
 target_ulong mmu_probe(CPUState *env, target_ulong address, int mmulev);
 
-/* translate.c */
-void translate_init();
-
 /* cpu-exec.c */
 int cpu_exec(CPUState *s);
 
