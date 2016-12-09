@@ -719,3 +719,7 @@ void do_cpu_sipi(CPUState *env)
 {
     apic_sipi(env->apic_state);
 }
+
+void tlib_arch_dispose()
+{
+}

@@ -10144,3 +10144,64 @@ void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
     env->regs[15] = ctx->gen_opc_pc[pc_pos];
     env->condexec_bits = gen_opc_condexec_bits[pc_pos];
 }
+
+int process_interrupt(int interrupt_request, CPUState *env)
+{
+    if (interrupt_request & CPU_INTERRUPT_HALT) {
+        env->interrupt_request &= ~CPU_INTERRUPT_HALT;
+        env->wfi = 1;
+        env->exception_index = EXCP_WFI;
+        cpu_loop_exit(env);
+    }
+    if (interrupt_request & CPU_INTERRUPT_FIQ
+            && !(env->uncached_cpsr & CPSR_F)) {
+        env->exception_index = EXCP_FIQ;
+        do_interrupt(env);
+        return 1;
+    }
+    /* ARMv7-M interrupt return works by loading a magic value
+       into the PC.  On real hardware the load causes the
+       return to occur.  The qemu implementation performs the
+       jump normally, then does the exception return when the
+       CPU tries to execute code at the magic address.
+       This will cause the magic PC value to be pushed to
+       the stack if an interrupt occurred at the wrong time.
+       We avoid this by disabling interrupts when
+       pc contains a magic address.  */
+    // fix from https://bugs.launchpad.net/qemu/+bug/942659
+    if ((interrupt_request & CPU_INTERRUPT_HARD) &&
+#ifdef TARGET_PROTO_ARM_M
+            (env->regs[15] < 0xfffffff0) && !(env->uncached_cpsr & CPSR_PRIMASK)
+#ifdef NO_INTERRUPTS_IN_IT_BLOCK
+            && !env->condexec_bits
+#endif
+       )
+#else
+        !(env->uncached_cpsr & CPSR_I))
+#endif
+    {
+        env->exception_index = EXCP_IRQ;
+        do_interrupt(env);
+        return 1;
+    }
+#ifdef TARGET_PROTO_ARM_M
+    if (interrupt_request & CPU_INTERRUPT_M_IRQ_EXIT) {
+        if(env->regs[15] >= 0xfffffff0) {
+            env->interrupt_request &= ~CPU_INTERRUPT_M_IRQ_EXIT;
+            do_v7m_exception_exit(env);
+            return 1;
+	}
+    }
+#endif
+    return 0;
+}
+
+//TODO: These empty implementations are required due to problems with weak attribute.
+//Remove this after #7035.
+void cpu_exec_epilogue(CPUState *env)
+{
+}
+
+void cpu_exec_prologue(CPUState *env)
+{
+}

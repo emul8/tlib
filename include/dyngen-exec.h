@@ -21,9 +21,6 @@
 
 #include "cpu.h"
 
-/* XXX: This may be wrong for 64-bit ILP32 hosts.  */
-typedef void * host_reg_t;
-
 #if defined(__i386__)
 #if defined(__linux__)
 #define AREG0 "ebx"
@@ -39,11 +36,6 @@ typedef void * host_reg_t;
 #endif
 
 register CPUState *env asm(AREG0);
-
-#define xglue(x, y) x ## y
-#define glue(x, y) xglue(x, y)
-#define stringify(s)	tostring(s)
-#define tostring(s)	#s
 
 /* The return address may point to the start of the next instruction.
    Subtracting one gets us the call instruction itself.  */

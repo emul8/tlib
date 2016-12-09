@@ -27,6 +27,7 @@
 #include "cpu.h"
 #include "helper.h"
 #include "tcg-op.h"
+#include "arch_callbacks.h"
 
 #define GEN_HELPER 1
 #include "helper.h"
@@ -2962,4 +2963,42 @@ void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
     if (CC_OP != CC_OP_FLAGS) {
         helper_compute_psr();
     }
+}
+
+int process_interrupt(int interrupt_request, CPUState *env)
+{
+    if (interrupt_request & CPU_INTERRUPT_HARD) {
+        if ( cpu_interrupts_enabled(env) )
+        {
+            env->interrupt_index = tlib_find_best_interrupt();
+            if(env->interrupt_index > 0) {
+                int pil = env->interrupt_index & 0xf;
+                int type = env->interrupt_index & 0xf0;
+
+                if (((type == TT_EXTINT) &&
+                            cpu_pil_allowed(env, pil)) ||
+                        type != TT_EXTINT) {
+                    env->exception_index = env->interrupt_index;
+                    do_interrupt(env);
+                    return 1;
+                }
+            }
+        }
+    } else if ((interrupt_request & CPU_INTERRUPT_RESET)) {
+        cpu_reset(env);
+    } else if ((interrupt_request & CPU_INTERRUPT_RUN)) {
+        /* SMP systems only, start after reset */
+        cpu_reset(env);
+    }
+    return 0;
+}
+
+//TODO: These empty implementations are required due to problems with weak attribute.
+//Remove this after #7035.
+void cpu_exec_epilogue(CPUState *env)
+{
+}
+
+void cpu_exec_prologue(CPUState *env)
+{
 }

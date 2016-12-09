@@ -25,28 +25,6 @@
 
 #include "osdep.h"
 
-#if defined(__x86_64__)
-#define __HAVE_FAST_MULU64__
-static inline void mulu64(uint64_t *plow, uint64_t *phigh,
-                          uint64_t a, uint64_t b)
-{
-    __asm__ ("mul %0\n\t"
-             : "=d" (*phigh), "=a" (*plow)
-             : "a" (a), "0" (b));
-}
-#define __HAVE_FAST_MULS64__
-static inline void muls64(uint64_t *plow, uint64_t *phigh,
-                          int64_t a, int64_t b)
-{
-    __asm__ ("imul %0\n\t"
-             : "=d" (*phigh), "=a" (*plow)
-             : "a" (a), "0" (b));
-}
-#else
-void muls64(uint64_t *phigh, uint64_t *plow, int64_t a, int64_t b);
-void mulu64(uint64_t *phigh, uint64_t *plow, uint64_t a, uint64_t b);
-#endif
-
 /* Binary search for leading zeros.  */
 
 static inline int clz32(uint32_t val)
@@ -83,26 +61,6 @@ static inline int clz32(uint32_t val)
         cnt++;
     }
     return cnt;
-#endif
-}
-
-static inline int clz64(uint64_t val)
-{
-#if defined(__GNUC__)
-    if (val)
-        return __builtin_clzll(val);
-    else
-        return 64;
-#else
-    int cnt = 0;
-
-    if (!(val >> 32)) {
-        cnt += 32;
-    } else {
-        val >>= 32;
-    }
-
-    return cnt + clz32(val);
 #endif
 }
 
@@ -145,38 +103,3 @@ static inline int ctz32(uint32_t val)
 #endif
 }
 
-static inline int ctz64(uint64_t val)
-{
-#if defined(__GNUC__)
-    if (val)
-        return __builtin_ctzll(val);
-    else
-        return 64;
-#else
-    int cnt;
-
-    cnt = 0;
-    if (!((uint32_t)val)) {
-        cnt += 32;
-        val >>= 32;
-    }
-
-    return cnt + ctz32(val);
-#endif
-}
-
-static inline int ctpop64(uint64_t val)
-{
-#if defined(__GNUC__)
-    return __builtin_popcountll(val);
-#else
-    val = (val & 0x5555555555555555ULL) + ((val >>  1) & 0x5555555555555555ULL);
-    val = (val & 0x3333333333333333ULL) + ((val >>  2) & 0x3333333333333333ULL);
-    val = (val & 0x0f0f0f0f0f0f0f0fULL) + ((val >>  4) & 0x0f0f0f0f0f0f0f0fULL);
-    val = (val & 0x00ff00ff00ff00ffULL) + ((val >>  8) & 0x00ff00ff00ff00ffULL);
-    val = (val & 0x0000ffff0000ffffULL) + ((val >> 16) & 0x0000ffff0000ffffULL);
-    val = (val & 0x00000000ffffffffULL) + ((val >> 32) & 0x00000000ffffffffULL);
-
-    return val;
-#endif
-}

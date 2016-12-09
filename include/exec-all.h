@@ -253,9 +253,6 @@ typedef void (CPUDebugExcpHandler)(CPUState *env);
 CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler);
 
 /* cpu-exec.c */
-extern volatile sig_atomic_t exit_request;
-extern int tb_restart_request;
-
 PhysPageDesc *phys_page_find(target_phys_addr_t index);
 
 void tb_invalidate_phys_page_range_inner(tb_page_addr_t start, tb_page_addr_t end,

@@ -7814,3 +7814,74 @@ void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
     if (cc_op != CC_OP_DYNAMIC)
         env->cc_op = cc_op;
 }
+
+void cpu_exec_prologue(CPUState *env)
+{
+    /* put eflags in CPU temporary format */
+    CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+    DF = 1 - (2 * ((env->eflags >> 10) & 1));
+    CC_OP = CC_OP_EFLAGS;
+    env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
+}
+
+void cpu_exec_epilogue(CPUState *env)
+{
+    /* restore flags in standard format */
+    env->eflags = env->eflags | cpu_cc_compute_all(env, CC_OP)
+        | (DF & DF_MASK);
+}
+
+int process_interrupt(int interrupt_request, CPUState *env)
+{
+    if (interrupt_request & CPU_INTERRUPT_INIT) {
+        svm_check_intercept(env, SVM_EXIT_INIT);
+        do_cpu_init(env);
+        env->exception_index = EXCP_HALTED;
+        cpu_loop_exit(env);
+    } else if (interrupt_request & CPU_INTERRUPT_SIPI) {
+        do_cpu_sipi(env);
+    } else if (env->hflags2 & HF2_GIF_MASK) {
+        if ((interrupt_request & CPU_INTERRUPT_SMI) &&
+                !(env->hflags & HF_SMM_MASK)) {
+            svm_check_intercept(env, SVM_EXIT_SMI);
+            env->interrupt_request &= ~CPU_INTERRUPT_SMI;
+            do_smm_enter(env);
+            return 1;
+        } else if ((interrupt_request & CPU_INTERRUPT_NMI) &&
+                !(env->hflags2 & HF2_NMI_MASK)) {
+            env->interrupt_request &= ~CPU_INTERRUPT_NMI;
+            env->hflags2 |= HF2_NMI_MASK;
+            do_interrupt_x86_hardirq(env, EXCP02_NMI, 1);
+            return 1;
+        } else if (interrupt_request & CPU_INTERRUPT_MCE) {
+            env->interrupt_request &= ~CPU_INTERRUPT_MCE;
+            do_interrupt_x86_hardirq(env, EXCP12_MCHK, 0);
+            return 1;
+        } else if ((interrupt_request & CPU_INTERRUPT_HARD) &&
+                (((env->hflags2 & HF2_VINTR_MASK) &&
+                  (env->hflags2 & HF2_HIF_MASK)) ||
+                 (!(env->hflags2 & HF2_VINTR_MASK) &&
+                  (env->eflags & IF_MASK &&
+                   !(env->hflags & HF_INHIBIT_IRQ_MASK))))) {
+            int intno;
+            svm_check_intercept(env, SVM_EXIT_INTR);
+            env->interrupt_request &= ~(CPU_INTERRUPT_HARD | CPU_INTERRUPT_VIRQ);
+            intno = cpu_get_pic_interrupt(env);
+            do_interrupt_x86_hardirq(env, intno, 1);
+            /* ensure that no TB jump will be modified as
+               the program flow was changed */
+            return 1;
+        } else if ((interrupt_request & CPU_INTERRUPT_VIRQ) &&
+                (env->eflags & IF_MASK) &&
+                !(env->hflags & HF_INHIBIT_IRQ_MASK)) {
+            int intno;
+            /* FIXME: this should respect TPR */
+            svm_check_intercept(env, SVM_EXIT_VINTR);
+            intno = ldl_phys(env->vm_vmcb + offsetof(struct vmcb, control.int_vector));
+            do_interrupt_x86_hardirq(env, intno, 1);
+            env->interrupt_request &= ~CPU_INTERRUPT_VIRQ;
+            return 1;
+        }
+    }
+    return 0;
+}

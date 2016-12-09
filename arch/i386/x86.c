@@ -22,10 +22,6 @@
 
 #ifdef TARGET_I386
 
-void run_on_cpu(void *env, void (*func)(void *data), void *data) {
-	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
-}
-
 int cpu_is_bsp(void *env) {
 	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
 	return 0;
@@ -70,7 +66,7 @@ void apic_sipi(void *s) {
 	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
 }
 
-uint64_t count = 0;
+static uint64_t count = 0;
 uint64_t cpu_get_tsc(void *env) {
 	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
         return count++;

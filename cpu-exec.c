@@ -18,11 +18,6 @@
  */
 #include "cpu.h"
 #include "tcg.h"
-#include "infrastructure.h"
-
-#ifdef TARGET_SPARC
-#include "arch/sparc/arch_callbacks.h"
-#endif
 
 target_ulong virt_to_phys(target_ulong virt) {
         #define MASK2 (0xFFFFFFFF - MASK1)
@@ -139,146 +134,15 @@ CPUDebugExcpHandler *cpu_set_debug_excp_handler(CPUDebugExcpHandler *handler)
     return old_handler;
 }
 
-static void cpu_handle_debug_exception(CPUState *env)
-{
-    if (debug_excp_handler) {
-        debug_excp_handler(env);
-    }
-}
-
 /* main execution loop */
 
-volatile sig_atomic_t exit_request;
+int process_interrupt(int interrupt_request, CPUState *env);
+void cpu_exec_prologue(CPUState *env);
+void cpu_exec_epilogue(CPUState *env);
 
 // it looks like cpu_exec is aware of possible problems and restores `env`, so the warning is not necessary
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclobbered"
-int process_interrupt(int interrupt_request, CPUState *env)
-{
-#if defined(TARGET_I386)
-    if (interrupt_request & CPU_INTERRUPT_INIT) {
-        svm_check_intercept(env, SVM_EXIT_INIT);
-        do_cpu_init(env);
-        env->exception_index = EXCP_HALTED;
-        cpu_loop_exit(env);
-    } else if (interrupt_request & CPU_INTERRUPT_SIPI) {
-        do_cpu_sipi(env);
-    } else if (env->hflags2 & HF2_GIF_MASK) {
-        if ((interrupt_request & CPU_INTERRUPT_SMI) &&
-                !(env->hflags & HF_SMM_MASK)) {
-            svm_check_intercept(env, SVM_EXIT_SMI);
-            env->interrupt_request &= ~CPU_INTERRUPT_SMI;
-            do_smm_enter(env);
-            return 1;
-        } else if ((interrupt_request & CPU_INTERRUPT_NMI) &&
-                !(env->hflags2 & HF2_NMI_MASK)) {
-            env->interrupt_request &= ~CPU_INTERRUPT_NMI;
-            env->hflags2 |= HF2_NMI_MASK;
-            do_interrupt_x86_hardirq(env, EXCP02_NMI, 1);
-            return 1;
-        } else if (interrupt_request & CPU_INTERRUPT_MCE) {
-            env->interrupt_request &= ~CPU_INTERRUPT_MCE;
-            do_interrupt_x86_hardirq(env, EXCP12_MCHK, 0);
-            return 1;
-        } else if ((interrupt_request & CPU_INTERRUPT_HARD) &&
-                (((env->hflags2 & HF2_VINTR_MASK) &&
-                  (env->hflags2 & HF2_HIF_MASK)) ||
-                 (!(env->hflags2 & HF2_VINTR_MASK) &&
-                  (env->eflags & IF_MASK &&
-                   !(env->hflags & HF_INHIBIT_IRQ_MASK))))) {
-            int intno;
-            svm_check_intercept(env, SVM_EXIT_INTR);
-            env->interrupt_request &= ~(CPU_INTERRUPT_HARD | CPU_INTERRUPT_VIRQ);
-            intno = cpu_get_pic_interrupt(env);
-            do_interrupt_x86_hardirq(env, intno, 1);
-            /* ensure that no TB jump will be modified as
-               the program flow was changed */
-            return 1;
-        } else if ((interrupt_request & CPU_INTERRUPT_VIRQ) &&
-                (env->eflags & IF_MASK) &&
-                !(env->hflags & HF_INHIBIT_IRQ_MASK)) {
-            int intno;
-            /* FIXME: this should respect TPR */
-            svm_check_intercept(env, SVM_EXIT_VINTR);
-            intno = ldl_phys(env->vm_vmcb + offsetof(struct vmcb, control.int_vector));
-            do_interrupt_x86_hardirq(env, intno, 1);
-            env->interrupt_request &= ~CPU_INTERRUPT_VIRQ;
-            return 1;
-        }
-    }
-#elif defined(TARGET_PPC)
-    if (interrupt_request & CPU_INTERRUPT_HARD) {
-        ppc_hw_interrupt(env);
-        if (env->pending_interrupts == 0)
-            env->interrupt_request &= ~CPU_INTERRUPT_HARD;
-        return 1;
-    }
-#elif defined(TARGET_SPARC)
-    if (interrupt_request & CPU_INTERRUPT_HARD) {
-        if ( cpu_interrupts_enabled(env) )
-        {
-            env->interrupt_index = tlib_find_best_interrupt();
-            if(env->interrupt_index > 0) {
-                int pil = env->interrupt_index & 0xf;
-                int type = env->interrupt_index & 0xf0;
-
-                if (((type == TT_EXTINT) &&
-                            cpu_pil_allowed(env, pil)) ||
-                        type != TT_EXTINT) {
-                    env->exception_index = env->interrupt_index;
-                    do_interrupt(env);
-                    return 1;
-                }
-            }
-        }
-    } else if ((interrupt_request & CPU_INTERRUPT_RESET)) {
-        cpu_reset(env);
-    } else if ((interrupt_request & CPU_INTERRUPT_RUN)) {
-        /* SMP systems only, start after reset */
-        cpu_reset(env);
-    }
-#elif defined(TARGET_ARM)
-    if (interrupt_request & CPU_INTERRUPT_HALT) {
-        env->interrupt_request &= ~CPU_INTERRUPT_HALT;
-        env->wfi = 1;
-        env->exception_index = EXCP_WFI;
-        cpu_loop_exit(env);
-    }
-    if (interrupt_request & CPU_INTERRUPT_FIQ
-            && !(env->uncached_cpsr & CPSR_F)) {
-        env->exception_index = EXCP_FIQ;
-        do_interrupt(env);
-        return 1;
-    }
-    /* ARMv7-M interrupt return works by loading a magic value
-       into the PC.  On real hardware the load causes the
-       return to occur.  The qemu implementation performs the
-       jump normally, then does the exception return when the
-       CPU tries to execute code at the magic address.
-       This will cause the magic PC value to be pushed to
-       the stack if an interrupt occurred at the wrong time.
-       We avoid this by disabling interrupts when
-       pc contains a magic address.  */
-    // fix from https://bugs.launchpad.net/qemu/+bug/942659
-    if ((interrupt_request & CPU_INTERRUPT_HARD) &&
-#ifdef TARGET_PROTO_ARM_M
-            (env->regs[15] < 0xfffffff0) && !(env->uncached_cpsr & CPSR_PRIMASK)
-#ifdef NO_INTERRUPTS_IN_IT_BLOCK
-            && !env->condexec_bits
-#endif
-       )
-#else
-        !(env->uncached_cpsr & CPSR_I))
-#endif
-        {
-            env->exception_index = EXCP_IRQ;
-            do_interrupt(env);
-            return 1;
-        }
-#endif
-    return 0;
-}
-
 int cpu_exec(CPUState *env)
 {
     int ret, interrupt_request;
@@ -294,19 +158,7 @@ int cpu_exec(CPUState *env)
         env->wfi = 0;
     }
 
-    if (unlikely(exit_request)) {
-        env->exit_request = 1;
-    }
-
-#if defined(TARGET_I386)
-    /* put eflags in CPU temporary format */
-    CC_SRC = env->eflags & (CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-    DF = 1 - (2 * ((env->eflags >> 10) & 1));
-    CC_OP = CC_OP_EFLAGS;
-    env->eflags &= ~(DF_MASK | CC_O | CC_S | CC_Z | CC_A | CC_P | CC_C);
-#elif defined(TARGET_PPC)
-    env->reserve_addr = -1;
-#endif
+    cpu_exec_prologue(env);
     env->exception_index = -1;
 
     /* prepare setjmp context for exception handling */
@@ -317,8 +169,8 @@ int cpu_exec(CPUState *env)
                 if (env->exception_index >= EXCP_INTERRUPT) {
                     /* exit request from the cpu execution loop */
                     ret = env->exception_index;
-                    if (ret == EXCP_DEBUG) {
-                        cpu_handle_debug_exception(env);
+                    if ((ret == EXCP_DEBUG) && debug_excp_handler) {
+                        debug_excp_handler(env);
                     }
                     break;
                 } else {
@@ -368,13 +220,6 @@ int cpu_exec(CPUState *env)
                     env->tb_restart_request = 0;
                     cpu_loop_exit(env);
                 }
-#ifdef TARGET_PROTO_ARM_M
-                if(env->regs[15] >= 0xfffffff0)
-                {
-                    do_v7m_exception_exit(env);
-                    next_tb = 0;
-                }
-#endif
                 tb = tb_find_fast(env);
                 /* Note: we do it here to avoid a gcc bug on Mac OS X when
                    doing it in tb_find_slow */
@@ -422,11 +267,7 @@ int cpu_exec(CPUState *env)
         }
     } /* for(;;) */
 
-#if defined(TARGET_I386)
-    /* restore flags in standard format */
-    env->eflags = env->eflags | cpu_cc_compute_all(env, CC_OP)
-        | (DF & DF_MASK);
-#endif
+    cpu_exec_epilogue(env);
 
     return ret;
 }

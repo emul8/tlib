@@ -51,7 +51,9 @@
 
 /* ARM-specific interrupt pending bits.  */
 #define CPU_INTERRUPT_FIQ   CPU_INTERRUPT_TGT_EXT_1
-
+#ifdef TARGET_PROTO_ARM_M
+#define CPU_INTERRUPT_M_IRQ_EXIT CPU_INTERRUPT_TGT_EXT_2
+#endif
 
 typedef void ARMWriteCPFunc(void *opaque, int cp_info,
                             int srcreg, int operand, uint32_t value);
