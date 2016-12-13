@@ -7,7 +7,6 @@
 #define TARGET_PHYS_ADDR_BITS TARGET_LONG_BITS
 #endif
 
-#ifdef TARGET_PHYS_ADDR_BITS
 /* target_phys_addr_t is the type of a physical address (its size can
    be different from 'target_ulong').
 
@@ -28,4 +27,3 @@
 #endif
 #endif
 
-#endif
