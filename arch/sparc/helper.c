@@ -398,21 +398,13 @@ void tlib_arch_dispose()
     tlib_free(cpu->def);
 }
 
-CPUState *cpu_init(const char *cpu_model)
+int cpu_init(const char *cpu_model)
 {
-    CPUState *env;
-
-    env = tlib_mallocz(sizeof(CPUState));
-    cpu_exec_init(env);
-
-    translate_init(env);
-
-    if (cpu_sparc_register(env, cpu_model) < 0) {
-        return NULL;
+    if (cpu_sparc_register(cpu, cpu_model) < 0) {
+        return -1;
     }
-    cpu_reset(env);
-
-    return env;
+    cpu_reset(cpu);
+    return 0;
 }
 
 void cpu_sparc_set_id(CPUState *env, unsigned int cpu)

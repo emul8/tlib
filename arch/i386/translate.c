@@ -7580,7 +7580,7 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
     return s->pc;
 }
 
-void optimize_flags_init(void)
+void translate_init(void)
 {
     cpu_env = tcg_global_reg_new_ptr(TCG_AREG0, "env");
     cpu_cc_op = tcg_global_mem_new_i32(TCG_AREG0,

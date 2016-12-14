@@ -763,7 +763,7 @@ typedef struct CPUState {
 
 } CPUState;
 
-CPUState *cpu_init(const char *cpu_model);
+int cpu_init(const char *cpu_model);
 int cpu_exec(CPUState *s);
 void x86_cpudef_setup(void);
 int cpu_x86_support_mca_broadcast(CPUState *env);
@@ -955,9 +955,6 @@ static inline int cpu_mmu_index (CPUState *env)
 #define ST0    (env->fpregs[env->fpstt].d)
 #define ST(n)  (env->fpregs[(env->fpstt + (n)) & 7].d)
 #define ST1    ST(1)
-
-/* translate.c */
-void optimize_flags_init(void);
 
 #include "cpu-all.h"
 #include "svm.h"
