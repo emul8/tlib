@@ -7659,6 +7659,8 @@ void gen_intermediate_code(CPUState *env,
     int num_insns;
     int max_insns;
 
+    gen_block_header();
+
     /* generate intermediate code */
     pc_start = tb->pc;
     cs_base = tb->cs_base;
@@ -7722,7 +7724,6 @@ void gen_intermediate_code(CPUState *env,
     if (max_insns == 0)
         max_insns = maximum_block_size;
 
-    gen_block_header();
     for(;;) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
@@ -7770,8 +7771,6 @@ void gen_intermediate_code(CPUState *env,
             break;
         }
     }
-    gen_block_footer(tb, num_insns);
-    *gen_opc_ptr = INDEX_op_end;
     /* we don't forget to fill the last values */
     if (search_pc) {
         j = gen_opc_ptr - tcg->gen_opc_buf;
@@ -7796,6 +7795,8 @@ void gen_intermediate_code(CPUState *env,
         tb->size = pc_ptr - pc_start;
         tb->icount = num_insns;
     }
+
+    gen_block_footer(tb);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

@@ -2742,7 +2742,8 @@ void gen_intermediate_code(CPUState *env,
     int num_insns;
     int max_insns;
 
-    memset(dc, 0, sizeof(DisasContext));
+    gen_block_header();
+
     dc->tb = tb;
     pc_start = tb->pc;
     dc->pc = pc_start;
@@ -2770,7 +2771,6 @@ void gen_intermediate_code(CPUState *env,
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
-    gen_block_header();
     do {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
@@ -2837,8 +2837,6 @@ void gen_intermediate_code(CPUState *env,
             tcg_gen_exit_tb(0);
         }
     }
-    gen_block_footer(tb, num_insns);
-    *gen_opc_ptr = INDEX_op_end;
     if (search_pc) {
         j = gen_opc_ptr - tcg->gen_opc_buf;
         lj++;
@@ -2853,6 +2851,7 @@ void gen_intermediate_code(CPUState *env,
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(pc_start, last_pc + 4 - pc_start, 0);
     }
+    gen_block_footer(tb);
 }
 
 void translate_init()

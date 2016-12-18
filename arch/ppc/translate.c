@@ -8009,6 +8009,8 @@ void gen_intermediate_code(CPUState *env,
     int max_insns;
     uint32_t op1, op2, op3;
 
+    gen_block_header();
+
     pc_start = tb->pc;
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
     dc->nip = pc_start;
@@ -8046,8 +8048,6 @@ void gen_intermediate_code(CPUState *env,
         max_insns = maximum_block_size;
 
     uint32_t block_begin_event_enabled = tlib_is_block_begin_event_enabled();
-
-    gen_block_header();
 
     if(block_begin_event_enabled)
     {
@@ -8157,8 +8157,6 @@ void gen_intermediate_code(CPUState *env,
         /* Generate the return instruction */
         tcg_gen_exit_tb(0);
     }
-    gen_block_footer(tb, num_insns);
-    *gen_opc_ptr = INDEX_op_end;
     if (unlikely(search_pc)) {
         j = gen_opc_ptr - tcg->gen_opc_buf;
         lj++;
@@ -8172,6 +8170,7 @@ void gen_intermediate_code(CPUState *env,
         int flags = env->bfd_mach | dc->le_mode << 16;
         tlib_on_block_translation(pc_start, dc->nip - pc_start, flags);
     }
+    gen_block_footer(tb);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

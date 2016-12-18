@@ -9895,6 +9895,8 @@ void gen_intermediate_code(CPUState *env,
     int num_insns;
     int max_insns;
 
+    gen_block_header();
+
     /* generate intermediate code */
     pc_start = tb->pc;
 
@@ -9929,8 +9931,6 @@ void gen_intermediate_code(CPUState *env,
         max_insns = maximum_block_size;
 
     uint32_t block_begin_event_enabled = tlib_is_block_begin_event_enabled();
-
-    gen_block_header();
 
     TCGArg *event_size_arg;
     if(block_begin_event_enabled)
@@ -10112,9 +10112,6 @@ done_generating:
     {
       *event_size_arg = num_insns;
     }
-    gen_block_footer(tb, num_insns);
-    *gen_opc_ptr = INDEX_op_end;
-
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(pc_start, dc->pc - pc_start, dc->thumb);
     }
@@ -10127,6 +10124,7 @@ done_generating:
         tb->size = dc->pc - pc_start;
         tb->icount = num_insns;
     }
+    gen_block_footer(tb);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

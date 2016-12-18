@@ -47,12 +47,13 @@ static inline void gen_block_header(void)
     tcg_temp_free_i32(flag);
 }
 
-static void gen_block_footer(TranslationBlock *tb, int num_insns)
+static void gen_block_footer(TranslationBlock *tb)
 {
     gen_set_label(stopflag_label);
     tcg_gen_exit_tb((long)tb + 2);
     if(tlib_is_instruction_count_enabled())
     {
-        *icount_arg = num_insns;
+        *icount_arg = tb->icount;
     }
+    *gen_opc_ptr = INDEX_op_end;
 }
