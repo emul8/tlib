@@ -25,19 +25,24 @@
 #include <inttypes.h>
 
 #include "cpu.h"
-#include "helper.h"
-#include "tcg-op.h"
 #include "arch_callbacks.h"
 
+#include "tcg-op.h"
+
+#include "helper.h"
 #define GEN_HELPER 1
 #include "helper.h"
+
+static TCGv_ptr cpu_env;
+
+#include "tb-helper.h"
 
 #define DYNAMIC_PC  1 /* dynamic pc value */
 #define JUMP_PC     2 /* dynamic pc value which takes only two values
                          according to jump_pc[T2] */
 
 /* global register indexes */
-static TCGv_ptr cpu_env, cpu_regwptr;
+static TCGv_ptr cpu_regwptr;
 static TCGv cpu_cc_src, cpu_cc_src2, cpu_cc_dst;
 static TCGv_i32 cpu_cc_op;
 static TCGv_i32 cpu_psr;
@@ -56,8 +61,6 @@ static TCGv_i32 cpu_fpr[TARGET_FPREGS];
 
 static target_ulong gen_opc_npc[OPC_BUF_SIZE];
 static target_ulong gen_opc_jump_pc[2];
-
-#include "tb-helper.h"
 
 typedef struct DisasContext {
     struct TranslationBlock *tb;

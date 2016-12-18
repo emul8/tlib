@@ -34,6 +34,10 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
+static TCGv_ptr cpu_env;
+
+#include "tb-helper.h"
+
 #define abort() do { cpu_abort(cpu, "ABORT at %s : %d\n", __FILE__, __LINE__); } while (0)
 
 #define ENABLE_ARCH_4T    arm_feature(env, ARM_FEATURE_V4T)
@@ -77,7 +81,6 @@ static uint32_t gen_opc_condexec_bits[OPC_BUF_SIZE];
 #define DISAS_WFI 4
 #define DISAS_SWI 5
 
-static TCGv_ptr cpu_env;
 /* We reuse the same 64-bit temporaries for efficiency.  */
 static TCGv_i64 cpu_V0, cpu_V1, cpu_M0;
 static TCGv_i32 cpu_R[16];
@@ -88,8 +91,6 @@ static TCGv_i32 cpu_exclusive_high;
 /* FIXME:  These should be removed.  */
 static TCGv cpu_F0s, cpu_F1s;
 static TCGv_i64 cpu_F0d, cpu_F1d;
-
-#include "tb-helper.h"
 
 static const char *regnames[] =
     { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",

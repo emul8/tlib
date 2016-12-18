@@ -30,6 +30,10 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
+static TCGv_ptr cpu_env;
+
+#include "tb-helper.h"
+
 #define PREFIX_REPZ   0x01
 #define PREFIX_REPNZ  0x02
 #define PREFIX_LOCK   0x04
@@ -57,7 +61,6 @@
 //#define MACRO_TEST   1
 
 /* global register indexes */
-static TCGv_ptr cpu_env;
 static TCGv cpu_A0, cpu_cc_src, cpu_cc_dst, cpu_cc_tmp;
 static TCGv_i32 cpu_cc_op;
 static TCGv cpu_regs[CPU_NB_REGS];
@@ -71,8 +74,6 @@ static TCGv_i64 cpu_tmp1_i64;
 static TCGv cpu_tmp5;
 
 static uint8_t gen_opc_cc_op[OPC_BUF_SIZE];
-
-#include "tb-helper.h"
 
 #ifdef TARGET_X86_64
 static int x86_64_hregs;

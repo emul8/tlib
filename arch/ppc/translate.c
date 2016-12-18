@@ -34,6 +34,10 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
+static TCGv_ptr cpu_env;
+
+#include "tb-helper.h"
+
 #define CPU_SINGLE_STEP 0x1
 #define CPU_BRANCH_STEP 0x2
 #define GDBSTUB_SINGLE_STEP 0x4
@@ -44,7 +48,6 @@
 /* Code translation helpers                                                  */
 
 /* global register indexes */
-static TCGv_ptr cpu_env;
 static char cpu_reg_names[10*3 + 22*4 /* GPR */
     + 10*4 + 22*5 /* SPE GPRh */
     + 10*4 + 22*5 /* FPR */
@@ -63,8 +66,6 @@ static TCGv cpu_xer;
 static TCGv cpu_reserve;
 static TCGv_i32 cpu_fpscr;
 static TCGv_i32 cpu_access_type;
-
-#include "tb-helper.h"
 
 void translate_init(void)
 {
