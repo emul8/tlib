@@ -26,12 +26,6 @@
 #include "cpu.h"
 #include "tcg-op.h"
 
-#include "helper.h"
-#define GEN_HELPER 1
-#include "helper.h"
-
-static TCGv_ptr cpu_env;
-
 #include "tb-helper.h"
 
 #define PREFIX_REPZ   0x01
@@ -7644,10 +7638,7 @@ void translate_init(void)
     cpu_regs[R_EDI] = tcg_global_mem_new_i32(TCG_AREG0,
                                              offsetof(CPUState, regs[R_EDI]), "edi");
 #endif
-
-    /* register helpers */
-#define GEN_HELPER 2
-#include "helper.h"
+    gen_helpers();
 }
 
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for

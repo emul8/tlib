@@ -30,12 +30,6 @@
 
 #include "tcg-op.h"
 
-#include "helper.h"
-#define GEN_HELPER 1
-#include "helper.h"
-
-static TCGv_ptr cpu_env;
-
 #include "tb-helper.h"
 
 #define abort() do { cpu_abort(cpu, "ABORT at %s : %d\n", __FILE__, __LINE__); } while (0)
@@ -98,7 +92,7 @@ static const char *regnames[] =
 void translate_init(void)
 {
     int i;
-
+    gen_helpers();
     cpu_env = tcg_global_reg_new_ptr(TCG_AREG0, "env");
 
     for (i = 0; i < 16; i++) {
@@ -112,9 +106,6 @@ void translate_init(void)
         offsetof(CPUState, exclusive_val), "exclusive_val");
     cpu_exclusive_high = tcg_global_mem_new_i32(TCG_AREG0,
         offsetof(CPUState, exclusive_high), "exclusive_high");
-
-#define GEN_HELPER 2
-#include "helper.h"
 }
 
 static inline TCGv load_cpu_offset(int offset)

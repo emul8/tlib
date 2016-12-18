@@ -29,12 +29,6 @@
 
 #include "tcg-op.h"
 
-#include "helper.h"
-#define GEN_HELPER 1
-#include "helper.h"
-
-static TCGv_ptr cpu_env;
-
 #include "tb-helper.h"
 
 #define DYNAMIC_PC  1 /* dynamic pc value */
@@ -2927,9 +2921,7 @@ void translate_init()
     for (i = 0; i < TARGET_FPREGS; i++)
         cpu_fpr[i] = tcg_global_mem_new_i32(TCG_AREG0, offsetof(CPUState, fpr[i]),
                                             fregnames[i]);
-        /* register helpers */
-#define GEN_HELPER 2
-#include "helper.h"
+    gen_helpers();
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

@@ -30,12 +30,6 @@
 #include "tcg-op.h"
 #include "host-utils.h"
 
-#include "helper.h"
-#define GEN_HELPER 1
-#include "helper.h"
-
-static TCGv_ptr cpu_env;
-
 #include "tb-helper.h"
 
 #define CPU_SINGLE_STEP 0x1
@@ -152,10 +146,7 @@ void translate_init(void)
 
     cpu_access_type = tcg_global_mem_new_i32(TCG_AREG0,
                                              offsetof(CPUState, access_type), "access_type");
-
-    /* register helpers */
-#define GEN_HELPER 2
-#include "helper.h"
+     gen_helpers();
 }
 
 /* internal defines */
