@@ -2734,18 +2734,17 @@ void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
                            int search_pc)
 {
-    target_ulong pc_start, last_pc;
+    target_ulong last_pc;
     uint16_t *gen_opc_end;
     DisasContext dc1, *dc = &dc1;
     CPUBreakpoint *bp;
     int max_insns;
 
-    memset(dc, 0, sizeof(DisasContext)); // TODO: does not work without it
     gen_block_header();
 
     dc->tb = tb;
-    pc_start = tb->pc;
-    dc->pc = pc_start;
+    dc->is_br = 0;
+    dc->pc = tb->pc;
     last_pc = dc->pc;
     dc->npc = (target_ulong) tb->cs_base;
     dc->cc_op = CC_OP_DYNAMIC;
@@ -2774,7 +2773,7 @@ void gen_intermediate_code(CPUState *env,
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc->pc) {
-                    if (dc->pc != pc_start)
+                    if (dc->pc != tb->pc)
                         save_state(dc, cpu_cond);
                     gen_helper_debug();
                     tcg_gen_exit_tb(0);
@@ -2808,7 +2807,7 @@ void gen_intermediate_code(CPUState *env,
             break;
         }
     } while ((gen_opc_ptr < gen_opc_end) &&
-             (dc->pc - pc_start) < (TARGET_PAGE_SIZE - 32) &&
+             (dc->pc - tb->pc) < (TARGET_PAGE_SIZE - 32) &&
              tb->icount < max_insns);
 
  exit_gen_loop:
@@ -2834,9 +2833,9 @@ void gen_intermediate_code(CPUState *env,
         gen_opc_jump_pc[0] = dc->jump_pc[0];
         gen_opc_jump_pc[1] = dc->jump_pc[1];
     }
-    tb->size = last_pc + 4 - pc_start;
+    tb->size = last_pc + 4 - tb->pc;
     if (tlib_is_on_block_translation_enabled) {
-        tlib_on_block_translation(pc_start, last_pc + 4 - pc_start, 0);
+        tlib_on_block_translation(tb->pc, last_pc + 4 - tb->pc, 0);
     }
     gen_block_footer(tb);
 }
