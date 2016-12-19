@@ -2740,6 +2740,7 @@ void gen_intermediate_code(CPUState *env,
     CPUBreakpoint *bp;
     int max_insns;
 
+    memset(dc, 0, sizeof(DisasContext)); // TODO: does not work without it
     gen_block_header();
 
     dc->tb = tb;
