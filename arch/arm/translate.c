@@ -9890,7 +9890,6 @@ void gen_intermediate_code(CPUState *env,
     CPUBreakpoint *bp;
     uint16_t *gen_opc_end;
     int j, lj;
-    target_ulong pc_start;
     uint32_t next_page_start;
     int num_insns;
     int max_insns;
@@ -9898,14 +9897,12 @@ void gen_intermediate_code(CPUState *env,
     gen_block_header();
 
     /* generate intermediate code */
-    pc_start = tb->pc;
-
     dc->tb = tb;
 
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     dc->is_jmp = DISAS_NEXT;
-    dc->pc = pc_start;
+    dc->pc = tb->pc;
     dc->singlestep_enabled = env->singlestep_enabled;
     dc->condjmp = 0;
     dc->thumb = ARM_TBFLAG_THUMB(tb->flags);
@@ -10113,7 +10110,7 @@ done_generating:
       *event_size_arg = num_insns;
     }
     if (tlib_is_on_block_translation_enabled) {
-        tlib_on_block_translation(pc_start, dc->pc - pc_start, dc->thumb);
+        tlib_on_block_translation(tb->pc, dc->pc - tb->pc, dc->thumb);
     }
     if (search_pc) {
         j = gen_opc_ptr - tcg->gen_opc_buf;
@@ -10121,7 +10118,7 @@ done_generating:
         while (lj <= j)
             tcg->gen_opc_instr_start[lj++] = 0;
     } else {
-        tb->size = dc->pc - pc_start;
+        tb->size = dc->pc - tb->pc;
         tb->icount = num_insns;
     }
     gen_block_footer(tb);
