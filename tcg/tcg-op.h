@@ -21,6 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifndef __TCG_OP_H__
+#define __TCG_OP_H__
+
 #include "tcg.h"
 #include "additional.h"
 
@@ -2501,4 +2504,6 @@ static inline void tcg_gen_qemu_st64(TCGv_i64 arg, TCGv addr, int mem_index)
                                                  TCGV_PTR_TO_NAT(A), (B))
 #define tcg_gen_ext_i32_ptr(R, A) tcg_gen_ext_i32_i64(TCGV_PTR_TO_NAT(R), (A))
 #endif /* TCG_TARGET_REG_BITS != 32 */
+
+#endif
 

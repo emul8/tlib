@@ -7658,8 +7658,6 @@ void gen_intermediate_code(CPUState *env,
     int num_insns;
     int max_insns;
 
-    gen_block_header();
-
     /* generate intermediate code */
     pc_start = tb->pc;
     cs_base = tb->cs_base;
@@ -7779,8 +7777,6 @@ void gen_intermediate_code(CPUState *env,
         tb->size = pc_ptr - pc_start;
         tb->icount = num_insns;
     }
-
-    gen_block_footer(tb);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

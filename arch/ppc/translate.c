@@ -8007,8 +8007,6 @@ void gen_intermediate_code(CPUState *env,
     int max_insns;
     uint32_t op1, op2, op3;
 
-    gen_block_header();
-
     pc_start = tb->pc;
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
     dc->nip = pc_start;
@@ -8154,7 +8152,6 @@ void gen_intermediate_code(CPUState *env,
         tlib_on_block_translation(pc_start, dc->nip - pc_start, flags);
     }
     tb->size = dc->nip - pc_start;
-    gen_block_footer(tb);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

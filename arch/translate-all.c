@@ -23,7 +23,54 @@
 #include <inttypes.h>
 
 #include "cpu.h"
-#include "tcg.h"
+#include "tcg-op.h"
+
+#include <global_helper.h>
+#define GEN_HELPER 1
+#include <global_helper.h>
+
+int gen_new_label(void);
+
+TCGv_ptr cpu_env;
+static TCGArg *icount_arg;
+static int stopflag_label;
+
+static inline void gen_block_header(void)
+{
+    TCGv_i32 flag;
+    stopflag_label = gen_new_label();
+    flag = tcg_temp_local_new_i32();
+    tcg_gen_ld_i32(flag, cpu_env, offsetof(CPUState, exit_request));
+    tcg_gen_brcondi_i32(TCG_COND_NE, flag, 0, stopflag_label);
+    tcg_temp_free_i32(flag);
+
+    if(tlib_is_instruction_count_enabled())
+    {
+        icount_arg = gen_opparam_ptr + 1;
+        // at this moment this const contains magic value 88888
+        // which is replaced at gen_block_footer near the end of
+        // the block
+        TCGv_i32 instruction_count = tcg_const_i32(88888);
+        gen_helper_update_insn_count(instruction_count);
+        tcg_temp_free_i32(instruction_count);
+    }
+
+    flag = tcg_temp_local_new_i32();
+    tcg_gen_ld_i32(flag, cpu_env, offsetof(CPUState, tb_restart_request));
+    tcg_gen_brcondi_i32(TCG_COND_NE, flag, 0, stopflag_label);
+    tcg_temp_free_i32(flag);
+}
+
+static inline void gen_block_footer(TranslationBlock *tb)
+{
+    gen_set_label(stopflag_label);
+    tcg_gen_exit_tb((long)tb + 2);
+    if(tlib_is_instruction_count_enabled())
+    {
+        *icount_arg = tb->icount;
+    }
+    *gen_opc_ptr = INDEX_op_end;
+}
 
 /* '*gen_code_size_ptr' contains the size of the generated code (host
    code).
@@ -36,7 +83,9 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 
     tcg_func_start(s);
 
+    gen_block_header();
     gen_intermediate_code(env, tb, 0);
+    gen_block_footer(tb);
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;
@@ -62,7 +111,9 @@ int cpu_restore_state(CPUState *env,
 
     tcg_func_start(s);
     memset((void*)tcg->gen_opc_instr_start, 0, OPC_BUF_SIZE);
+    gen_block_header();
     gen_intermediate_code(env, tb, 1);
+    gen_block_footer(tb);
 
     /* find opc index corresponding to search_pc */
     tc_ptr = (unsigned long)tb->tc_ptr;

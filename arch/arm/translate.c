@@ -9892,8 +9892,6 @@ void gen_intermediate_code(CPUState *env,
     uint32_t next_page_start;
     int max_insns;
 
-    gen_block_header();
-
     /* generate intermediate code */
     dc->tb = tb;
 
@@ -10104,7 +10102,6 @@ done_generating:
         tlib_on_block_translation(tb->pc, dc->pc - tb->pc, dc->thumb);
     }
     tb->size = dc->pc - tb->pc;
-    gen_block_footer(tb);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
