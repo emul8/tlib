@@ -8001,15 +8001,13 @@ void gen_intermediate_code(CPUState *env,
 {
     DisasContext dc1, *dc = &dc1;
     opc_handler_t **table, *handler;
-    target_ulong pc_start;
     uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
     int max_insns;
     uint32_t op1, op2, op3;
 
-    pc_start = tb->pc;
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
-    dc->nip = pc_start;
+    dc->nip = tb->pc;
     dc->tb = tb;
     dc->exception = POWERPC_EXCP_NONE;
     dc->spr_cb = env->spr_cb;
@@ -8149,9 +8147,9 @@ void gen_intermediate_code(CPUState *env,
     }
     if (tlib_is_on_block_translation_enabled) {
         int flags = env->bfd_mach | dc->le_mode << 16;
-        tlib_on_block_translation(pc_start, dc->nip - pc_start, flags);
+        tlib_on_block_translation(tb->pc, dc->nip - tb->pc, flags);
     }
-    tb->size = dc->nip - pc_start;
+    tb->size = dc->nip - tb->pc;
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

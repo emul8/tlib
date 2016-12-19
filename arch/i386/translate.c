@@ -7653,13 +7653,10 @@ void gen_intermediate_code(CPUState *env,
     uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
     uint64_t flags;
-    target_ulong pc_start;
     target_ulong cs_base;
-    int num_insns;
     int max_insns;
 
     /* generate intermediate code */
-    pc_start = tb->pc;
     cs_base = tb->cs_base;
     flags = tb->flags;
 
@@ -7714,8 +7711,8 @@ void gen_intermediate_code(CPUState *env,
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     dc->is_jmp = DISAS_NEXT;
-    pc_ptr = pc_start;
-    num_insns = 0;
+    pc_ptr = tb->pc;
+    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
@@ -7737,7 +7734,7 @@ void gen_intermediate_code(CPUState *env,
         }
 
         pc_ptr = disas_insn(dc, pc_ptr);
-        num_insns++;
+        tb->icount++;
         /* stop translation if indicated */
         if (dc->is_jmp)
             break;
@@ -7754,8 +7751,8 @@ void gen_intermediate_code(CPUState *env,
         }
         /* if too long translation, stop generation too */
         if (gen_opc_ptr >= gen_opc_end ||
-            (pc_ptr - pc_start) >= (TARGET_PAGE_SIZE - 32) ||
-            num_insns >= max_insns) {
+            (pc_ptr - tb->pc) >= (TARGET_PAGE_SIZE - 32) ||
+            tb->icount >= max_insns) {
             gen_jmp_im(pc_ptr - dc->cs_base);
             gen_eob(dc);
             break;
@@ -7770,13 +7767,10 @@ void gen_intermediate_code(CPUState *env,
 #endif
             disas_flags = !dc->code32;
 
-        tlib_on_block_translation(pc_start, pc_ptr - pc_start, disas_flags);
+        tlib_on_block_translation(tb->pc, pc_ptr - tb->pc, disas_flags);
     }
 
-    if (!search_pc) {
-        tb->size = pc_ptr - pc_start;
-        tb->icount = num_insns;
-    }
+    tb->size = pc_ptr - tb->pc;
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
