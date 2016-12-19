@@ -2738,8 +2738,6 @@ void gen_intermediate_code(CPUState *env,
     uint16_t *gen_opc_end;
     DisasContext dc1, *dc = &dc1;
     CPUBreakpoint *bp;
-    int j, lj = -1;
-    int num_insns;
     int max_insns;
 
     gen_block_header();
@@ -2767,7 +2765,7 @@ void gen_intermediate_code(CPUState *env,
     cpu_val = tcg_temp_local_new();
     cpu_addr = tcg_temp_local_new();
 
-    num_insns = 0;
+    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
@@ -2785,20 +2783,14 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - tcg->gen_opc_buf;
-            if (lj < j) {
-                lj++;
-                while (lj < j)
-                    tcg->gen_opc_instr_start[lj++] = 0;
-                tcg->gen_opc_pc[lj] = dc->pc;
-                gen_opc_npc[lj] = dc->npc;
-                tcg->gen_opc_instr_start[lj] = 1;
-            }
+	    tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc->pc;
+	    gen_opc_npc[gen_opc_ptr - tcg->gen_opc_buf] = dc->npc;
+	    tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
         last_pc = dc->pc;
         disas_sparc_insn(dc);
-        num_insns++;
+        tb->icount++;
 
         if (dc->is_br)
             break;
@@ -2816,7 +2808,7 @@ void gen_intermediate_code(CPUState *env,
         }
     } while ((gen_opc_ptr < gen_opc_end) &&
              (dc->pc - pc_start) < (TARGET_PAGE_SIZE - 32) &&
-             num_insns < max_insns);
+             tb->icount < max_insns);
 
  exit_gen_loop:
     tcg_temp_free(cpu_addr);
@@ -2838,16 +2830,10 @@ void gen_intermediate_code(CPUState *env,
         }
     }
     if (search_pc) {
-        j = gen_opc_ptr - tcg->gen_opc_buf;
-        lj++;
-        while (lj <= j)
-            tcg->gen_opc_instr_start[lj++] = 0;
         gen_opc_jump_pc[0] = dc->jump_pc[0];
         gen_opc_jump_pc[1] = dc->jump_pc[1];
-    } else {
-        tb->size = last_pc + 4 - pc_start;
-        tb->icount = num_insns;
     }
+    tb->size = last_pc + 4 - pc_start;
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(pc_start, last_pc + 4 - pc_start, 0);
     }

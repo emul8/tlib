@@ -7652,7 +7652,6 @@ void gen_intermediate_code(CPUState *env,
     target_ulong pc_ptr;
     uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
-    int j, lj;
     uint64_t flags;
     target_ulong pc_start;
     target_ulong cs_base;
@@ -7718,7 +7717,6 @@ void gen_intermediate_code(CPUState *env,
 
     dc->is_jmp = DISAS_NEXT;
     pc_ptr = pc_start;
-    lj = -1;
     num_insns = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
@@ -7735,15 +7733,9 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - tcg->gen_opc_buf;
-            if (lj < j) {
-                lj++;
-                while (lj < j)
-                    tcg->gen_opc_instr_start[lj++] = 0;
-            }
-            tcg->gen_opc_pc[lj] = pc_ptr;
-            gen_opc_cc_op[lj] = dc->cc_op;
-            tcg->gen_opc_instr_start[lj] = 1;
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = pc_ptr;
+            gen_opc_cc_op[gen_opc_ptr - tcg->gen_opc_buf] = dc->cc_op;
+            tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
         pc_ptr = disas_insn(dc, pc_ptr);
@@ -7771,14 +7763,6 @@ void gen_intermediate_code(CPUState *env,
             break;
         }
     }
-    /* we don't forget to fill the last values */
-    if (search_pc) {
-        j = gen_opc_ptr - tcg->gen_opc_buf;
-        lj++;
-        while (lj <= j)
-            tcg->gen_opc_instr_start[lj++] = 0;
-    }
-
     if (tlib_is_on_block_translation_enabled) {
         int disas_flags;
 #ifdef TARGET_X86_64

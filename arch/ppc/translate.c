@@ -8004,8 +8004,6 @@ void gen_intermediate_code(CPUState *env,
     target_ulong pc_start;
     uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
-    int j, lj = -1;
-    int num_insns;
     int max_insns;
     uint32_t op1, op2, op3;
 
@@ -8042,7 +8040,7 @@ void gen_intermediate_code(CPUState *env,
     /* Single step trace mode */
     msr_se = 1;
 #endif
-    num_insns = 0;
+    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
@@ -8069,14 +8067,8 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (unlikely(search_pc)) {
-            j = gen_opc_ptr - tcg->gen_opc_buf;
-            if (lj < j) {
-                lj++;
-                while (lj < j)
-                    tcg->gen_opc_instr_start[lj++] = 0;
-            }
-            tcg->gen_opc_pc[lj] = dc->nip;
-            tcg->gen_opc_instr_start[lj] = 1;
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc->nip;
+            tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
         if (unlikely(dc->le_mode)) {
@@ -8104,7 +8096,7 @@ void gen_intermediate_code(CPUState *env,
             table = env->opcodes;
         }
 
-        num_insns++;
+        tb->icount++;
         handler = table[op1];
         if (is_indirect_opcode(handler)) {
             table = ind_table(handler);
@@ -8141,7 +8133,7 @@ void gen_intermediate_code(CPUState *env,
             gen_exception(dc, POWERPC_EXCP_TRACE);
         } else if (unlikely(((dc->nip & (TARGET_PAGE_SIZE - 1)) == 0) ||
                             (env->singlestep_enabled) ||
-                            num_insns >= max_insns)) {
+                            tb->icount >= max_insns)) {
             /* if we reach a page boundary or are single stepping, stop
              * generation
              */
@@ -8157,19 +8149,11 @@ void gen_intermediate_code(CPUState *env,
         /* Generate the return instruction */
         tcg_gen_exit_tb(0);
     }
-    if (unlikely(search_pc)) {
-        j = gen_opc_ptr - tcg->gen_opc_buf;
-        lj++;
-        while (lj <= j)
-            tcg->gen_opc_instr_start[lj++] = 0;
-    } else {
-        tb->size = dc->nip - pc_start;
-        tb->icount = num_insns;
-    }
     if (tlib_is_on_block_translation_enabled) {
         int flags = env->bfd_mach | dc->le_mode << 16;
         tlib_on_block_translation(pc_start, dc->nip - pc_start, flags);
     }
+    tb->size = dc->nip - pc_start;
     gen_block_footer(tb);
 }
 

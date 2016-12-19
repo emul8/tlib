@@ -9889,7 +9889,6 @@ void gen_intermediate_code(CPUState *env,
     DisasContext dc1, *dc = &dc1;
     CPUBreakpoint *bp;
     uint16_t *gen_opc_end;
-    int j, lj;
     uint32_t next_page_start;
     int max_insns;
 
@@ -9920,7 +9919,6 @@ void gen_intermediate_code(CPUState *env,
     /* FIXME: cpu_M0 can probably be the same as cpu_V0.  */
     cpu_M0 = tcg_temp_new_i64();
     next_page_start = (tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
-    lj = -1;
     tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
@@ -9995,15 +9993,9 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (search_pc) {
-           j = gen_opc_ptr - tcg->gen_opc_buf;
-           if (lj < j) {
-                lj++;
-                while (lj < j)
-                    tcg->gen_opc_instr_start[lj++] = 0;
-            }
-            tcg->gen_opc_pc[j] = dc->pc;
-            gen_opc_condexec_bits[j] = (dc->condexec_cond << 4) | (dc->condexec_mask >> 1);
-            tcg->gen_opc_instr_start[j] = 1;
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc->pc;
+            gen_opc_condexec_bits[gen_opc_ptr - tcg->gen_opc_buf] = (dc->condexec_cond << 4) | (dc->condexec_mask >> 1);
+            tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
         if (dc->thumb) {
@@ -10110,10 +10102,6 @@ done_generating:
     }
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(tb->pc, dc->pc - tb->pc, dc->thumb);
-    }
-    if (search_pc) {
-        while (lj++ <= (gen_opc_ptr - tcg->gen_opc_buf))
-            tcg->gen_opc_instr_start[lj] = 0;
     }
     tb->size = dc->pc - tb->pc;
     gen_block_footer(tb);

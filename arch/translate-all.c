@@ -61,7 +61,7 @@ int cpu_restore_state(CPUState *env,
     int instructions_executed_so_far = 0;
 
     tcg_func_start(s);
-
+    memset((void*)tcg->gen_opc_instr_start, 0, OPC_BUF_SIZE);
     gen_intermediate_code(env, tb, 1);
 
     /* find opc index corresponding to search_pc */
