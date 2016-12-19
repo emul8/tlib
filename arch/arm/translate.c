@@ -9891,7 +9891,6 @@ void gen_intermediate_code(CPUState *env,
     uint16_t *gen_opc_end;
     int j, lj;
     uint32_t next_page_start;
-    int num_insns;
     int max_insns;
 
     gen_block_header();
@@ -9920,9 +9919,9 @@ void gen_intermediate_code(CPUState *env,
     cpu_V1 = cpu_F1d;
     /* FIXME: cpu_M0 can probably be the same as cpu_V0.  */
     cpu_M0 = tcg_temp_new_i64();
-    next_page_start = (pc_start & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
+    next_page_start = (tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
     lj = -1;
-    num_insns = 0;
+    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
@@ -9996,15 +9995,15 @@ void gen_intermediate_code(CPUState *env,
             }
         }
         if (search_pc) {
-            j = gen_opc_ptr - tcg->gen_opc_buf;
-            if (lj < j) {
+           j = gen_opc_ptr - tcg->gen_opc_buf;
+           if (lj < j) {
                 lj++;
                 while (lj < j)
                     tcg->gen_opc_instr_start[lj++] = 0;
             }
-            tcg->gen_opc_pc[lj] = dc->pc;
-            gen_opc_condexec_bits[lj] = (dc->condexec_cond << 4) | (dc->condexec_mask >> 1);
-            tcg->gen_opc_instr_start[lj] = 1;
+            tcg->gen_opc_pc[j] = dc->pc;
+            gen_opc_condexec_bits[j] = (dc->condexec_cond << 4) | (dc->condexec_mask >> 1);
+            tcg->gen_opc_instr_start[j] = 1;
         }
 
         if (dc->thumb) {
@@ -10034,11 +10033,11 @@ void gen_intermediate_code(CPUState *env,
          * Otherwise the subsequent code could get translated several times.
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
-        num_insns ++;
+        tb->icount++;
     } while (!dc->is_jmp && gen_opc_ptr < gen_opc_end &&
              !env->singlestep_enabled &&
              dc->pc < next_page_start &&
-             num_insns < max_insns);
+             tb->icount < max_insns);
 
     /* At this stage dc->condjmp will only be set when the skipped
        instruction was a conditional branch or trap, and the PC has
@@ -10107,20 +10106,16 @@ void gen_intermediate_code(CPUState *env,
 done_generating:
     if(block_begin_event_enabled)
     {
-      *event_size_arg = num_insns;
+      *event_size_arg = tb->icount;
     }
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(tb->pc, dc->pc - tb->pc, dc->thumb);
     }
     if (search_pc) {
-        j = gen_opc_ptr - tcg->gen_opc_buf;
-        lj++;
-        while (lj <= j)
-            tcg->gen_opc_instr_start[lj++] = 0;
-    } else {
-        tb->size = dc->pc - tb->pc;
-        tb->icount = num_insns;
+        while (lj++ <= (gen_opc_ptr - tcg->gen_opc_buf))
+            tcg->gen_opc_instr_start[lj] = 0;
     }
+    tb->size = dc->pc - tb->pc;
     gen_block_footer(tb);
 }
 
