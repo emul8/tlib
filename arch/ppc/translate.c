@@ -8030,10 +8030,6 @@ void gen_intermediate_code(CPUState *env,
         dc.singlestep_enabled |= CPU_BRANCH_STEP;
     if (unlikely(env->singlestep_enabled))
         dc.singlestep_enabled |= GDBSTUB_SINGLE_STEP;
-#if defined (DO_SINGLE_STEP) && 0
-    /* Single step trace mode */
-    msr_se = 1;
-#endif
     tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
