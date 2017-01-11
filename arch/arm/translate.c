@@ -9886,28 +9886,28 @@ void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
                            int search_pc)
 {
-    DisasContext dc1, *dc = &dc1;
+    DisasContext dc;
     CPUBreakpoint *bp;
     uint16_t *gen_opc_end;
     uint32_t next_page_start;
     int max_insns;
 
     /* generate intermediate code */
-    dc->tb = tb;
+    dcb = tb;
 
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
-    dc->is_jmp = DISAS_NEXT;
-    dc->pc = tb->pc;
-    dc->singlestep_enabled = env->singlestep_enabled;
-    dc->condjmp = 0;
-    dc->thumb = ARM_TBFLAG_THUMB(tb->flags);
-    dc->condexec_mask = (ARM_TBFLAG_CONDEXEC(tb->flags) & 0xf) << 1;
-    dc->condexec_cond = ARM_TBFLAG_CONDEXEC(tb->flags) >> 4;
-    dc->user = (ARM_TBFLAG_PRIV(tb->flags) == 0);
-    dc->vfp_enabled = ARM_TBFLAG_VFPEN(tb->flags);
-    dc->vec_len = ARM_TBFLAG_VECLEN(tb->flags);
-    dc->vec_stride = ARM_TBFLAG_VECSTRIDE(tb->flags);
+    dc.is_jmp = DISAS_NEXT;
+    dc.pc = tb->pc;
+    dc.singlestep_enabled = env->singlestep_enabled;
+    dc.condjmp = 0;
+    dc.thumb = ARM_TBFLAG_THUMB(tb->flags);
+    dc.condexec_mask = (ARM_TBFLAG_CONDEXEC(tb->flags) & 0xf) << 1;
+    dc.condexec_cond = ARM_TBFLAG_CONDEXEC(tb->flags) >> 4;
+    dc.user = (ARM_TBFLAG_PRIV(tb->flags) == 0);
+    dc.vfp_enabled = ARM_TBFLAG_VFPEN(tb->flags);
+    dc.vec_len = ARM_TBFLAG_VECLEN(tb->flags);
+    dc.vec_stride = ARM_TBFLAG_VECSTRIDE(tb->flags);
     cpu_F0s = tcg_temp_new_i32();
     cpu_F1s = tcg_temp_new_i32();
     cpu_F0d = tcg_temp_new_i64();
@@ -9927,7 +9927,7 @@ void gen_intermediate_code(CPUState *env,
     TCGArg *event_size_arg;
     if(block_begin_event_enabled)
     {
-      TCGv_i32 event_address = tcg_const_i32(dc->pc);
+      TCGv_i32 event_address = tcg_const_i32(dc.pc);
       event_size_arg = gen_opparam_ptr + 1;
       TCGv_i32 event_size = tcg_const_i32(0xFFFF); // bogus value that is to be fixed at later point
 
@@ -9971,7 +9971,7 @@ void gen_intermediate_code(CPUState *env,
 
     /* Reset the conditional execution bits immediately. This avoids
        complications trying to do it at the end of the block.  */
-    if (dc->condexec_mask || dc->condexec_cond)
+    if (dc.condexec_mask || dc.condexec_cond)
       {
         TCGv tmp = tcg_temp_new_i32();
         tcg_gen_movi_i32(tmp, 0);
@@ -9980,43 +9980,43 @@ void gen_intermediate_code(CPUState *env,
     do {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc->pc) {
+                if (bp->pc == dc.pc) {
                     gen_exception_insn(dc, 0, EXCP_DEBUG);
                     /* Advance PC so that clearing the breakpoint will
                        invalidate this TB.  */
-                    dc->pc += 2;
+                    dc.pc += 2;
                     goto done_generating;
                     break;
                 }
             }
         }
         if (search_pc) {
-            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc->pc;
-            gen_opc_condexec_bits[gen_opc_ptr - tcg->gen_opc_buf] = (dc->condexec_cond << 4) | (dc->condexec_mask >> 1);
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
+            gen_opc_condexec_bits[gen_opc_ptr - tcg->gen_opc_buf] = (dc.condexec_cond << 4) | (dc.condexec_mask >> 1);
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        if (dc->thumb) {
+        if (dc.thumb) {
             disas_thumb_insn(env, dc);
-            if (dc->condexec_mask) {
-                dc->condexec_cond = (dc->condexec_cond & 0xe)
-                                   | ((dc->condexec_mask >> 4) & 1);
-                dc->condexec_mask = (dc->condexec_mask << 1) & 0x1f;
-                if (dc->condexec_mask == 0) {
-                    dc->condexec_cond = 0;
+            if (dc.condexec_mask) {
+                dc.condexec_cond = (dc.condexec_cond & 0xe)
+                                   | ((dc.condexec_mask >> 4) & 1);
+                dc.condexec_mask = (dc.condexec_mask << 1) & 0x1f;
+                if (dc.condexec_mask == 0) {
+                    dc.condexec_cond = 0;
                 }
             }
         } else {
             disas_arm_insn(env, dc);
         }
 
-        if (dc->condjmp && !dc->is_jmp) {
-            gen_set_label(dc->condlabel);
-            dc->condjmp = 0;
+        if (dc.condjmp && !dc.is_jmp) {
+            gen_set_label(dc.condlabel);
+            dc.condjmp = 0;
         }
 
         if (tcg_check_temp_count()) {
-            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc->pc);
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
         }
 
         /* Translation stops when a conditional branch is encountered.
@@ -10024,31 +10024,31 @@ void gen_intermediate_code(CPUState *env,
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
         tb->icount++;
-    } while (!dc->is_jmp && gen_opc_ptr < gen_opc_end &&
+    } while (!dc.is_jmp && gen_opc_ptr < gen_opc_end &&
              !env->singlestep_enabled &&
-             dc->pc < next_page_start &&
+             dc.pc < next_page_start &&
              tb->icount < max_insns);
 
-    /* At this stage dc->condjmp will only be set when the skipped
+    /* At this stage dc.condjmp will only be set when the skipped
        instruction was a conditional branch or trap, and the PC has
        already been written.  */
     if (unlikely(env->singlestep_enabled)) {
         /* Make sure the pc is updated, and raise a debug exception.  */
-        if (dc->condjmp) {
+        if (dc.condjmp) {
             gen_set_condexec(dc);
-            if (dc->is_jmp == DISAS_SWI) {
+            if (dc.is_jmp == DISAS_SWI) {
                 gen_exception(EXCP_SWI);
             } else {
                 gen_exception(EXCP_DEBUG);
             }
-            gen_set_label(dc->condlabel);
+            gen_set_label(dc.condlabel);
         }
-        if (dc->condjmp || !dc->is_jmp) {
-            gen_set_pc_im(dc->pc);
-            dc->condjmp = 0;
+        if (dc.condjmp || !dc.is_jmp) {
+            gen_set_pc_im(dc.pc);
+            dc.condjmp = 0;
         }
         gen_set_condexec(dc);
-        if (dc->is_jmp == DISAS_SWI && !dc->condjmp) {
+        if (dc.is_jmp == DISAS_SWI && !dc.condjmp) {
             gen_exception(EXCP_SWI);
         } else {
             /* FIXME: Single stepping a WFI insn will not halt
@@ -10065,9 +10065,9 @@ void gen_intermediate_code(CPUState *env,
            Hardware breakpoints have already been handled and skip this code.
          */
         gen_set_condexec(dc);
-        switch(dc->is_jmp) {
+        switch(dc.is_jmp) {
         case DISAS_NEXT:
-            gen_goto_tb(dc, 1, dc->pc);
+            gen_goto_tb(dc, 1, dc.pc);
             break;
         default:
         case DISAS_JUMP:
@@ -10085,11 +10085,11 @@ void gen_intermediate_code(CPUState *env,
             gen_exception(EXCP_SWI);
             break;
         }
-        if (dc->condjmp) {
-            gen_set_label(dc->condlabel);
+        if (dc.condjmp) {
+            gen_set_label(dc.condlabel);
             gen_set_condexec(dc);
-            gen_goto_tb(dc, 1, dc->pc);
-            dc->condjmp = 0;
+            gen_goto_tb(dc, 1, dc.pc);
+            dc.condjmp = 0;
         }
     }
 
@@ -10098,10 +10098,10 @@ done_generating:
     {
       *event_size_arg = tb->icount;
     }
+    tb->size = dc.pc - tb->pc;
     if (tlib_is_on_block_translation_enabled) {
-        tlib_on_block_translation(tb->pc, dc->pc - tb->pc, dc->thumb);
+        tlib_on_block_translation(tb->pc, tb->size, dc.thumb);
     }
-    tb->size = dc->pc - tb->pc;
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

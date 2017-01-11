@@ -2736,21 +2736,21 @@ void gen_intermediate_code(CPUState *env,
 {
     target_ulong last_pc;
     uint16_t *gen_opc_end;
-    DisasContext dc1, *dc = &dc1;
+    DisasContext dc;
     CPUBreakpoint *bp;
     int max_insns;
 
-    dc->tb = tb;
-    dc->is_br = 0;
-    dc->pc = tb->pc;
-    last_pc = dc->pc;
-    dc->npc = (target_ulong) tb->cs_base;
-    dc->cc_op = CC_OP_DYNAMIC;
-    dc->mem_idx = cpu_mmu_index(env);
-    dc->def = env->def;
-    dc->fpu_enabled = tb_fpu_enabled(tb->flags);
-    dc->address_mask_32bit = tb_am_enabled(tb->flags);
-    dc->singlestep_enabled = (env->singlestep_enabled);
+    dc.tb = tb;
+    dc.is_br = 0;
+    dc.pc = tb->pc;
+    last_pc = dc.pc;
+    dc.npc = (target_ulong) tb->cs_base;
+    dc.cc_op = CC_OP_DYNAMIC;
+    dc.mem_idx = cpu_mmu_index(env);
+    dc.def = env->def;
+    dc.fpu_enabled = tb_fpu_enabled(tb->flags);
+    dc.address_mask_32bit = tb_am_enabled(tb->flags);
+    dc.singlestep_enabled = (env->singlestep_enabled);
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     cpu_tmp0 = tcg_temp_new();
@@ -2770,42 +2770,42 @@ void gen_intermediate_code(CPUState *env,
     do {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc->pc) {
-                    if (dc->pc != tb->pc)
+                if (bp->pc == dc.pc) {
+                    if (dc.pc != tb->pc)
                         save_state(dc, cpu_cond);
                     gen_helper_debug();
                     tcg_gen_exit_tb(0);
-                    dc->is_br = 1;
+                    dc.is_br = 1;
                     goto exit_gen_loop;
                 }
             }
         }
         if (search_pc) {
-	    tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc->pc;
-	    gen_opc_npc[gen_opc_ptr - tcg->gen_opc_buf] = dc->npc;
+	    tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
+	    gen_opc_npc[gen_opc_ptr - tcg->gen_opc_buf] = dc.npc;
 	    tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        last_pc = dc->pc;
+        last_pc = dc.pc;
         disas_sparc_insn(dc);
         tb->icount++;
 
-        if (dc->is_br)
+        if (dc.is_br)
             break;
         /* if the next PC is different, we abort now */
-        if (dc->pc != (last_pc + 4))
+        if (dc.pc != (last_pc + 4))
             break;
         /* if we reach a page boundary, we stop generation so that the
            PC of a TT_TFAULT exception is always in the right page */
-        if ((dc->pc & (TARGET_PAGE_SIZE - 1)) == 0)
+        if ((dc.pc & (TARGET_PAGE_SIZE - 1)) == 0)
             break;
         /* if single step mode, we generate only one instruction and
            generate an exception */
-        if (dc->singlestep_enabled) {
+        if (dc.singlestep_enabled) {
             break;
         }
     } while ((gen_opc_ptr < gen_opc_end) &&
-             (dc->pc - tb->pc) < (TARGET_PAGE_SIZE - 32) &&
+             (dc.pc - tb->pc) < (TARGET_PAGE_SIZE - 32) &&
              tb->icount < max_insns);
 
  exit_gen_loop:
@@ -2815,26 +2815,26 @@ void gen_intermediate_code(CPUState *env,
     tcg_temp_free_i64(cpu_tmp64);
     tcg_temp_free_i32(cpu_tmp32);
     tcg_temp_free(cpu_tmp0);
-    if (!dc->is_br) {
-        if (dc->pc != DYNAMIC_PC &&
-            (dc->npc != DYNAMIC_PC && dc->npc != JUMP_PC)) {
+    if (!dc.is_br) {
+        if (dc.pc != DYNAMIC_PC &&
+            (dc.npc != DYNAMIC_PC && dc.npc != JUMP_PC)) {
             /* static PC and NPC: we can use direct chaining */
-            gen_goto_tb(dc, 0, dc->pc, dc->npc);
+            gen_goto_tb(dc, 0, dc.pc, dc.npc);
         } else {
-            if (dc->pc != DYNAMIC_PC)
-                tcg_gen_movi_tl(cpu_pc, dc->pc);
+            if (dc.pc != DYNAMIC_PC)
+                tcg_gen_movi_tl(cpu_pc, dc.pc);
             save_npc(dc, cpu_cond);
             tcg_gen_exit_tb(0);
         }
     }
     if (search_pc) {
-        gen_opc_jump_pc[0] = dc->jump_pc[0];
-        gen_opc_jump_pc[1] = dc->jump_pc[1];
-    }
-    if (tlib_is_on_block_translation_enabled) {
-        tlib_on_block_translation(tb->pc, last_pc + 4 - tb->pc, 0);
+        gen_opc_jump_pc[0] = dc.jump_pc[0];
+        gen_opc_jump_pc[1] = dc.jump_pc[1];
     }
     tb->size = last_pc + 4 - tb->pc;
+    if (tlib_is_on_block_translation_enabled) {
+        tlib_on_block_translation(tb->pc, tb->size, 0);
+    }
 }
 
 void translate_init()

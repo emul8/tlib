@@ -7999,7 +7999,7 @@ void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
                            int search_pc)
 {
-    DisasContext dc1, *dc = &dc1;
+    DisasContext dc;
     opc_handler_t **table, *handler;
     uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
@@ -8007,31 +8007,31 @@ void gen_intermediate_code(CPUState *env,
     uint32_t op1, op2, op3;
 
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
-    dc->nip = tb->pc;
-    dc->tb = tb;
-    dc->exception = POWERPC_EXCP_NONE;
-    dc->spr_cb = env->spr_cb;
-    dc->mem_idx = env->mmu_idx;
-    dc->access_type = -1;
-    dc->le_mode = env->hflags & (1 << MSR_LE) ? 1 : 0;
-    dc->fpu_enabled = msr_fp;
-    dc->vle_enabled = tlib_is_vle_enabled();
+    dc.nip = tb->pc;
+    dc.tb = tb;
+    dc.exception = POWERPC_EXCP_NONE;
+    dc.spr_cb = env->spr_cb;
+    dc.mem_idx = env->mmu_idx;
+    dc.access_type = -1;
+    dc.le_mode = env->hflags & (1 << MSR_LE) ? 1 : 0;
+    dc.fpu_enabled = msr_fp;
+    dc.vle_enabled = tlib_is_vle_enabled();
     if ((env->flags & POWERPC_FLAG_SPE) && msr_spe)
-        dc->spe_enabled = msr_spe;
+        dc.spe_enabled = msr_spe;
     else
-        dc->spe_enabled = 0;
+        dc.spe_enabled = 0;
     if ((env->flags & POWERPC_FLAG_VRE) && msr_vr)
-        dc->altivec_enabled = msr_vr;
+        dc.altivec_enabled = msr_vr;
     else
-        dc->altivec_enabled = 0;
+        dc.altivec_enabled = 0;
     if ((env->flags & POWERPC_FLAG_SE) && msr_se)
-        dc->singlestep_enabled = CPU_SINGLE_STEP;
+        dc.singlestep_enabled = CPU_SINGLE_STEP;
     else
-        dc->singlestep_enabled = 0;
+        dc.singlestep_enabled = 0;
     if ((env->flags & POWERPC_FLAG_BE) && msr_be)
-        dc->singlestep_enabled |= CPU_BRANCH_STEP;
+        dc.singlestep_enabled |= CPU_BRANCH_STEP;
     if (unlikely(env->singlestep_enabled))
-        dc->singlestep_enabled |= GDBSTUB_SINGLE_STEP;
+        dc.singlestep_enabled |= GDBSTUB_SINGLE_STEP;
 #if defined (DO_SINGLE_STEP) && 0
     /* Single step trace mode */
     msr_se = 1;
@@ -8053,37 +8053,37 @@ void gen_intermediate_code(CPUState *env,
       tcg_temp_free_i32(event_size);
     }
     /* Set env in case of segfault during code fetch */
-    while (dc->exception == POWERPC_EXCP_NONE && gen_opc_ptr < gen_opc_end) {
+    while (dc.exception == POWERPC_EXCP_NONE && gen_opc_ptr < gen_opc_end) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc->nip) {
+                if (bp->pc == dc.nip) {
                     gen_debug_exception(dc);
                     break;
                 }
             }
         }
         if (unlikely(search_pc)) {
-            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc->nip;
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.nip;
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        if (unlikely(dc->le_mode)) {
-            dc->opcode = bswap32(ldl_code(dc->nip));
+        if (unlikely(dc.le_mode)) {
+            dc.opcode = bswap32(ldl_code(dc.nip));
         } else {
-            dc->opcode = ldl_code(dc->nip);
+            dc.opcode = ldl_code(dc.nip);
         }
 
-        if(dc->vle_enabled) // use the vle decoding function to obtain the opcodes
+        if(dc.vle_enabled) // use the vle decoding function to obtain the opcodes
         {
             decode_vle_instruction(dc, &op1, &op2, &op3);
         }
         else // use standard decoding macros
         {
-            op1 = opc1(dc->opcode);
-            op2 = opc2(dc->opcode);
-            op3 = opc3(dc->opcode);
+            op1 = opc1(dc.opcode);
+            op2 = opc2(dc.opcode);
+            op3 = opc3(dc.opcode);
         }
-        if(dc->vle_enabled)
+        if(dc.vle_enabled)
         {
             table = env->vle_opcodes;
         }
@@ -8102,32 +8102,32 @@ void gen_intermediate_code(CPUState *env,
                 handler = table[op3];
             }
         }
-        dc->nip += handler->length;
+        dc.nip += handler->length;
 
         /* Is opcode *REALLY* valid ? */
         if (likely(handler->handler != &gen_invalid)) {
             uint32_t inval;
 
-            if (unlikely(handler->type & (PPC_SPE | PPC_SPE_SINGLE | PPC_SPE_DOUBLE) && Rc(dc->opcode))) {
+            if (unlikely(handler->type & (PPC_SPE | PPC_SPE_SINGLE | PPC_SPE_DOUBLE) && Rc(dc.opcode))) {
                 inval = handler->inval2;
             } else {
                 inval = handler->inval1;
             }
 
-            if (unlikely((dc->opcode & inval) != 0)) {
+            if (unlikely((dc.opcode & inval) != 0)) {
                 gen_inval_exception(dc, POWERPC_EXCP_INVAL_INVAL);
                 break;
             }
         }
         (*(handler->handler))(dc);
         /* Check trace mode exceptions */
-        if (unlikely(dc->singlestep_enabled & CPU_SINGLE_STEP &&
-                     (dc->nip <= 0x100 || dc->nip > 0xF00) &&
-                     dc->exception != POWERPC_SYSCALL &&
-                     dc->exception != POWERPC_EXCP_TRAP &&
-                     dc->exception != POWERPC_EXCP_BRANCH)) {
+        if (unlikely(dc.singlestep_enabled & CPU_SINGLE_STEP &&
+                     (dc.nip <= 0x100 || dc.nip > 0xF00) &&
+                     dc.exception != POWERPC_SYSCALL &&
+                     dc.exception != POWERPC_EXCP_TRAP &&
+                     dc.exception != POWERPC_EXCP_BRANCH)) {
             gen_exception(dc, POWERPC_EXCP_TRACE);
-        } else if (unlikely(((dc->nip & (TARGET_PAGE_SIZE - 1)) == 0) ||
+        } else if (unlikely(((dc.nip & (TARGET_PAGE_SIZE - 1)) == 0) ||
                             (env->singlestep_enabled) ||
                             tb->icount >= max_insns)) {
             /* if we reach a page boundary or are single stepping, stop
@@ -8136,20 +8136,20 @@ void gen_intermediate_code(CPUState *env,
             break;
         }
     }
-    if (dc->exception == POWERPC_EXCP_NONE) {
-        gen_goto_tb(dc, 0, dc->nip);
-    } else if (dc->exception != POWERPC_EXCP_BRANCH) {
+    if (dc.exception == POWERPC_EXCP_NONE) {
+        gen_goto_tb(dc, 0, dc.nip);
+    } else if (dc.exception != POWERPC_EXCP_BRANCH) {
         if (unlikely(env->singlestep_enabled)) {
             gen_debug_exception(dc);
         }
         /* Generate the return instruction */
         tcg_gen_exit_tb(0);
     }
+    tb->size = dc.nip - tb->pc;
     if (tlib_is_on_block_translation_enabled) {
-        int flags = env->bfd_mach | dc->le_mode << 16;
-        tlib_on_block_translation(tb->pc, dc->nip - tb->pc, flags);
+        int flags = env->bfd_mach | dc.le_mode << 16;
+        tlib_on_block_translation(tb->pc, tb->size, flags);
     }
-    tb->size = dc->nip - tb->pc;
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

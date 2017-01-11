@@ -7648,7 +7648,7 @@ void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
                            int search_pc)
 {
-    DisasContext dc1, *dc = &dc1;
+    DisasContext dc;
     target_ulong pc_ptr;
     uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
@@ -7660,38 +7660,38 @@ void gen_intermediate_code(CPUState *env,
     cs_base = tb->cs_base;
     flags = tb->flags;
 
-    dc->pe = (flags >> HF_PE_SHIFT) & 1;
-    dc->code32 = (flags >> HF_CS32_SHIFT) & 1;
-    dc->ss32 = (flags >> HF_SS32_SHIFT) & 1;
-    dc->addseg = (flags >> HF_ADDSEG_SHIFT) & 1;
-    dc->f_st = 0;
-    dc->vm86 = (flags >> VM_SHIFT) & 1;
-    dc->cpl = (flags >> HF_CPL_SHIFT) & 3;
-    dc->iopl = (flags >> IOPL_SHIFT) & 3;
-    dc->tf = (flags >> TF_SHIFT) & 1;
-    dc->singlestep_enabled = env->singlestep_enabled;
-    dc->cc_op = CC_OP_DYNAMIC;
-    dc->cs_base = cs_base;
-    dc->tb = tb;
-    dc->popl_esp_hack = 0;
+    dc.pe = (flags >> HF_PE_SHIFT) & 1;
+    dc.code32 = (flags >> HF_CS32_SHIFT) & 1;
+    dc.ss32 = (flags >> HF_SS32_SHIFT) & 1;
+    dc.addseg = (flags >> HF_ADDSEG_SHIFT) & 1;
+    dc.f_st = 0;
+    dc.vm86 = (flags >> VM_SHIFT) & 1;
+    dc.cpl = (flags >> HF_CPL_SHIFT) & 3;
+    dc.iopl = (flags >> IOPL_SHIFT) & 3;
+    dc.tf = (flags >> TF_SHIFT) & 1;
+    dc.singlestep_enabled = env->singlestep_enabled;
+    dc.cc_op = CC_OP_DYNAMIC;
+    dc.cs_base = cs_base;
+    dc.tb = tb;
+    dc.popl_esp_hack = 0;
     /* select memory access functions */
-    dc->mem_index = 0;
+    dc.mem_index = 0;
     if (flags & HF_SOFTMMU_MASK) {
-        if (dc->cpl == 3)
-            dc->mem_index = 2 * 4;
+        if (dc.cpl == 3)
+            dc.mem_index = 2 * 4;
         else
-            dc->mem_index = 1 * 4;
+            dc.mem_index = 1 * 4;
     }
-    dc->cpuid_features = env->cpuid_features;
-    dc->cpuid_ext_features = env->cpuid_ext_features;
-    dc->cpuid_ext2_features = env->cpuid_ext2_features;
-    dc->cpuid_ext3_features = env->cpuid_ext3_features;
+    dc.cpuid_features = env->cpuid_features;
+    dc.cpuid_ext_features = env->cpuid_ext_features;
+    dc.cpuid_ext2_features = env->cpuid_ext2_features;
+    dc.cpuid_ext3_features = env->cpuid_ext3_features;
 #ifdef TARGET_X86_64
-    dc->lma = (flags >> HF_LMA_SHIFT) & 1;
-    dc->code64 = (flags >> HF_CS64_SHIFT) & 1;
+    dc.lma = (flags >> HF_LMA_SHIFT) & 1;
+    dc.code64 = (flags >> HF_CS64_SHIFT) & 1;
 #endif
-    dc->flags = flags;
-    dc->jmp_opt = !(dc->tf || env->singlestep_enabled ||
+    dc.flags = flags;
+    dc.jmp_opt = !(dc.tf || env->singlestep_enabled ||
                     (flags & HF_INHIBIT_IRQ_MASK));
 
     cpu_T[0] = tcg_temp_new();
@@ -7710,7 +7710,7 @@ void gen_intermediate_code(CPUState *env,
 
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
-    dc->is_jmp = DISAS_NEXT;
+    dc.is_jmp = DISAS_NEXT;
     pc_ptr = tb->pc;
     tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
@@ -7722,30 +7722,30 @@ void gen_intermediate_code(CPUState *env,
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == pc_ptr &&
                     !((bp->flags & BP_CPU) && (tb->flags & HF_RF_MASK))) {
-                    gen_debug(dc, pc_ptr - dc->cs_base);
+                    gen_debug(dc, pc_ptr - dc.cs_base);
                     break;
                 }
             }
         }
         if (search_pc) {
             tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = pc_ptr;
-            gen_opc_cc_op[gen_opc_ptr - tcg->gen_opc_buf] = dc->cc_op;
+            gen_opc_cc_op[gen_opc_ptr - tcg->gen_opc_buf] = dc.cc_op;
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
         pc_ptr = disas_insn(dc, pc_ptr);
         tb->icount++;
         /* stop translation if indicated */
-        if (dc->is_jmp)
+        if (dc.is_jmp)
             break;
         /* if single step mode, we generate only one instruction and
            generate an exception */
         /* if irq were inhibited with HF_INHIBIT_IRQ_MASK, we clear
            the flag and abort the translation to give the irqs a
            change to be happen */
-        if (dc->tf || dc->singlestep_enabled ||
+        if (dc.tf || dc.singlestep_enabled ||
             (flags & HF_INHIBIT_IRQ_MASK)) {
-            gen_jmp_im(pc_ptr - dc->cs_base);
+            gen_jmp_im(pc_ptr - dc.cs_base);
             gen_eob(dc);
             break;
         }
@@ -7753,24 +7753,23 @@ void gen_intermediate_code(CPUState *env,
         if (gen_opc_ptr >= gen_opc_end ||
             (pc_ptr - tb->pc) >= (TARGET_PAGE_SIZE - 32) ||
             tb->icount >= max_insns) {
-            gen_jmp_im(pc_ptr - dc->cs_base);
+            gen_jmp_im(pc_ptr - dc.cs_base);
             gen_eob(dc);
             break;
         }
     }
+    tb->size = pc_ptr - tb->pc;
     if (tlib_is_on_block_translation_enabled) {
         int disas_flags;
 #ifdef TARGET_X86_64
-        if (dc->code64)
+        if (dc.code64)
             disas_flags = 2;
         else
 #endif
-            disas_flags = !dc->code32;
+            disas_flags = !dc.code32;
 
-        tlib_on_block_translation(tb->pc, pc_ptr - tb->pc, disas_flags);
+        tlib_on_block_translation(tb->pc, tb->size, disas_flags);
     }
-
-    tb->size = pc_ptr - tb->pc;
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
