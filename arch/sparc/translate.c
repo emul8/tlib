@@ -2761,7 +2761,6 @@ void gen_intermediate_code(CPUState *env,
     cpu_val = tcg_temp_local_new();
     cpu_addr = tcg_temp_local_new();
 
-    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;

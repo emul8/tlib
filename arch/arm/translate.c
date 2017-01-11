@@ -9914,24 +9914,9 @@ void gen_intermediate_code(CPUState *env,
     /* FIXME: cpu_M0 can probably be the same as cpu_V0.  */
     cpu_M0 = tcg_temp_new_i64();
     next_page_start = (tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
-    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
-
-    uint32_t block_begin_event_enabled = tlib_is_block_begin_event_enabled();
-
-    TCGArg *event_size_arg;
-    if(block_begin_event_enabled)
-    {
-      TCGv_i32 event_address = tcg_const_i32(dc.pc);
-      event_size_arg = gen_opparam_ptr + 1;
-      TCGv_i32 event_size = tcg_const_i32(0xFFFF); // bogus value that is to be fixed at later point
-
-      gen_helper_block_begin_event(event_address, event_size);
-      tcg_temp_free_i32(event_address);
-      tcg_temp_free_i32(event_size);
-    }
 
     tcg_clear_temp_count();
 
@@ -10091,10 +10076,6 @@ void gen_intermediate_code(CPUState *env,
     }
 
 done_generating:
-    if(block_begin_event_enabled)
-    {
-      *event_size_arg = tb->icount;
-    }
     tb->size = dc.pc - tb->pc;
     if (tlib_is_on_block_translation_enabled) {
         tlib_on_block_translation(tb->pc, tb->size, dc.thumb);

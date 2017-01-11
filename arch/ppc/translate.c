@@ -8030,22 +8030,10 @@ void gen_intermediate_code(CPUState *env,
         dc.singlestep_enabled |= CPU_BRANCH_STEP;
     if (unlikely(env->singlestep_enabled))
         dc.singlestep_enabled |= GDBSTUB_SINGLE_STEP;
-    tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
 
-    uint32_t block_begin_event_enabled = tlib_is_block_begin_event_enabled();
-
-    if(block_begin_event_enabled)
-    {
-      TCGv_i32 event_address = tcg_const_i32(tb->pc);
-      TCGv_i32 event_size = tcg_const_i32(0xFFFF); // bogus value that is to be fixed at later point
-
-      gen_helper_block_begin_event(event_address, event_size);
-      tcg_temp_free_i32(event_address);
-      tcg_temp_free_i32(event_size);
-    }
     /* Set env in case of segfault during code fetch */
     while (dc.exception == POWERPC_EXCP_NONE && ((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE)) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
