@@ -2735,7 +2735,6 @@ void gen_intermediate_code(CPUState *env,
                            int search_pc)
 {
     target_ulong last_pc;
-    uint16_t *gen_opc_end;
     DisasContext dc;
     CPUBreakpoint *bp;
     int max_insns;
@@ -2751,7 +2750,6 @@ void gen_intermediate_code(CPUState *env,
     dc.fpu_enabled = tb_fpu_enabled(tb->flags);
     dc.address_mask_32bit = tb_am_enabled(tb->flags);
     dc.singlestep_enabled = (env->singlestep_enabled);
-    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     cpu_tmp0 = tcg_temp_new();
     cpu_tmp32 = tcg_temp_new_i32();
@@ -2804,7 +2802,7 @@ void gen_intermediate_code(CPUState *env,
         if (dc.singlestep_enabled) {
             break;
         }
-    } while ((gen_opc_ptr < gen_opc_end) &&
+    } while (((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE) &&
              (dc.pc - tb->pc) < (TARGET_PAGE_SIZE - 32) &&
              tb->icount < max_insns);
 

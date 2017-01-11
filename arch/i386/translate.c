@@ -7650,7 +7650,6 @@ void gen_intermediate_code(CPUState *env,
 {
     DisasContext dc;
     target_ulong pc_ptr;
-    uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
     uint64_t flags;
     target_ulong cs_base;
@@ -7710,14 +7709,14 @@ void gen_intermediate_code(CPUState *env,
 
     gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
-    dc.is_jmp = DISAS_NEXT;
+    dc.is_jmp = DISAS_NEXT; // = 0
     pc_ptr = tb->pc;
     tb->icount = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
 
-    for(;;) {
+    while (!dc.is_jmp) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == pc_ptr &&
@@ -7735,9 +7734,6 @@ void gen_intermediate_code(CPUState *env,
 
         pc_ptr = disas_insn(dc, pc_ptr);
         tb->icount++;
-        /* stop translation if indicated */
-        if (dc.is_jmp)
-            break;
         /* if single step mode, we generate only one instruction and
            generate an exception */
         /* if irq were inhibited with HF_INHIBIT_IRQ_MASK, we clear
@@ -7750,7 +7746,7 @@ void gen_intermediate_code(CPUState *env,
             break;
         }
         /* if too long translation, stop generation too */
-        if (gen_opc_ptr >= gen_opc_end ||
+        if (((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) ||
             (pc_ptr - tb->pc) >= (TARGET_PAGE_SIZE - 32) ||
             tb->icount >= max_insns) {
             gen_jmp_im(pc_ptr - dc.cs_base);

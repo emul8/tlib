@@ -9888,14 +9888,11 @@ void gen_intermediate_code(CPUState *env,
 {
     DisasContext dc;
     CPUBreakpoint *bp;
-    uint16_t *gen_opc_end;
     uint32_t next_page_start;
     int max_insns;
 
     /* generate intermediate code */
     dcb = tb;
-
-    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
 
     dc.is_jmp = DISAS_NEXT;
     dc.pc = tb->pc;
@@ -10024,7 +10021,7 @@ void gen_intermediate_code(CPUState *env,
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
         tb->icount++;
-    } while (!dc.is_jmp && gen_opc_ptr < gen_opc_end &&
+    } while (!dc.is_jmp && ((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE) &&
              !env->singlestep_enabled &&
              dc.pc < next_page_start &&
              tb->icount < max_insns);

@@ -8001,12 +8001,10 @@ void gen_intermediate_code(CPUState *env,
 {
     DisasContext dc;
     opc_handler_t **table, *handler;
-    uint16_t *gen_opc_end;
     CPUBreakpoint *bp;
     int max_insns;
     uint32_t op1, op2, op3;
 
-    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
     dc.nip = tb->pc;
     dc.tb = tb;
     dc.exception = POWERPC_EXCP_NONE;
@@ -8053,7 +8051,7 @@ void gen_intermediate_code(CPUState *env,
       tcg_temp_free_i32(event_size);
     }
     /* Set env in case of segfault during code fetch */
-    while (dc.exception == POWERPC_EXCP_NONE && gen_opc_ptr < gen_opc_end) {
+    while (dc.exception == POWERPC_EXCP_NONE && ((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE)) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.nip) {
