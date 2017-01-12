@@ -9957,7 +9957,7 @@ void gen_intermediate_code(CPUState *env,
         tcg_gen_movi_i32(tmp, 0);
         store_cpu_field(tmp, condexec_bits);
       }
-    do {
+    while (!dc.is_jmp) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
@@ -10004,10 +10004,23 @@ void gen_intermediate_code(CPUState *env,
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
         tb->icount++;
-    } while (!dc.is_jmp && ((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE) &&
-             !env->singlestep_enabled &&
-             dc.pc < next_page_start &&
-             tb->icount < max_insns);
+
+	if (dc.is_jmp) {
+            break;
+	}
+	if (env->singlestep_enabled) {
+	    break;
+	}
+	if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
+            break;
+        }
+        if (dc.pc >= next_page_start) {
+            break;
+        }
+        if (tb->icount >= max_insns) {
+            break;
+        }
+    }
 
     /* At this stage dc.condjmp will only be set when the skipped
        instruction was a conditional branch or trap, and the PC has
