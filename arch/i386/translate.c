@@ -7707,8 +7707,6 @@ void gen_intermediate_code(CPUState *env,
     cpu_ptr0 = tcg_temp_new_ptr();
     cpu_ptr1 = tcg_temp_new_ptr();
 
-    gen_opc_end = tcg->gen_opc_buf + OPC_MAX_SIZE;
-
     dc.is_jmp = DISAS_NEXT; // = 0
     pc_ptr = tb->pc;
     max_insns = tb->cflags & CF_COUNT_MASK;
@@ -7720,7 +7718,7 @@ void gen_intermediate_code(CPUState *env,
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == pc_ptr &&
                     !((bp->flags & BP_CPU) && (tb->flags & HF_RF_MASK))) {
-                    gen_debug(dc, pc_ptr - dc.cs_base);
+                    gen_debug(&dc, pc_ptr - dc.cs_base);
                     break;
                 }
             }
@@ -7731,7 +7729,7 @@ void gen_intermediate_code(CPUState *env,
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        pc_ptr = disas_insn(dc, pc_ptr);
+        pc_ptr = disas_insn(&dc, pc_ptr);
         tb->icount++;
         /* if single step mode, we generate only one instruction and
            generate an exception */
@@ -7741,7 +7739,7 @@ void gen_intermediate_code(CPUState *env,
         if (dc.tf || dc.singlestep_enabled ||
             (flags & HF_INHIBIT_IRQ_MASK)) {
             gen_jmp_im(pc_ptr - dc.cs_base);
-            gen_eob(dc);
+            gen_eob(&dc);
             break;
         }
         /* if too long translation, stop generation too */
@@ -7749,7 +7747,7 @@ void gen_intermediate_code(CPUState *env,
             (pc_ptr - tb->pc) >= (TARGET_PAGE_SIZE - 32) ||
             tb->icount >= max_insns) {
             gen_jmp_im(pc_ptr - dc.cs_base);
-            gen_eob(dc);
+            gen_eob(&dc);
             break;
         }
     }
