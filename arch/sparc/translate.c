@@ -1201,7 +1201,7 @@ static void do_branch(DisasContext *dc, int32_t offset, uint32_t insn, int cc,
         gen_cond(r_cond, cc, cond, dc);
         if (a) {
             gen_branch_a(dc, target, dc->npc, r_cond);
-            dc->is_jmp = 1;
+            dc->is_jmp = DISAS_JUMP;
         } else {
             dc->pc = dc->npc;
             dc->jump_pc[0] = target;
@@ -1242,7 +1242,7 @@ static void do_fbranch(DisasContext *dc, int32_t offset, uint32_t insn, int cc,
         gen_fcond(r_cond, cc, cond);
         if (a) {
             gen_branch_a(dc, target, dc->npc, r_cond);
-            dc->is_jmp = 1;
+            dc->is_jmp = DISAS_JUMP;
         } else {
             dc->pc = dc->npc;
             dc->jump_pc[0] = target;
@@ -1302,7 +1302,7 @@ static int gen_trap_ifnofpu(DisasContext *dc, TCGv r_cond)
         r_const = tcg_const_i32(TT_NFPU_INSN);
         gen_helper_raise_exception(r_const);
         tcg_temp_free_i32(r_const);
-        dc->is_jmp = 1;
+        dc->is_jmp = DISAS_JUMP;
         return 1;
     }
     return 0;
@@ -1582,7 +1582,7 @@ static void disas_sparc_insn(DisasContext * dc)
                 }
                 gen_op_next_insn();
                 tcg_gen_exit_tb(0);
-                dc->is_jmp = 1;
+                dc->is_jmp = DISAS_JUMP;
                 goto jmp_insn;
             } else if (xop == 0x28) {
                 rs1 = GET_FIELD(insn, 13, 17);
@@ -2237,7 +2237,7 @@ static void disas_sparc_insn(DisasContext * dc)
                             save_state(dc, cpu_cond);
                             gen_op_next_insn();
                             tcg_gen_exit_tb(0);
-                            dc->is_jmp = 1;
+                            dc->is_jmp = DISAS_JUMP;
                         }
                         break;
                     case 0x32: /* wrwim */
@@ -2664,7 +2664,7 @@ static void disas_sparc_insn(DisasContext * dc)
     } else if (dc->npc == JUMP_PC) {
         /* we can do a static jump */
         gen_branch2(dc, dc->jump_pc[0], dc->jump_pc[1], cpu_cond);
-        dc->is_jmp = 1;
+        dc->is_jmp = DISAS_JUMP;
     } else {
         dc->pc = dc->npc;
         dc->npc = dc->npc + 4;
@@ -2679,7 +2679,7 @@ static void disas_sparc_insn(DisasContext * dc)
         r_const = tcg_const_i32(TT_ILL_INSN);
         gen_helper_raise_exception(r_const);
         tcg_temp_free_i32(r_const);
-        dc->is_jmp = 1;
+        dc->is_jmp = DISAS_JUMP;
     }
     goto egress;
  unimp_flush:
@@ -2690,7 +2690,7 @@ static void disas_sparc_insn(DisasContext * dc)
         r_const = tcg_const_i32(TT_UNIMP_FLUSH);
         gen_helper_raise_exception(r_const);
         tcg_temp_free_i32(r_const);
-        dc->is_jmp = 1;
+        dc->is_jmp = DISAS_JUMP;
     }
     goto egress;
  priv_insn:
@@ -2701,18 +2701,18 @@ static void disas_sparc_insn(DisasContext * dc)
         r_const = tcg_const_i32(TT_PRIV_INSN);
         gen_helper_raise_exception(r_const);
         tcg_temp_free_i32(r_const);
-        dc->is_jmp = 1;
+        dc->is_jmp = DISAS_JUMP;
     }
     goto egress;
  nfpu_insn:
     save_state(dc, cpu_cond);
     gen_op_fpexception_im(FSR_FTT_UNIMPFPOP);
-    dc->is_jmp = 1;
+    dc->is_jmp = DISAS_JUMP;
     goto egress;
  nfq_insn:
     save_state(dc, cpu_cond);
     gen_op_fpexception_im(FSR_FTT_SEQ_ERROR);
-    dc->is_jmp = 1;
+    dc->is_jmp = DISAS_JUMP;
     goto egress;
  ncp_insn:
     {
@@ -2722,7 +2722,7 @@ static void disas_sparc_insn(DisasContext * dc)
         r_const = tcg_const_i32(TT_NCP_INSN);
         gen_helper_raise_exception(r_const);
         tcg_temp_free(r_const);
-        dc->is_jmp = 1;
+        dc->is_jmp = DISAS_JUMP;
     }
     goto egress;
  egress:
@@ -2740,7 +2740,7 @@ void gen_intermediate_code(CPUState *env,
     int max_insns;
 
     dc.tb = tb;
-    dc.is_jmp = 0;
+    dc.is_jmp = DISAS_NEXT;
     dc.pc = tb->pc;
     last_pc = dc.pc;
     dc.npc = (target_ulong) tb->cs_base;
@@ -2772,7 +2772,7 @@ void gen_intermediate_code(CPUState *env,
                         save_state(&dc, cpu_cond);
                     gen_helper_debug();
                     tcg_gen_exit_tb(0);
-                    dc.is_jmp = 1;
+                    dc.is_jmp = DISAS_JUMP;
                     break;
                 }
             }
