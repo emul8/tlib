@@ -478,6 +478,4 @@ DEF_HELPER_3(neon_qzip8, void, env, i32, i32)
 DEF_HELPER_3(neon_qzip16, void, env, i32, i32)
 DEF_HELPER_3(neon_qzip32, void, env, i32, i32)
 
-DEF_HELPER_2(block_begin_event, void, i32, i32)
-
 #include "def-helper.h"

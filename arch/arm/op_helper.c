@@ -410,8 +410,3 @@ uint32_t HELPER(ror_cc)(uint32_t x, uint32_t i)
         return ((uint32_t)x >> shift) | (x << (32 - shift));
     }
 }
-
-void HELPER(block_begin_event)(uint32_t address, uint32_t size)
-{
-  tlib_on_block_begin(address, size);
-}

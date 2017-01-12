@@ -4038,9 +4038,3 @@ void helper_booke206_tlbflush(uint32_t type)
 
     booke206_flush_tlb(env, flags, 1);
 }
-
-void helper_block_begin_event(uint32_t address, uint32_t size)
-{
-  tlib_on_block_begin(address, size);
-}
-

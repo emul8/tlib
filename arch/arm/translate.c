@@ -9891,9 +9891,7 @@ void gen_intermediate_code(CPUState *env,
     uint32_t next_page_start;
     int max_insns;
 
-    /* generate intermediate code */
-    dcb = tb;
-
+    dc.tb = tb;
     dc.is_jmp = DISAS_NEXT;
     dc.pc = tb->pc;
     dc.singlestep_enabled = env->singlestep_enabled;
@@ -9963,7 +9961,7 @@ void gen_intermediate_code(CPUState *env,
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
-                    gen_exception_insn(dc, 0, EXCP_DEBUG);
+                    gen_exception_insn(&dc, 0, EXCP_DEBUG);
                     /* Advance PC so that clearing the breakpoint will
                        invalidate this TB.  */
                     dc.pc += 2;
@@ -9979,7 +9977,7 @@ void gen_intermediate_code(CPUState *env,
         }
 
         if (dc.thumb) {
-            disas_thumb_insn(env, dc);
+            disas_thumb_insn(env, &dc);
             if (dc.condexec_mask) {
                 dc.condexec_cond = (dc.condexec_cond & 0xe)
                                    | ((dc.condexec_mask >> 4) & 1);
@@ -9989,7 +9987,7 @@ void gen_intermediate_code(CPUState *env,
                 }
             }
         } else {
-            disas_arm_insn(env, dc);
+            disas_arm_insn(env, &dc);
         }
 
         if (dc.condjmp && !dc.is_jmp) {
@@ -10017,7 +10015,7 @@ void gen_intermediate_code(CPUState *env,
     if (unlikely(env->singlestep_enabled)) {
         /* Make sure the pc is updated, and raise a debug exception.  */
         if (dc.condjmp) {
-            gen_set_condexec(dc);
+            gen_set_condexec(&dc);
             if (dc.is_jmp == DISAS_SWI) {
                 gen_exception(EXCP_SWI);
             } else {
@@ -10029,7 +10027,7 @@ void gen_intermediate_code(CPUState *env,
             gen_set_pc_im(dc.pc);
             dc.condjmp = 0;
         }
-        gen_set_condexec(dc);
+        gen_set_condexec(&dc);
         if (dc.is_jmp == DISAS_SWI && !dc.condjmp) {
             gen_exception(EXCP_SWI);
         } else {
@@ -10046,10 +10044,10 @@ void gen_intermediate_code(CPUState *env,
             - Hardware watchpoints.
            Hardware breakpoints have already been handled and skip this code.
          */
-        gen_set_condexec(dc);
+        gen_set_condexec(&dc);
         switch(dc.is_jmp) {
         case DISAS_NEXT:
-            gen_goto_tb(dc, 1, dc.pc);
+            gen_goto_tb(&dc, 1, dc.pc);
             break;
         default:
         case DISAS_JUMP:
@@ -10069,8 +10067,8 @@ void gen_intermediate_code(CPUState *env,
         }
         if (dc.condjmp) {
             gen_set_label(dc.condlabel);
-            gen_set_condexec(dc);
-            gen_goto_tb(dc, 1, dc.pc);
+            gen_set_condexec(&dc);
+            gen_goto_tb(&dc, 1, dc.pc);
             dc.condjmp = 0;
         }
     }

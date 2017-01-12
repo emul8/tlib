@@ -32,10 +32,11 @@
 int gen_new_label(void);
 
 TCGv_ptr cpu_env;
-static TCGArg *icount_arg, *size_arg;
+static TCGArg *icount_arg, *event_size_arg;
+
 static int stopflag_label;
 
-static inline void gen_block_header(void)
+static inline void gen_block_header(TranslationBlock *tb)
 {
     TCGv_i32 flag;
     stopflag_label = gen_new_label();
@@ -62,7 +63,7 @@ static inline void gen_block_header(void)
 
     if(tlib_is_block_begin_event_enabled())
     {
-      TCGv_i32 event_address = tcg_const_i32(dc.pc);
+      TCGv_i32 event_address = tcg_const_i32(tb->pc);
       event_size_arg = gen_opparam_ptr + 1;
       TCGv_i32 event_size = tcg_const_i32(0xFFFF); // bogus value that is to be fixed at later point
 
@@ -74,7 +75,7 @@ static inline void gen_block_header(void)
 
 static inline void gen_block_footer(TranslationBlock *tb)
 {
-    if(block_begin_event_enabled)
+    if(tlib_is_block_begin_event_enabled())
     {
       *event_size_arg = tb->icount;
     }
@@ -99,7 +100,7 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
     tcg_func_start(s);
 
     tb->icount = 0;
-    gen_block_header();
+    gen_block_header(tb);
     gen_intermediate_code(env, tb, 0);
     gen_block_footer(tb);
 
@@ -128,7 +129,7 @@ int cpu_restore_state(CPUState *env,
     tcg_func_start(s);
     memset((void*)tcg->gen_opc_instr_start, 0, OPC_BUF_SIZE);
     tb->icount = 0;
-    gen_block_header();
+    gen_block_header(tb);
     gen_intermediate_code(env, tb, 1);
     gen_block_footer(tb);
 

@@ -365,6 +365,4 @@ DEF_HELPER_2(store_dbatu, void, i32, tl)
 DEF_HELPER_2(store_601_batl, void, i32, tl)
 DEF_HELPER_2(store_601_batu, void, i32, tl)
 
-DEF_HELPER_2(block_begin_event, void, i32, i32)
-
 #include "def-helper.h"
