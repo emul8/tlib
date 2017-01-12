@@ -7752,17 +7752,10 @@ void gen_intermediate_code(CPUState *env,
         }
     }
     tb->size = pc_ptr - tb->pc;
-    if (tlib_is_on_block_translation_enabled) {
-        int disas_flags;
-#ifdef TARGET_X86_64
-        if (dc.code64)
-            disas_flags = 2;
-        else
-#endif
-            disas_flags = !dc.code32;
-
-        tlib_on_block_translation(tb->pc, tb->size, disas_flags);
-    }
+    tb->disas_flags = !dc.code32;
+    #ifdef TARGET_X86_64
+    if (dc.code64) tb->disas_flags = 2;
+    #endif
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

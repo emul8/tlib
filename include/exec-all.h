@@ -81,6 +81,7 @@ struct TranslationBlock {
     target_ulong pc;   /* simulated PC corresponding to this block (EIP + CS base) */
     target_ulong cs_base; /* CS base for this block */
     uint64_t flags; /* flags defining in which context the code was generated */
+    uint32_t disas_flags;
     uint16_t size;      /* size of target code for this block (1 <=
                            size <= TARGET_PAGE_SIZE) */
     uint16_t cflags;    /* compile flags */

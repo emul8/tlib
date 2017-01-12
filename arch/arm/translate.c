@@ -10075,9 +10075,7 @@ void gen_intermediate_code(CPUState *env,
 
 done_generating:
     tb->size = dc.pc - tb->pc;
-    if (tlib_is_on_block_translation_enabled) {
-        tlib_on_block_translation(tb->pc, tb->size, dc.thumb);
-    }
+    tb->disas_flags = dc.thumb;
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

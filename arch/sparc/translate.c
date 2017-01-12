@@ -2769,7 +2769,7 @@ void gen_intermediate_code(CPUState *env,
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
                     if (dc.pc != tb->pc)
-                        save_state(dc, cpu_cond);
+                        save_state(&dc, cpu_cond);
                     gen_helper_debug();
                     tcg_gen_exit_tb(0);
                     dc.is_br = 1;
@@ -2784,7 +2784,7 @@ void gen_intermediate_code(CPUState *env,
         }
 
         last_pc = dc.pc;
-        disas_sparc_insn(dc);
+        disas_sparc_insn(&dc);
         tb->icount++;
 
         if (dc.is_br)
@@ -2816,11 +2816,11 @@ void gen_intermediate_code(CPUState *env,
         if (dc.pc != DYNAMIC_PC &&
             (dc.npc != DYNAMIC_PC && dc.npc != JUMP_PC)) {
             /* static PC and NPC: we can use direct chaining */
-            gen_goto_tb(dc, 0, dc.pc, dc.npc);
+            gen_goto_tb(&dc, 0, dc.pc, dc.npc);
         } else {
             if (dc.pc != DYNAMIC_PC)
                 tcg_gen_movi_tl(cpu_pc, dc.pc);
-            save_npc(dc, cpu_cond);
+            save_npc(&dc, cpu_cond);
             tcg_gen_exit_tb(0);
         }
     }
@@ -2829,9 +2829,7 @@ void gen_intermediate_code(CPUState *env,
         gen_opc_jump_pc[1] = dc.jump_pc[1];
     }
     tb->size = last_pc + 4 - tb->pc;
-    if (tlib_is_on_block_translation_enabled) {
-        tlib_on_block_translation(tb->pc, tb->size, 0);
-    }
+    tb->disas_flags = 0;
 }
 
 void translate_init()

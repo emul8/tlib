@@ -75,6 +75,9 @@ static inline void gen_block_header(TranslationBlock *tb)
 
 static inline void gen_block_footer(TranslationBlock *tb)
 {
+    if (tlib_is_on_block_translation_enabled) {
+        tlib_on_block_translation(tb->pc, tb->size, tb->disas_flags);
+    }
     if(tlib_is_block_begin_event_enabled())
     {
       *event_size_arg = tb->icount;
