@@ -7719,7 +7719,7 @@ void gen_intermediate_code(CPUState *env,
                 if (bp->pc == pc_ptr &&
                     !((bp->flags & BP_CPU) && (tb->flags & HF_RF_MASK))) {
                     gen_debug(&dc, pc_ptr - dc.cs_base);
-                    break;
+                    goto done_generating;
                 }
             }
         }
@@ -7751,6 +7751,7 @@ void gen_intermediate_code(CPUState *env,
             break;
         }
     }
+done_generating:
     tb->size = pc_ptr - tb->pc;
     tb->disas_flags = !dc.code32;
     #ifdef TARGET_X86_64

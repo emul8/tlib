@@ -2773,7 +2773,7 @@ void gen_intermediate_code(CPUState *env,
                     gen_helper_debug();
                     tcg_gen_exit_tb(0);
                     dc.is_jmp = DISAS_JUMP;
-                    break;
+                    goto done_generating;
                 }
             }
         }
@@ -2810,8 +2810,9 @@ void gen_intermediate_code(CPUState *env,
         if ((dc.pc - tb->pc) >= (TARGET_PAGE_SIZE - 32)) {
             break;
         }
-    } 
+    }
 
+done_generating:
     tcg_temp_free(cpu_addr);
     tcg_temp_free(cpu_val);
     tcg_temp_free(cpu_dst);

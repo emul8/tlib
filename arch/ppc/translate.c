@@ -8040,7 +8040,7 @@ void gen_intermediate_code(CPUState *env,
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.nip) {
                     gen_debug_exception(&dc);
-                    break;
+                    goto done_generating;
                 }
             }
         }
@@ -8127,6 +8127,7 @@ void gen_intermediate_code(CPUState *env,
         /* Generate the return instruction */
         tcg_gen_exit_tb(0);
     }
+done_generating:
     tb->size = dc.nip - tb->pc;
     tb->disas_flags = env->bfd_mach | dc.le_mode << 16;
 }
