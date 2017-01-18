@@ -2801,7 +2801,7 @@ void gen_intermediate_code(CPUState *env,
         if (dc.singlestep_enabled) {
             break;
         }
-	if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
+        if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
             break;
         }
         if (tb->icount >= max_insns) {

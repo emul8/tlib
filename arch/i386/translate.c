@@ -7707,7 +7707,7 @@ void gen_intermediate_code(CPUState *env,
     cpu_ptr0 = tcg_temp_new_ptr();
     cpu_ptr1 = tcg_temp_new_ptr();
 
-    dc.is_jmp = DISAS_NEXT; // = 0
+    dc.is_jmp = DISAS_NEXT;
     pc_ptr = tb->pc;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)

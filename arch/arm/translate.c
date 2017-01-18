@@ -9966,7 +9966,6 @@ void gen_intermediate_code(CPUState *env,
                        invalidate this TB.  */
                     dc.pc += 2;
                     goto done_generating;
-                    break;
                 }
             }
         }
@@ -10005,13 +10004,13 @@ void gen_intermediate_code(CPUState *env,
          * ensures prefetch aborts occur at the right place.  */
         tb->icount++;
 
-	if (dc.is_jmp) {
+        if (dc.is_jmp) {
             break;
-	}
-	if (env->singlestep_enabled) {
-	    break;
-	}
-	if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
+        }
+        if (env->singlestep_enabled) {
+            break;
+        }
+        if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
             break;
         }
         if (dc.pc >= next_page_start) {
