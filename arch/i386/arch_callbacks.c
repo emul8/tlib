@@ -30,3 +30,5 @@ DEFAULT_VOID_HANDLER2(void tlib_write_byte_to_port, uint16_t address, uint8_t va
 DEFAULT_VOID_HANDLER2(void tlib_write_word_to_port, uint16_t address, uint16_t value)
 
 DEFAULT_VOID_HANDLER2(void tlib_write_double_word_to_port, uint16_t address, uint32_t value)
+
+DEFAULT_INT_HANDLER1(int32_t tlib_get_pending_interrupt, void)

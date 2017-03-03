@@ -1253,7 +1253,6 @@ void do_interrupt(CPUState *env1)
 void do_interrupt_x86_hardirq(CPUState *env1, int intno, int is_hw)
 {
     CPUState *saved_env;
-
     saved_env = env;
     env = env1;
     do_interrupt_all(intno, 0, 0, 0, is_hw);
