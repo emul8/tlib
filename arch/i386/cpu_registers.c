@@ -28,7 +28,29 @@ uint32_t* get_reg_pointer_32(int reg)
     {
         case EIP_32:
             return &(cpu->eip);
+        case EFLAGS_32:
+            return &(cpu->eflags);
+        case CS_32:
+            return &(cpu->segs[R_CS].base);
+        case SS_32:
+            return &(cpu->segs[R_SS].base);
+        case DS_32:
+            return &(cpu->segs[R_DS].base);
+        case ES_32:
+            return &(cpu->segs[R_ES].base);
+        case FS_32:
+            return &(cpu->segs[R_FS].base);
+        case GS_32:
+            return &(cpu->segs[R_GS].base);
         default:
+            if(reg >= EAX_32 && reg <= EDI_32)
+            {
+                return &(cpu->regs[reg]);
+            }
+            if(reg >= CR0_32 && reg <= CR4_32)
+            {
+                return &(cpu->cr[reg - CR0_32]);
+            }
             return NULL;
     }
 }
