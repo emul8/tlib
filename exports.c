@@ -67,7 +67,9 @@ int32_t tlib_init(char *cpu_name)
 
 static void free_phys_dirty()
 {
-  tlib_free(dirty_ram.phys_dirty);
+  if(dirty_ram.phys_dirty) {
+    tlib_free(dirty_ram.phys_dirty);
+  }
 }
 
 
