@@ -68,10 +68,8 @@ void apic_sipi(void *s) {
 	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
 }
 
-static uint64_t count = 0;
 uint64_t cpu_get_tsc(void *env) {
-	tlib_printf(LOG_LEVEL_WARNING, "%s(...)", __FUNCTION__);
-        return count++;
+    return tlib_get_instruction_count();
 }
 
 #endif
