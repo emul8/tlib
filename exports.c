@@ -271,6 +271,11 @@ void tlib_restore_context()
 
   pc = (unsigned long)global_retaddr;
   tb = tb_find_pc(pc);
+  if(tb == 0)
+  {
+    // this happens when PC is outside RAM or ROM
+    return;
+  }
   cpu_restore_state(cpu, tb, pc);
 }
 
