@@ -103,6 +103,7 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
     tcg_func_start(s);
 
     tb->icount = 0;
+    tb->size = 0;
     gen_block_header(tb);
     gen_intermediate_code(env, tb, 0);
     gen_block_footer(tb);
@@ -132,6 +133,7 @@ int cpu_restore_state(CPUState *env,
     tcg_func_start(s);
     memset((void*)tcg->gen_opc_instr_start, 0, OPC_BUF_SIZE);
     tb->icount = 0;
+    tb->size = 0;
     gen_block_header(tb);
     gen_intermediate_code(env, tb, 1);
     gen_block_footer(tb);

@@ -1456,7 +1456,7 @@ static inline TCGv get_src2(unsigned int insn, TCGv def)
         goto nfpu_insn;
 
 /* before an instruction, dc->pc must be static */
-static void disas_sparc_insn(DisasContext * dc)
+static int disas_insn(CPUState *env, DisasContext *dc)
 {
     unsigned int insn, opc, rs1, rs2, rd;
     TCGv cpu_src1, cpu_src2, cpu_tmp1, cpu_tmp2;
@@ -2728,13 +2728,13 @@ static void disas_sparc_insn(DisasContext * dc)
  egress:
     tcg_temp_free(cpu_tmp1);
     tcg_temp_free(cpu_tmp2);
+    return 4;
 }
 
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
                            int search_pc)
 {
-    target_ulong last_pc;
     DisasContext dc;
     CPUBreakpoint *bp;
     int max_insns;
@@ -2742,7 +2742,6 @@ void gen_intermediate_code(CPUState *env,
     dc.tb = tb;
     dc.is_jmp = DISAS_NEXT;
     dc.pc = tb->pc;
-    last_pc = dc.pc;
     dc.npc = (target_ulong) tb->cs_base;
     dc.cc_op = CC_OP_DYNAMIC;
     dc.mem_idx = cpu_mmu_index(env);
@@ -2783,15 +2782,16 @@ void gen_intermediate_code(CPUState *env,
 	    tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        last_pc = dc.pc;
-        disas_sparc_insn(&dc);
+        tb->size += disas_insn(env, &dc);
         tb->icount++;
 
-        if (dc.is_jmp)
+        if (dc.is_jmp) {
             break;
+	}
         /* if the next PC is different, we abort now */
-        if (dc.pc != (last_pc + 4))
+        if ((dc.pc - tb->pc) != tb->size) {
             break;
+	}
         /* if we reach a page boundary, we stop generation so that the
            PC of a TT_TFAULT exception is always in the right page */
         if ((dc.pc & (TARGET_PAGE_SIZE - 1)) == 0)
@@ -2807,7 +2807,7 @@ void gen_intermediate_code(CPUState *env,
         if (tb->icount >= max_insns) {
             break;
         }
-        if ((dc.pc - tb->pc) >= (TARGET_PAGE_SIZE - 32)) {
+        if (tb->size >= (TARGET_PAGE_SIZE - 32)) {
             break;
         }
     }
@@ -2835,7 +2835,6 @@ done_generating:
         gen_opc_jump_pc[0] = dc.jump_pc[0];
         gen_opc_jump_pc[1] = dc.jump_pc[1];
     }
-    tb->size = last_pc + 4 - tb->pc;
     tb->disas_flags = 0;
 }
 

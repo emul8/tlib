@@ -7994,16 +7994,67 @@ static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t 
         *op3 = (opcode >> op3_shift) & ((1 << op3_len) - 1);
 }
 
+int disas_insn(CPUState *env, DisasContext *dc) {
+    opc_handler_t **table, *handler;
+    uint32_t op1, op2, op3;
+
+    if (unlikely(dc->le_mode)) {
+        dc->opcode = bswap32(ldl_code(dc->pc));
+    } else {
+        dc->opcode = ldl_code(dc->pc);
+    }
+
+    if(dc->vle_enabled) // use the vle decoding function to obtain the opcodes
+    {
+        decode_vle_instruction(dc, &op1, &op2, &op3);
+        table = env->vle_opcodes;
+    }
+    else // use standard decoding macros
+    {
+        op1 = opc1(dc->opcode);
+        op2 = opc2(dc->opcode);
+        op3 = opc3(dc->opcode);
+        table = env->opcodes;
+    }
+
+    handler = table[op1];
+    if (is_indirect_opcode(handler)) {
+        table = ind_table(handler);
+        handler = table[op2];
+        if (is_indirect_opcode(handler)) {
+            table = ind_table(handler);
+            handler = table[op3];
+        }
+    }
+    dc->pc += handler->length;
+
+    /* Is opcode *REALLY* valid ? */
+    if (likely(handler->handler != &gen_invalid)) {
+        uint32_t inval;
+
+        if (unlikely(handler->type & (PPC_SPE | PPC_SPE_SINGLE | PPC_SPE_DOUBLE) && Rc(dc->opcode))) {
+            inval = handler->inval2;
+        } else {
+            inval = handler->inval1;
+        }
+
+        if (unlikely((dc->opcode & inval) != 0)) {
+            gen_inval_exception(dc, POWERPC_EXCP_INVAL_INVAL);
+            //break; // TODO
+        }
+    }
+    (*(handler->handler))(dc);
+    return handler->length;
+}
+
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb,
                            int search_pc)
 {
     DisasContext dc;
-    opc_handler_t **table, *handler;
     CPUBreakpoint *bp;
     int max_insns;
-    uint32_t op1, op2, op3;
 
     dc.pc = tb->pc;
     dc.tb = tb;
@@ -8049,59 +8100,9 @@ void gen_intermediate_code(CPUState *env,
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        if (unlikely(dc.le_mode)) {
-            dc.opcode = bswap32(ldl_code(dc.pc));
-        } else {
-            dc.opcode = ldl_code(dc.pc);
-        }
-
-        if(dc.vle_enabled) // use the vle decoding function to obtain the opcodes
-        {
-            decode_vle_instruction(&dc, &op1, &op2, &op3);
-        }
-        else // use standard decoding macros
-        {
-            op1 = opc1(dc.opcode);
-            op2 = opc2(dc.opcode);
-            op3 = opc3(dc.opcode);
-        }
-        if(dc.vle_enabled)
-        {
-            table = env->vle_opcodes;
-        }
-        else
-        {
-            table = env->opcodes;
-        }
-
+        tb->size += disas_insn(env, &dc);
         tb->icount++;
-        handler = table[op1];
-        if (is_indirect_opcode(handler)) {
-            table = ind_table(handler);
-            handler = table[op2];
-            if (is_indirect_opcode(handler)) {
-                table = ind_table(handler);
-                handler = table[op3];
-            }
-        }
-        dc.pc += handler->length;
 
-        /* Is opcode *REALLY* valid ? */
-        if (likely(handler->handler != &gen_invalid)) {
-            uint32_t inval;
-
-            if (unlikely(handler->type & (PPC_SPE | PPC_SPE_SINGLE | PPC_SPE_DOUBLE) && Rc(dc.opcode))) {
-                inval = handler->inval2;
-            } else {
-                inval = handler->inval1;
-            }
-
-            if (unlikely((dc.opcode & inval) != 0)) {
-                gen_inval_exception(&dc, POWERPC_EXCP_INVAL_INVAL);
-                break;
-            }
-        }
-        (*(handler->handler))(&dc);
         /* Check trace mode exceptions */
         if (unlikely(dc.singlestep_enabled & CPU_SINGLE_STEP &&
                      (dc.pc <= 0x100 || dc.pc > 0xF00) &&
@@ -8128,7 +8129,6 @@ void gen_intermediate_code(CPUState *env,
         tcg_gen_exit_tb(0);
     }
 done_generating:
-    tb->size = dc.pc - tb->pc;
     tb->disas_flags = env->bfd_mach | dc.le_mode << 16;
 }
 

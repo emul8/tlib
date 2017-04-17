@@ -9877,6 +9877,24 @@ undef:
     gen_exception_insn(s, 2, EXCP_UDEF);
 }
 
+int disas_insn(CPUState *env, DisasContext *dc) {
+    if (dc->thumb) {
+        disas_thumb_insn(env, dc);
+        if (dc->condexec_mask) {
+            dc->condexec_cond = (dc->condexec_cond & 0xe)
+                               | ((dc->condexec_mask >> 4) & 1);
+            dc->condexec_mask = (dc->condexec_mask << 1) & 0x1f;
+            if (dc->condexec_mask == 0) {
+                dc->condexec_cond = 0;
+            }
+        }
+        return 2;
+    } else {
+        disas_arm_insn(env, dc);
+        return 4;
+    }
+}
+
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
@@ -9975,19 +9993,8 @@ void gen_intermediate_code(CPUState *env,
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        if (dc.thumb) {
-            disas_thumb_insn(env, &dc);
-            if (dc.condexec_mask) {
-                dc.condexec_cond = (dc.condexec_cond & 0xe)
-                                   | ((dc.condexec_mask >> 4) & 1);
-                dc.condexec_mask = (dc.condexec_mask << 1) & 0x1f;
-                if (dc.condexec_mask == 0) {
-                    dc.condexec_cond = 0;
-                }
-            }
-        } else {
-            disas_arm_insn(env, &dc);
-        }
+	tb->size += disas_insn(env, &dc);
+        tb->icount++;
 
         if (dc.condjmp && !dc.is_jmp) {
             gen_set_label(dc.condlabel);
@@ -10002,7 +10009,6 @@ void gen_intermediate_code(CPUState *env,
          * Otherwise the subsequent code could get translated several times.
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
-        tb->icount++;
 
         if (dc.is_jmp) {
             break;
@@ -10086,7 +10092,6 @@ void gen_intermediate_code(CPUState *env,
     }
 
 done_generating:
-    tb->size = dc.pc - tb->pc;
     tb->disas_flags = dc.thumb;
 }
 

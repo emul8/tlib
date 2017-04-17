@@ -4075,15 +4075,15 @@ static void gen_sse(DisasContext *s, int b, target_ulong pc_start, int rex_r)
 
 /* convert one instruction. s->is_jmp is set if the translation must
    be stopped. Return the next pc value */
-static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
+static int disas_insn(CPUState *env, DisasContext *s)
 {
     int b, prefixes, aflag, dflag;
     int shift, ot;
     int modrm, reg, rm, mod, reg_addr, op, opreg, offset_addr, val;
-    target_ulong next_eip, tval;
+    target_ulong next_eip, tval, pc_start;
     int rex_w, rex_r;
 
-    s->pc = pc_start;
+    pc_start = s->pc;
     prefixes = 0;
     aflag = s->code32;
     dflag = s->code32;
@@ -7568,11 +7568,11 @@ static target_ulong disas_insn(DisasContext *s, target_ulong pc_start)
     default:
         goto illegal_op;
     }
-    return s->pc;
+    return (int)(s->pc - pc_start);
  illegal_op:
     /* XXX: ensure that no lock was generated */
     gen_exception(s, EXCP06_ILLOP, pc_start - s->cs_base);
-    return s->pc;
+    return (int)(s->pc - pc_start);
 }
 
 void translate_init(void)
@@ -7649,7 +7649,6 @@ void gen_intermediate_code(CPUState *env,
                            int search_pc)
 {
     DisasContext dc;
-    target_ulong pc_ptr;
     CPUBreakpoint *bp;
     uint64_t flags;
     target_ulong cs_base;
@@ -7708,7 +7707,7 @@ void gen_intermediate_code(CPUState *env,
     cpu_ptr1 = tcg_temp_new_ptr();
 
     dc.is_jmp = DISAS_NEXT;
-    pc_ptr = tb->pc;
+    dc.pc = tb->pc;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
@@ -7716,20 +7715,20 @@ void gen_intermediate_code(CPUState *env,
     while (!dc.is_jmp) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == pc_ptr &&
+                if (bp->pc == dc.pc &&
                     !((bp->flags & BP_CPU) && (tb->flags & HF_RF_MASK))) {
-                    gen_debug(&dc, pc_ptr - dc.cs_base);
+                    gen_debug(&dc, dc.pc - dc.cs_base);
                     goto done_generating;
                 }
             }
         }
         if (search_pc) {
-            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = pc_ptr;
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
             gen_opc_cc_op[gen_opc_ptr - tcg->gen_opc_buf] = dc.cc_op;
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        pc_ptr = disas_insn(&dc, pc_ptr);
+        tb->size += disas_insn(env, &dc);
         tb->icount++;
         /* if single step mode, we generate only one instruction and
            generate an exception */
@@ -7738,21 +7737,20 @@ void gen_intermediate_code(CPUState *env,
            change to be happen */
         if (dc.tf || dc.singlestep_enabled ||
             (flags & HF_INHIBIT_IRQ_MASK)) {
-            gen_jmp_im(pc_ptr - dc.cs_base);
+            gen_jmp_im(dc.pc - dc.cs_base);
             gen_eob(&dc);
             break;
         }
         /* if too long translation, stop generation too */
         if (((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) ||
-            (pc_ptr - tb->pc) >= (TARGET_PAGE_SIZE - 32) ||
+            (tb->size >= (TARGET_PAGE_SIZE - 32)) ||
             tb->icount >= max_insns) {
-            gen_jmp_im(pc_ptr - dc.cs_base);
+            gen_jmp_im(dc.pc - dc.cs_base);
             gen_eob(&dc);
             break;
         }
     }
 done_generating:
-    tb->size = pc_ptr - tb->pc;
     tb->disas_flags = !dc.code32;
     #ifdef TARGET_X86_64
     if (dc.code64) tb->disas_flags = 2;
