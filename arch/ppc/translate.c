@@ -153,7 +153,7 @@ void translate_init(void)
 typedef struct DisasContext {
     struct TranslationBlock *tb;
     int singlestep_enabled;
-    target_ulong nip;
+    target_ulong pc;
     uint32_t opcode;
     uint32_t exception;
     /* Routine used to access memory */
@@ -227,7 +227,7 @@ static inline void gen_exception_err(DisasContext *s, uint32_t excp, uint32_t er
 {
     TCGv_i32 t0, t1;
     if (s->exception == POWERPC_EXCP_NONE) {
-        gen_update_nip(s, s->nip);
+        gen_update_nip(s, s->pc);
     }
     t0 = tcg_const_i32(excp);
     t1 = tcg_const_i32(error);
@@ -241,7 +241,7 @@ static inline void gen_exception(DisasContext *s, uint32_t excp)
 {
     TCGv_i32 t0;
     if (s->exception == POWERPC_EXCP_NONE) {
-        gen_update_nip(s, s->nip);
+        gen_update_nip(s, s->pc);
     }
     t0 = tcg_const_i32(excp);
     gen_helper_raise_exception(t0);
@@ -255,7 +255,7 @@ static inline void gen_debug_exception(DisasContext *s)
 
     if ((s->exception != POWERPC_EXCP_BRANCH) &&
         (s->exception != POWERPC_EXCP_SYNC)) {
-        gen_update_nip(s, s->nip);
+        gen_update_nip(s, s->pc);
     }
     t0 = tcg_const_i32(EXCP_DEBUG);
     gen_helper_raise_exception(t0);
@@ -270,7 +270,7 @@ static inline void gen_inval_exception(DisasContext *s, uint32_t error)
 /* Stop translation */
 static inline void gen_stop_exception(DisasContext *s)
 {
-    gen_update_nip(s, s->nip);
+    gen_update_nip(s, s->pc);
     s->exception = POWERPC_EXCP_STOP;
 }
 
@@ -1381,7 +1381,7 @@ static void gen_f##name(DisasContext *s)                                    \
         return;                                                               \
     }                                                                         \
     /* NIP cannot be restored if the memory exception comes from an helper */ \
-    gen_update_nip(s, s->nip - 4);                                        \
+    gen_update_nip(s, s->pc - 4);                                        \
     gen_reset_fpstatus();                                                     \
     gen_helper_f##op(cpu_fpr[rD(s->opcode)], cpu_fpr[rA(s->opcode)],      \
                      cpu_fpr[rC(s->opcode)], cpu_fpr[rB(s->opcode)]);     \
@@ -1404,7 +1404,7 @@ static void gen_f##name(DisasContext *s)                                    \
         return;                                                               \
     }                                                                         \
     /* NIP cannot be restored if the memory exception comes from an helper */ \
-    gen_update_nip(s, s->nip - 4);                                        \
+    gen_update_nip(s, s->pc - 4);                                        \
     gen_reset_fpstatus();                                                     \
     gen_helper_f##op(cpu_fpr[rD(s->opcode)], cpu_fpr[rA(s->opcode)],      \
                      cpu_fpr[rB(s->opcode)]);                               \
@@ -1426,7 +1426,7 @@ static void gen_f##name(DisasContext *s)                                    \
         return;                                                               \
     }                                                                         \
     /* NIP cannot be restored if the memory exception comes from an helper */ \
-    gen_update_nip(s, s->nip - 4);                                        \
+    gen_update_nip(s, s->pc - 4);                                        \
     gen_reset_fpstatus();                                                     \
     gen_helper_f##op(cpu_fpr[rD(s->opcode)], cpu_fpr[rA(s->opcode)],      \
                        cpu_fpr[rC(s->opcode)]);                             \
@@ -1448,7 +1448,7 @@ static void gen_f##name(DisasContext *s)                                    \
         return;                                                               \
     }                                                                         \
     /* NIP cannot be restored if the memory exception comes from an helper */ \
-    gen_update_nip(s, s->nip - 4);                                        \
+    gen_update_nip(s, s->pc - 4);                                        \
     gen_reset_fpstatus();                                                     \
     gen_helper_f##name(cpu_fpr[rD(s->opcode)], cpu_fpr[rB(s->opcode)]);   \
     gen_compute_fprf(cpu_fpr[rD(s->opcode)],                                \
@@ -1463,7 +1463,7 @@ static void gen_f##name(DisasContext *s)                                    \
         return;                                                               \
     }                                                                         \
     /* NIP cannot be restored if the memory exception comes from an helper */ \
-    gen_update_nip(s, s->nip - 4);                                        \
+    gen_update_nip(s, s->pc - 4);                                        \
     gen_reset_fpstatus();                                                     \
     gen_helper_f##name(cpu_fpr[rD(s->opcode)], cpu_fpr[rB(s->opcode)]);   \
     gen_compute_fprf(cpu_fpr[rD(s->opcode)],                                \
@@ -1494,7 +1494,7 @@ static void gen_frsqrtes(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     gen_helper_frsqrte(cpu_fpr[rD(s->opcode)], cpu_fpr[rB(s->opcode)]);
     gen_helper_frsp(cpu_fpr[rD(s->opcode)], cpu_fpr[rD(s->opcode)]);
@@ -1515,7 +1515,7 @@ static void gen_fsqrt(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     gen_helper_fsqrt(cpu_fpr[rD(s->opcode)], cpu_fpr[rB(s->opcode)]);
     gen_compute_fprf(cpu_fpr[rD(s->opcode)], 1, Rc(s->opcode) != 0);
@@ -1528,7 +1528,7 @@ static void gen_fsqrts(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     gen_helper_fsqrt(cpu_fpr[rD(s->opcode)], cpu_fpr[rB(s->opcode)]);
     gen_helper_frsp(cpu_fpr[rD(s->opcode)], cpu_fpr[rD(s->opcode)]);
@@ -1573,7 +1573,7 @@ static void gen_fcmpo(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     crf = tcg_const_i32(crfD(s->opcode));
     gen_helper_fcmpo(cpu_fpr[rA(s->opcode)], cpu_fpr[rB(s->opcode)], crf);
@@ -1590,7 +1590,7 @@ static void gen_fcmpu(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     crf = tcg_const_i32(crfD(s->opcode));
     gen_helper_fcmpu(cpu_fpr[rA(s->opcode)], cpu_fpr[rB(s->opcode)], crf);
@@ -1665,7 +1665,7 @@ static void gen_mtfsb0(DisasContext *s)
     if (likely(crb != FPSCR_FEX && crb != FPSCR_VX)) {
         TCGv_i32 t0;
         /* NIP cannot be restored if the memory exception comes from an helper */
-        gen_update_nip(s, s->nip - 4);
+        gen_update_nip(s, s->pc - 4);
         t0 = tcg_const_i32(crb);
         gen_helper_fpscr_clrbit(t0);
         tcg_temp_free_i32(t0);
@@ -1690,7 +1690,7 @@ static void gen_mtfsb1(DisasContext *s)
     if (likely(crb != FPSCR_FEX && crb != FPSCR_VX && crb != FPSCR_NI)) {
         TCGv_i32 t0;
         /* NIP cannot be restored if the memory exception comes from an helper */
-        gen_update_nip(s, s->nip - 4);
+        gen_update_nip(s, s->pc - 4);
         t0 = tcg_const_i32(crb);
         gen_helper_fpscr_setbit(t0);
         tcg_temp_free_i32(t0);
@@ -1713,7 +1713,7 @@ static void gen_mtfsf(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     if (L)
         t0 = tcg_const_i32(0xff);
@@ -1742,7 +1742,7 @@ static void gen_mtfsfi(DisasContext *s)
     bf = crbD(s->opcode) >> 2;
     sh = 7 - bf;
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_reset_fpstatus();
     t0 = tcg_const_i64(FPIMM(s->opcode) << (4 * sh));
     t1 = tcg_const_i32(1 << sh);
@@ -1803,7 +1803,7 @@ static inline void gen_check_align(DisasContext *s, TCGv EA, int mask)
     TCGv t0 = tcg_temp_new();
     TCGv_i32 t1, t2;
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     tcg_gen_andi_tl(t0, EA, mask);
     tcg_gen_brcondi_tl(TCG_COND_EQ, t0, 0, l1);
     t1 = tcg_const_i32(POWERPC_EXCP_ALIGN);
@@ -2107,7 +2107,7 @@ static void gen_lmw(DisasContext *s)
     TCGv_i32 t1;
     gen_set_access_type(s, ACCESS_INT);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     t1 = tcg_const_i32(rD(s->opcode));
     gen_addr_imm_index(s, t0, 0);
@@ -2123,7 +2123,7 @@ static void gen_stmw(DisasContext *s)
     TCGv_i32 t1;
     gen_set_access_type(s, ACCESS_INT);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     t1 = tcg_const_i32(rS(s->opcode));
     gen_addr_imm_index(s, t0, 0);
@@ -2160,7 +2160,7 @@ static void gen_lswi(DisasContext *s)
     }
     gen_set_access_type(s, ACCESS_INT);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_register(s, t0);
     t1 = tcg_const_i32(nb);
@@ -2178,7 +2178,7 @@ static void gen_lswx(DisasContext *s)
     TCGv_i32 t1, t2, t3;
     gen_set_access_type(s, ACCESS_INT);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_reg_index(s, t0);
     t1 = tcg_const_i32(rD(s->opcode));
@@ -2199,7 +2199,7 @@ static void gen_stswi(DisasContext *s)
     int nb = NB(s->opcode);
     gen_set_access_type(s, ACCESS_INT);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_register(s, t0);
     if (nb == 0)
@@ -2219,7 +2219,7 @@ static void gen_stswx(DisasContext *s)
     TCGv_i32 t1, t2;
     gen_set_access_type(s, ACCESS_INT);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_reg_index(s, t0);
     t1 = tcg_temp_new_i32();
@@ -2510,10 +2510,10 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
             if ((s->singlestep_enabled &
                 (CPU_BRANCH_STEP | CPU_SINGLE_STEP)) &&
                 s->exception == POWERPC_EXCP_BRANCH) {
-                target_ulong tmp = s->nip;
-                s->nip = dest;
+                target_ulong tmp = s->pc;
+                s->pc = dest;
                 gen_exception(s, POWERPC_EXCP_TRACE);
-                s->nip = tmp;
+                s->pc = tmp;
             }
             if (s->singlestep_enabled & GDBSTUB_SINGLE_STEP) {
                 gen_debug_exception(s);
@@ -2537,11 +2537,11 @@ static void gen_b(DisasContext *s)
     /* sign extend LI */
     li = ((int32_t)LI(s->opcode) << 6) >> 6;
     if (likely(AA(s->opcode) == 0))
-        target = s->nip + li - 4;
+        target = s->pc + li - 4;
     else
         target = li;
     if (LK(s->opcode))
-        gen_setlr(s, s->nip);
+        gen_setlr(s, s->pc);
     gen_goto_tb(s, 0, target);
 }
 
@@ -2566,7 +2566,7 @@ static inline void gen_bcond(DisasContext *s, int type)
         TCGV_UNUSED(target);
     }
     if (LK(s->opcode))
-        gen_setlr(s, s->nip);
+        gen_setlr(s, s->pc);
     l1 = gen_new_label();
     if ((bo & 0x4) == 0) {
         /* Decrement and test CTR */
@@ -2602,17 +2602,17 @@ static inline void gen_bcond(DisasContext *s, int type)
     if (type == BCOND_IM) {
         target_ulong li = (target_long)((int16_t)(BD(s->opcode)));
         if (likely(AA(s->opcode) == 0)) {
-            gen_goto_tb(s, 0, s->nip + li - 4);
+            gen_goto_tb(s, 0, s->pc + li - 4);
         } else {
             gen_goto_tb(s, 0, li);
         }
         gen_set_label(l1);
-        gen_goto_tb(s, 1, s->nip);
+        gen_goto_tb(s, 1, s->pc);
     } else {
         tcg_gen_andi_tl(cpu_nip, target, ~3);
         tcg_gen_exit_tb(0);
         gen_set_label(l1);
-        tcg_gen_movi_tl(cpu_nip, s->nip);
+        tcg_gen_movi_tl(cpu_nip, s->pc);
         tcg_gen_exit_tb(0);
     }
 }
@@ -2718,7 +2718,7 @@ static void gen_tw(DisasContext *s)
 {
     TCGv_i32 t0 = tcg_const_i32(TO(s->opcode));
     /* Update the nip since this might generate a trap exception */
-    gen_update_nip(s, s->nip);
+    gen_update_nip(s, s->pc);
     gen_helper_tw(cpu_gpr[rA(s->opcode)], cpu_gpr[rB(s->opcode)], t0);
     tcg_temp_free_i32(t0);
 }
@@ -2729,7 +2729,7 @@ static void gen_twi(DisasContext *s)
     TCGv t0 = tcg_const_tl(SIMM(s->opcode));
     TCGv_i32 t1 = tcg_const_i32(TO(s->opcode));
     /* Update the nip since this might generate a trap exception */
-    gen_update_nip(s, s->nip);
+    gen_update_nip(s, s->pc);
     gen_helper_tw(cpu_gpr[rA(s->opcode)], t0, t1);
     tcg_temp_free(t0);
     tcg_temp_free_i32(t1);
@@ -2884,7 +2884,7 @@ static void gen_mtmsr(DisasContext *s)
          *      if we enter power saving mode, we will exit the loop
          *      directly from ppc_store_msr
          */
-        gen_update_nip(s, s->nip);
+        gen_update_nip(s, s->pc);
         tcg_gen_mov_tl(msr, cpu_gpr[rS(s->opcode)]);
         gen_helper_store_msr(msr);
         /* Must stop the translation as machine state (may have) changed */
@@ -2987,7 +2987,7 @@ static void gen_dcbz(DisasContext *s)
     TCGv t0;
     gen_set_access_type(s, ACCESS_CACHE);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_reg_index(s, t0);
     gen_helper_dcbz(t0);
@@ -2999,7 +2999,7 @@ static void gen_dcbz_970(DisasContext *s)
     TCGv t0;
     gen_set_access_type(s, ACCESS_CACHE);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_reg_index(s, t0);
     if (s->opcode & 0x00200000)
@@ -3042,7 +3042,7 @@ static void gen_icbi(DisasContext *s)
     TCGv t0;
     gen_set_access_type(s, ACCESS_CACHE);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     t0 = tcg_temp_new();
     gen_addr_reg_index(s, t0);
     gen_helper_icbi(t0);
@@ -3343,7 +3343,7 @@ static void gen_lscbx(DisasContext *s)
 
     gen_addr_reg_index(s, t0);
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_helper_lscbx(t0, t0, t1, t2, t3);
     tcg_temp_free_i32(t1);
     tcg_temp_free_i32(t2);
@@ -4353,7 +4353,7 @@ static void gen_mfdcr(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     dcrn = tcg_const_tl(SPR(s->opcode));
     gen_helper_load_dcr(cpu_gpr[rD(s->opcode)], dcrn);
     tcg_temp_free(dcrn);
@@ -4368,7 +4368,7 @@ static void gen_mtdcr(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     dcrn = tcg_const_tl(SPR(s->opcode));
     gen_helper_store_dcr(dcrn, cpu_gpr[rS(s->opcode)]);
     tcg_temp_free(dcrn);
@@ -4383,7 +4383,7 @@ static void gen_mfdcrx(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_helper_load_dcr(cpu_gpr[rD(s->opcode)], cpu_gpr[rA(s->opcode)]);
     /* Note: Rc update flag set leads to undefined state of Rc0 */
 }
@@ -4397,7 +4397,7 @@ static void gen_mtdcrx(DisasContext *s)
         return;
     }
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_helper_store_dcr(cpu_gpr[rA(s->opcode)], cpu_gpr[rS(s->opcode)]);
     /* Note: Rc update flag set leads to undefined state of Rc0 */
 }
@@ -4406,7 +4406,7 @@ static void gen_mtdcrx(DisasContext *s)
 static void gen_mfdcrux(DisasContext *s)
 {
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_helper_load_dcr(cpu_gpr[rD(s->opcode)], cpu_gpr[rA(s->opcode)]);
     /* Note: Rc update flag set leads to undefined state of Rc0 */
 }
@@ -4415,7 +4415,7 @@ static void gen_mfdcrux(DisasContext *s)
 static void gen_mtdcrux(DisasContext *s)
 {
     /* NIP cannot be restored if the memory exception comes from an helper */
-    gen_update_nip(s, s->nip - 4);
+    gen_update_nip(s, s->pc - 4);
     gen_helper_store_dcr(cpu_gpr[rA(s->opcode)], cpu_gpr[rS(s->opcode)]);
     /* Note: Rc update flag set leads to undefined state of Rc0 */
 }
@@ -8005,7 +8005,7 @@ void gen_intermediate_code(CPUState *env,
     int max_insns;
     uint32_t op1, op2, op3;
 
-    dc.nip = tb->pc;
+    dc.pc = tb->pc;
     dc.tb = tb;
     dc.exception = POWERPC_EXCP_NONE;
     dc.spr_cb = env->spr_cb;
@@ -8038,21 +8038,21 @@ void gen_intermediate_code(CPUState *env,
     while (dc.exception == POWERPC_EXCP_NONE && ((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE)) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.nip) {
+                if (bp->pc == dc.pc) {
                     gen_debug_exception(&dc);
                     goto done_generating;
                 }
             }
         }
         if (unlikely(search_pc)) {
-            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.nip;
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
         if (unlikely(dc.le_mode)) {
-            dc.opcode = bswap32(ldl_code(dc.nip));
+            dc.opcode = bswap32(ldl_code(dc.pc));
         } else {
-            dc.opcode = ldl_code(dc.nip);
+            dc.opcode = ldl_code(dc.pc);
         }
 
         if(dc.vle_enabled) // use the vle decoding function to obtain the opcodes
@@ -8084,7 +8084,7 @@ void gen_intermediate_code(CPUState *env,
                 handler = table[op3];
             }
         }
-        dc.nip += handler->length;
+        dc.pc += handler->length;
 
         /* Is opcode *REALLY* valid ? */
         if (likely(handler->handler != &gen_invalid)) {
@@ -8104,12 +8104,12 @@ void gen_intermediate_code(CPUState *env,
         (*(handler->handler))(&dc);
         /* Check trace mode exceptions */
         if (unlikely(dc.singlestep_enabled & CPU_SINGLE_STEP &&
-                     (dc.nip <= 0x100 || dc.nip > 0xF00) &&
+                     (dc.pc <= 0x100 || dc.pc > 0xF00) &&
                      dc.exception != POWERPC_SYSCALL &&
                      dc.exception != POWERPC_EXCP_TRAP &&
                      dc.exception != POWERPC_EXCP_BRANCH)) {
             gen_exception(&dc, POWERPC_EXCP_TRACE);
-        } else if (unlikely(((dc.nip & (TARGET_PAGE_SIZE - 1)) == 0) ||
+        } else if (unlikely(((dc.pc & (TARGET_PAGE_SIZE - 1)) == 0) ||
                             (env->singlestep_enabled) ||
                             tb->icount >= max_insns)) {
             /* if we reach a page boundary or are single stepping, stop
@@ -8119,7 +8119,7 @@ void gen_intermediate_code(CPUState *env,
         }
     }
     if (dc.exception == POWERPC_EXCP_NONE) {
-        gen_goto_tb(&dc, 0, dc.nip);
+        gen_goto_tb(&dc, 0, dc.pc);
     } else if (dc.exception != POWERPC_EXCP_BRANCH) {
         if (unlikely(env->singlestep_enabled)) {
             gen_debug_exception(&dc);
@@ -8128,7 +8128,7 @@ void gen_intermediate_code(CPUState *env,
         tcg_gen_exit_tb(0);
     }
 done_generating:
-    tb->size = dc.nip - tb->pc;
+    tb->size = dc.pc - tb->pc;
     tb->disas_flags = env->bfd_mach | dc.le_mode << 16;
 }
 
