@@ -7645,8 +7645,7 @@ void translate_init(void)
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
 void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb,
-                           int search_pc)
+                           TranslationBlock *tb)
 {
     DisasContext dc;
     CPUBreakpoint *bp;
@@ -7722,7 +7721,7 @@ void gen_intermediate_code(CPUState *env,
                 }
             }
         }
-        if (search_pc) {
+        if (tb->search_pc) {
             tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
             gen_opc_cc_op[gen_opc_ptr - tcg->gen_opc_buf] = dc.cc_op;
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;

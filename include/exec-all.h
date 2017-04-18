@@ -40,7 +40,7 @@ typedef ram_addr_t tb_page_addr_t;
 struct TranslationBlock;
 typedef struct TranslationBlock TranslationBlock;
 
-void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb, int search_pc);
+void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb);
 void restore_state_to_opc(CPUState *env, struct TranslationBlock *tb,
                           int pc_pos);
 
@@ -106,6 +106,7 @@ struct TranslationBlock {
     struct TranslationBlock *jmp_next[2];
     struct TranslationBlock *jmp_first;
     uint32_t icount;
+    int search_pc;
 };
 
 static inline unsigned int tb_jmp_cache_hash_page(target_ulong pc)

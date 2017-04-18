@@ -8049,8 +8049,7 @@ int disas_insn(CPUState *env, DisasContext *dc) {
 
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb,
-                           int search_pc)
+                           TranslationBlock *tb)
 {
     DisasContext dc;
     CPUBreakpoint *bp;
@@ -8095,7 +8094,7 @@ void gen_intermediate_code(CPUState *env,
                 }
             }
         }
-        if (unlikely(search_pc)) {
+        if (tb->search_pc) {
             tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }

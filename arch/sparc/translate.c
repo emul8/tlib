@@ -2732,8 +2732,7 @@ static int disas_insn(CPUState *env, DisasContext *dc)
 }
 
 void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb,
-                           int search_pc)
+                           TranslationBlock *tb)
 {
     DisasContext dc;
     CPUBreakpoint *bp;
@@ -2776,7 +2775,7 @@ void gen_intermediate_code(CPUState *env,
                 }
             }
         }
-        if (search_pc) {
+        if (tb->search_pc) {
 	    tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
 	    gen_opc_npc[gen_opc_ptr - tcg->gen_opc_buf] = dc.npc;
 	    tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
@@ -2831,7 +2830,7 @@ done_generating:
             tcg_gen_exit_tb(0);
         }
     }
-    if (search_pc) {
+    if (tb->search_pc) {
         gen_opc_jump_pc[0] = dc.jump_pc[0];
         gen_opc_jump_pc[1] = dc.jump_pc[1];
     }

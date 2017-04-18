@@ -9901,8 +9901,7 @@ int disas_insn(CPUState *env, DisasContext *dc) {
 
 
 void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb,
-                           int search_pc)
+                           TranslationBlock *tb)
 {
     DisasContext dc;
     CPUBreakpoint *bp;
@@ -9987,7 +9986,7 @@ void gen_intermediate_code(CPUState *env,
                 }
             }
         }
-        if (search_pc) {
+        if (tb->search_pc) {
             tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
             gen_opc_condexec_bits[gen_opc_ptr - tcg->gen_opc_buf] = (dc.condexec_cond << 4) | (dc.condexec_mask >> 1);
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
