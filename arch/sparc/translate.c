@@ -2758,6 +2758,16 @@ void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb)
     cpu_addr = tcg_temp_local_new();
 }
 
+int gen_breakpoint(DisasContext *dc, CPUBreakpoint *bp) {
+    if (dc->pc != dc->tb->pc) {
+        save_state(dc, cpu_cond);
+    }
+    gen_helper_debug();
+    tcg_gen_exit_tb(0);
+    dc->is_jmp = DISAS_JUMP;
+    return 1;
+}
+
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb)
 {
@@ -2777,12 +2787,9 @@ void gen_intermediate_code(CPUState *env,
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
-                    if (dc.pc != tb->pc)
-                        save_state(&dc, cpu_cond);
-                    gen_helper_debug();
-                    tcg_gen_exit_tb(0);
-                    dc.is_jmp = DISAS_JUMP;
-                    goto done_generating;
+                    if (gen_breakpoint(&dc, bp)) {
+                        goto done_generating;
+                    }
                 }
             }
         }

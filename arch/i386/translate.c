@@ -7700,6 +7700,14 @@ void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb)
     cpu_ptr1 = tcg_temp_new_ptr();
 }
 
+int gen_breakpoint(DisasContext *dc, CPUBreakpoint *bp) {
+    if (!((bp->flags & BP_CPU) && (dc->tb->flags & HF_RF_MASK))) {
+        gen_debug(dc, dc->pc - dc->cs_base);
+        return 1;
+    }
+    return 0;
+}
+
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
@@ -7721,10 +7729,10 @@ void gen_intermediate_code(CPUState *env,
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc &&
-                    !((bp->flags & BP_CPU) && (tb->flags & HF_RF_MASK))) {
-                    gen_debug(&dc, dc.pc - dc.cs_base);
-                    goto done_generating;
+                if (bp->pc == dc.pc) {
+                    if (gen_breakpoint(&dc, bp)) {
+                        goto done_generating;
+                    }
                 }
             }
         }
@@ -7742,7 +7750,7 @@ void gen_intermediate_code(CPUState *env,
            the flag and abort the translation to give the irqs a
            change to be happen */
         if (dc.tf || dc.singlestep_enabled ||
-            (flags & HF_INHIBIT_IRQ_MASK)) {
+            (dc.flags & HF_INHIBIT_IRQ_MASK)) {
             gen_jmp_im(dc.pc - dc.cs_base);
             gen_eob(&dc);
             break;

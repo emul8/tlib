@@ -8079,6 +8079,11 @@ void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb)
         dc->singlestep_enabled |= GDBSTUB_SINGLE_STEP;
 }
 
+int gen_breakpoint(DisasContext *dc, CPUBreakpoint *bp) {
+    gen_debug_exception(dc);
+    return 1;
+}
+
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb)
@@ -8100,8 +8105,9 @@ void gen_intermediate_code(CPUState *env,
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
-                    gen_debug_exception(&dc);
-                    goto done_generating;
+                    if (gen_breakpoint(&dc, bp)) {
+                        goto done_generating;
+                    }
                 }
             }
         }

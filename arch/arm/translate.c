@@ -9962,6 +9962,14 @@ void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb)
       }
 }
 
+int gen_breakpoint(DisasContext *dc, CPUBreakpoint *bp) {
+    gen_exception_insn(dc, 0, EXCP_DEBUG);
+    /* Advance PC so that clearing the breakpoint will
+      invalidate this TB.  */
+    dc->pc += 2;
+    return 1;
+}
+
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
@@ -9986,11 +9994,9 @@ void gen_intermediate_code(CPUState *env,
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
-                    gen_exception_insn(&dc, 0, EXCP_DEBUG);
-                    /* Advance PC so that clearing the breakpoint will
-                       invalidate this TB.  */
-                    dc.pc += 2;
-                    goto done_generating;
+                    if (gen_breakpoint(&dc, bp)) {
+                        goto done_generating;
+                    }
                 }
             }
         }
