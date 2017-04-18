@@ -7648,55 +7648,42 @@ uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
     return !(dc->code32);
 }
 
-/* generate intermediate code in gen_opc_buf and gen_opparam_buf for
-   basic block 'tb'. If search_pc is TRUE, also generate PC
-   information for each intermediate instruction. */
-void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb)
-{
-    DisasContext dc;
-    CPUBreakpoint *bp;
-    uint64_t flags;
-    target_ulong cs_base;
-    int max_insns;
-
-    /* generate intermediate code */
-    cs_base = tb->cs_base;
-    flags = tb->flags;
-
-    dc.pe = (flags >> HF_PE_SHIFT) & 1;
-    dc.code32 = (flags >> HF_CS32_SHIFT) & 1;
-    dc.ss32 = (flags >> HF_SS32_SHIFT) & 1;
-    dc.addseg = (flags >> HF_ADDSEG_SHIFT) & 1;
-    dc.f_st = 0;
-    dc.vm86 = (flags >> VM_SHIFT) & 1;
-    dc.cpl = (flags >> HF_CPL_SHIFT) & 3;
-    dc.iopl = (flags >> IOPL_SHIFT) & 3;
-    dc.tf = (flags >> TF_SHIFT) & 1;
-    dc.singlestep_enabled = env->singlestep_enabled;
-    dc.cc_op = CC_OP_DYNAMIC;
-    dc.cs_base = cs_base;
-    dc.tb = tb;
-    dc.popl_esp_hack = 0;
+void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb) {
+    dc->is_jmp = DISAS_NEXT;
+    dc->pc = tb->pc;
+    dc->pe = (tb->flags >> HF_PE_SHIFT) & 1;
+    dc->code32 = (tb->flags >> HF_CS32_SHIFT) & 1;
+    dc->ss32 = (tb->flags >> HF_SS32_SHIFT) & 1;
+    dc->addseg = (tb->flags >> HF_ADDSEG_SHIFT) & 1;
+    dc->f_st = 0;
+    dc->vm86 = (tb->flags >> VM_SHIFT) & 1;
+    dc->cpl = (tb->flags >> HF_CPL_SHIFT) & 3;
+    dc->iopl = (tb->flags >> IOPL_SHIFT) & 3;
+    dc->tf = (tb->flags >> TF_SHIFT) & 1;
+    dc->singlestep_enabled = env->singlestep_enabled;
+    dc->cc_op = CC_OP_DYNAMIC;
+    dc->cs_base = tb->cs_base;
+    dc->tb = tb;
+    dc->popl_esp_hack = 0;
     /* select memory access functions */
-    dc.mem_index = 0;
-    if (flags & HF_SOFTMMU_MASK) {
-        if (dc.cpl == 3)
-            dc.mem_index = 2 * 4;
+    dc->mem_index = 0;
+    if (tb->flags & HF_SOFTMMU_MASK) {
+        if (dc->cpl == 3)
+            dc->mem_index = 2 * 4;
         else
-            dc.mem_index = 1 * 4;
+            dc->mem_index = 1 * 4;
     }
-    dc.cpuid_features = env->cpuid_features;
-    dc.cpuid_ext_features = env->cpuid_ext_features;
-    dc.cpuid_ext2_features = env->cpuid_ext2_features;
-    dc.cpuid_ext3_features = env->cpuid_ext3_features;
+    dc->cpuid_features = env->cpuid_features;
+    dc->cpuid_ext_features = env->cpuid_ext_features;
+    dc->cpuid_ext2_features = env->cpuid_ext2_features;
+    dc->cpuid_ext3_features = env->cpuid_ext3_features;
 #ifdef TARGET_X86_64
-    dc.lma = (flags >> HF_LMA_SHIFT) & 1;
-    dc.code64 = (flags >> HF_CS64_SHIFT) & 1;
+    dc->lma = (tb->flags >> HF_LMA_SHIFT) & 1;
+    dc->code64 = (tb->flags >> HF_CS64_SHIFT) & 1;
 #endif
-    dc.flags = flags;
-    dc.jmp_opt = !(dc.tf || env->singlestep_enabled ||
-                    (flags & HF_INHIBIT_IRQ_MASK));
+    dc->flags = tb->flags;
+    dc->jmp_opt = !(dc->tf || env->singlestep_enabled ||
+                    (tb->flags & HF_INHIBIT_IRQ_MASK));
 
     cpu_T[0] = tcg_temp_new();
     cpu_T[1] = tcg_temp_new();
@@ -7711,14 +7698,27 @@ void gen_intermediate_code(CPUState *env,
     cpu_tmp5 = tcg_temp_new();
     cpu_ptr0 = tcg_temp_new_ptr();
     cpu_ptr1 = tcg_temp_new_ptr();
+}
 
-    dc.is_jmp = DISAS_NEXT;
-    dc.pc = tb->pc;
+/* generate intermediate code in gen_opc_buf and gen_opparam_buf for
+   basic block 'tb'. If search_pc is TRUE, also generate PC
+   information for each intermediate instruction. */
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb)
+{
+    DisasContext dc;
+    CPUBreakpoint *bp;
+    int max_insns;
+
+    create_disas_context(&dc, env, tb);
+
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
 
-    while (!dc.is_jmp) {
+    tcg_clear_temp_count();
+
+    while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc &&
@@ -7753,6 +7753,9 @@ void gen_intermediate_code(CPUState *env,
             tb->icount >= max_insns) {
             gen_jmp_im(dc.pc - dc.cs_base);
             gen_eob(&dc);
+            break;
+        }
+        if (dc.is_jmp) {
             break;
         }
     }

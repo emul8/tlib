@@ -8051,6 +8051,34 @@ uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
     return env->bfd_mach | dc->le_mode << 16;
 }
 
+void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb) {
+    dc->pc = tb->pc;
+    dc->tb = tb;
+    dc->exception = POWERPC_EXCP_NONE;
+    dc->spr_cb = env->spr_cb;
+    dc->mem_idx = env->mmu_idx;
+    dc->access_type = -1;
+    dc->le_mode = env->hflags & (1 << MSR_LE) ? 1 : 0;
+    dc->fpu_enabled = msr_fp;
+    dc->vle_enabled = tlib_is_vle_enabled();
+    if ((env->flags & POWERPC_FLAG_SPE) && msr_spe)
+        dc->spe_enabled = msr_spe;
+    else
+        dc->spe_enabled = 0;
+    if ((env->flags & POWERPC_FLAG_VRE) && msr_vr)
+        dc->altivec_enabled = msr_vr;
+    else
+        dc->altivec_enabled = 0;
+    if ((env->flags & POWERPC_FLAG_SE) && msr_se)
+        dc->singlestep_enabled = CPU_SINGLE_STEP;
+    else
+        dc->singlestep_enabled = 0;
+    if ((env->flags & POWERPC_FLAG_BE) && msr_be)
+        dc->singlestep_enabled |= CPU_BRANCH_STEP;
+    if (unlikely(env->singlestep_enabled))
+        dc->singlestep_enabled |= GDBSTUB_SINGLE_STEP;
+}
+
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb)
@@ -8059,37 +8087,16 @@ void gen_intermediate_code(CPUState *env,
     CPUBreakpoint *bp;
     int max_insns;
 
-    dc.pc = tb->pc;
-    dc.tb = tb;
-    dc.exception = POWERPC_EXCP_NONE;
-    dc.spr_cb = env->spr_cb;
-    dc.mem_idx = env->mmu_idx;
-    dc.access_type = -1;
-    dc.le_mode = env->hflags & (1 << MSR_LE) ? 1 : 0;
-    dc.fpu_enabled = msr_fp;
-    dc.vle_enabled = tlib_is_vle_enabled();
-    if ((env->flags & POWERPC_FLAG_SPE) && msr_spe)
-        dc.spe_enabled = msr_spe;
-    else
-        dc.spe_enabled = 0;
-    if ((env->flags & POWERPC_FLAG_VRE) && msr_vr)
-        dc.altivec_enabled = msr_vr;
-    else
-        dc.altivec_enabled = 0;
-    if ((env->flags & POWERPC_FLAG_SE) && msr_se)
-        dc.singlestep_enabled = CPU_SINGLE_STEP;
-    else
-        dc.singlestep_enabled = 0;
-    if ((env->flags & POWERPC_FLAG_BE) && msr_be)
-        dc.singlestep_enabled |= CPU_BRANCH_STEP;
-    if (unlikely(env->singlestep_enabled))
-        dc.singlestep_enabled |= GDBSTUB_SINGLE_STEP;
+    create_disas_context(&dc, env, tb);
+
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
 
+    tcg_clear_temp_count();
+
     /* Set env in case of segfault during code fetch */
-    while (dc.exception == POWERPC_EXCP_NONE && ((gen_opc_ptr - tcg->gen_opc_buf) < OPC_MAX_SIZE)) {
+    while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
@@ -8119,6 +8126,12 @@ void gen_intermediate_code(CPUState *env,
             /* if we reach a page boundary or are single stepping, stop
              * generation
              */
+            break;
+        }
+        if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
+            break;
+        }
+        if (dc.exception != POWERPC_EXCP_NONE) {
             break;
         }
     }

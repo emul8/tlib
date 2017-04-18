@@ -9899,31 +9899,19 @@ uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
     return dc->thumb;
 }
 
-/* generate intermediate code in gen_opc_buf and gen_opparam_buf for
-   basic block 'tb'. If search_pc is TRUE, also generate PC
-   information for each intermediate instruction. */
-
-
-void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb)
-{
-    DisasContext dc;
-    CPUBreakpoint *bp;
-    uint32_t next_page_start;
-    int max_insns;
-
-    dc.tb = tb;
-    dc.is_jmp = DISAS_NEXT;
-    dc.pc = tb->pc;
-    dc.singlestep_enabled = env->singlestep_enabled;
-    dc.condjmp = 0;
-    dc.thumb = ARM_TBFLAG_THUMB(tb->flags);
-    dc.condexec_mask = (ARM_TBFLAG_CONDEXEC(tb->flags) & 0xf) << 1;
-    dc.condexec_cond = ARM_TBFLAG_CONDEXEC(tb->flags) >> 4;
-    dc.user = (ARM_TBFLAG_PRIV(tb->flags) == 0);
-    dc.vfp_enabled = ARM_TBFLAG_VFPEN(tb->flags);
-    dc.vec_len = ARM_TBFLAG_VECLEN(tb->flags);
-    dc.vec_stride = ARM_TBFLAG_VECSTRIDE(tb->flags);
+void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb) {
+    dc->tb = tb;
+    dc->is_jmp = DISAS_NEXT;
+    dc->pc = tb->pc;
+    dc->singlestep_enabled = env->singlestep_enabled;
+    dc->condjmp = 0;
+    dc->thumb = ARM_TBFLAG_THUMB(tb->flags);
+    dc->condexec_mask = (ARM_TBFLAG_CONDEXEC(tb->flags) & 0xf) << 1;
+    dc->condexec_cond = ARM_TBFLAG_CONDEXEC(tb->flags) >> 4;
+    dc->user = (ARM_TBFLAG_PRIV(tb->flags) == 0);
+    dc->vfp_enabled = ARM_TBFLAG_VFPEN(tb->flags);
+    dc->vec_len = ARM_TBFLAG_VECLEN(tb->flags);
+    dc->vec_stride = ARM_TBFLAG_VECSTRIDE(tb->flags);
     cpu_F0s = tcg_temp_new_i32();
     cpu_F1s = tcg_temp_new_i32();
     cpu_F0d = tcg_temp_new_i64();
@@ -9932,12 +9920,6 @@ void gen_intermediate_code(CPUState *env,
     cpu_V1 = cpu_F1d;
     /* FIXME: cpu_M0 can probably be the same as cpu_V0.  */
     cpu_M0 = tcg_temp_new_i64();
-    next_page_start = (tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
-    max_insns = tb->cflags & CF_COUNT_MASK;
-    if (max_insns == 0)
-        max_insns = maximum_block_size;
-
-    tcg_clear_temp_count();
 
     /* A note on handling of the condexec (IT) bits:
      *
@@ -9972,13 +9954,35 @@ void gen_intermediate_code(CPUState *env,
 
     /* Reset the conditional execution bits immediately. This avoids
        complications trying to do it at the end of the block.  */
-    if (dc.condexec_mask || dc.condexec_cond)
+    if (dc->condexec_mask || dc->condexec_cond)
       {
         TCGv tmp = tcg_temp_new_i32();
         tcg_gen_movi_i32(tmp, 0);
         store_cpu_field(tmp, condexec_bits);
       }
-    while (!dc.is_jmp) {
+}
+
+/* generate intermediate code in gen_opc_buf and gen_opparam_buf for
+   basic block 'tb'. If search_pc is TRUE, also generate PC
+   information for each intermediate instruction. */
+
+
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb)
+{
+    DisasContext dc;
+    CPUBreakpoint *bp;
+    int max_insns;
+
+    create_disas_context(&dc, env, tb);
+
+    max_insns = tb->cflags & CF_COUNT_MASK;
+    if (max_insns == 0)
+        max_insns = maximum_block_size;
+
+    tcg_clear_temp_count();
+
+    while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
@@ -10022,7 +10026,7 @@ void gen_intermediate_code(CPUState *env,
         if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
             break;
         }
-        if (dc.pc >= next_page_start) {
+        if (dc.pc >= ((tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE)) {
             break;
         }
         if (tb->icount >= max_insns) {

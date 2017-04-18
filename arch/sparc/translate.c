@@ -2735,23 +2735,17 @@ uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
     return 0;
 }
 
-void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb)
-{
-    DisasContext dc;
-    CPUBreakpoint *bp;
-    int max_insns;
-
-    dc.tb = tb;
-    dc.is_jmp = DISAS_NEXT;
-    dc.pc = tb->pc;
-    dc.npc = (target_ulong) tb->cs_base;
-    dc.cc_op = CC_OP_DYNAMIC;
-    dc.mem_idx = cpu_mmu_index(env);
-    dc.def = env->def;
-    dc.fpu_enabled = tb_fpu_enabled(tb->flags);
-    dc.address_mask_32bit = tb_am_enabled(tb->flags);
-    dc.singlestep_enabled = (env->singlestep_enabled);
+void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb) {
+    dc->tb = tb;
+    dc->is_jmp = DISAS_NEXT;
+    dc->pc = tb->pc;
+    dc->npc = (target_ulong) tb->cs_base;
+    dc->cc_op = CC_OP_DYNAMIC;
+    dc->mem_idx = cpu_mmu_index(env);
+    dc->def = env->def;
+    dc->fpu_enabled = tb_fpu_enabled(tb->flags);
+    dc->address_mask_32bit = tb_am_enabled(tb->flags);
+    dc->singlestep_enabled = (env->singlestep_enabled);
 
     cpu_tmp0 = tcg_temp_new();
     cpu_tmp32 = tcg_temp_new_i32();
@@ -2762,11 +2756,24 @@ void gen_intermediate_code(CPUState *env,
     // loads and stores
     cpu_val = tcg_temp_local_new();
     cpu_addr = tcg_temp_local_new();
+}
+
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb)
+{
+    DisasContext dc;
+    CPUBreakpoint *bp;
+    int max_insns;
+
+    create_disas_context(&dc, env, tb);
 
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
-    while (!dc.is_jmp) {
+
+    tcg_clear_temp_count();
+
+    while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
                 if (bp->pc == dc.pc) {
