@@ -2731,6 +2731,10 @@ static int disas_insn(CPUState *env, DisasContext *dc)
     return 4;
 }
 
+uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
+    return 0;
+}
+
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb)
 {
@@ -2834,7 +2838,7 @@ done_generating:
         gen_opc_jump_pc[0] = dc.jump_pc[0];
         gen_opc_jump_pc[1] = dc.jump_pc[1];
     }
-    tb->disas_flags = 0;
+    tb->disas_flags = get_disas_flags(env, &dc);
 }
 
 void translate_init()

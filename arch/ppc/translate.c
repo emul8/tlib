@@ -8047,6 +8047,10 @@ int disas_insn(CPUState *env, DisasContext *dc) {
     return handler->length;
 }
 
+uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
+    return env->bfd_mach | dc->le_mode << 16;
+}
+
 /*****************************************************************************/
 void gen_intermediate_code(CPUState *env,
                            TranslationBlock *tb)
@@ -8128,7 +8132,7 @@ void gen_intermediate_code(CPUState *env,
         tcg_gen_exit_tb(0);
     }
 done_generating:
-    tb->disas_flags = env->bfd_mach | dc.le_mode << 16;
+    tb->disas_flags = get_disas_flags(env, &dc);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

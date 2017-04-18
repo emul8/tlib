@@ -9895,6 +9895,10 @@ int disas_insn(CPUState *env, DisasContext *dc) {
     }
 }
 
+uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
+    return dc->thumb;
+}
+
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
@@ -10091,7 +10095,7 @@ void gen_intermediate_code(CPUState *env,
     }
 
 done_generating:
-    tb->disas_flags = dc.thumb;
+    tb->disas_flags = get_disas_flags(env, &dc);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)

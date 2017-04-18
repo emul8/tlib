@@ -7641,6 +7641,13 @@ void translate_init(void)
     gen_helpers();
 }
 
+uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
+    #ifdef TARGET_X86_64
+    if (dc->code64) return 2;
+    #endif
+    return !(dc->code32);
+}
+
 /* generate intermediate code in gen_opc_buf and gen_opparam_buf for
    basic block 'tb'. If search_pc is TRUE, also generate PC
    information for each intermediate instruction. */
@@ -7750,10 +7757,7 @@ void gen_intermediate_code(CPUState *env,
         }
     }
 done_generating:
-    tb->disas_flags = !dc.code32;
-    #ifdef TARGET_X86_64
-    if (dc.code64) tb->disas_flags = 2;
-    #endif
+    tb->disas_flags = get_disas_flags(env, &dc);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
