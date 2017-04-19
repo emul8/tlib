@@ -9992,12 +9992,9 @@ void gen_intermediate_code(CPUState *env,
 
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc) {
-                    if (gen_breakpoint(&dc, bp)) {
-                        goto done_generating;
-                    }
-                }
+	    bp = process_breakpoints(env, dc.pc);
+	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
+                        break;
             }
         }
         if (tb->search_pc) {
@@ -10009,13 +10006,13 @@ void gen_intermediate_code(CPUState *env,
 	tb->size += disas_insn(env, &dc);
         tb->icount++;
 
+        if (tcg_check_temp_count()) {
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
+        }
+
         if (dc.condjmp && !dc.is_jmp) {
             gen_set_label(dc.condlabel);
             dc.condjmp = 0;
-        }
-
-        if (tcg_check_temp_count()) {
-            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
         }
 
         /* Translation stops when a conditional branch is encountered.
@@ -10104,7 +10101,6 @@ void gen_intermediate_code(CPUState *env,
         }
     }
 
-done_generating:
     tb->disas_flags = get_disas_flags(env, &dc);
 }
 

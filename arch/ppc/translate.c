@@ -8103,12 +8103,9 @@ void gen_intermediate_code(CPUState *env,
     /* Set env in case of segfault during code fetch */
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc) {
-                    if (gen_breakpoint(&dc, bp)) {
-                        goto done_generating;
-                    }
-                }
+	    bp = process_breakpoints(env, dc.pc);
+	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
+                        break;
             }
         }
         if (tb->search_pc) {
@@ -8118,6 +8115,10 @@ void gen_intermediate_code(CPUState *env,
 
         tb->size += disas_insn(env, &dc);
         tb->icount++;
+
+        if (tcg_check_temp_count()) {
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
+        }
 
         /* Check trace mode exceptions */
         if (unlikely(dc.singlestep_enabled & CPU_SINGLE_STEP &&
@@ -8150,7 +8151,7 @@ void gen_intermediate_code(CPUState *env,
         /* Generate the return instruction */
         tcg_gen_exit_tb(0);
     }
-done_generating:
+
     tb->disas_flags = get_disas_flags(env, &dc);
 }
 

@@ -2785,12 +2785,9 @@ void gen_intermediate_code(CPUState *env,
 
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc) {
-                    if (gen_breakpoint(&dc, bp)) {
-                        goto done_generating;
-                    }
-                }
+	    bp = process_breakpoints(env, dc.pc);
+	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
+                        break;
             }
         }
         if (tb->search_pc) {
@@ -2801,6 +2798,10 @@ void gen_intermediate_code(CPUState *env,
 
         tb->size += disas_insn(env, &dc);
         tb->icount++;
+
+        if (tcg_check_temp_count()) {
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
+        }
 
         if (dc.is_jmp) {
             break;
@@ -2829,7 +2830,6 @@ void gen_intermediate_code(CPUState *env,
         }
     }
 
-done_generating:
     tcg_temp_free(cpu_addr);
     tcg_temp_free(cpu_val);
     tcg_temp_free(cpu_dst);
@@ -2852,6 +2852,7 @@ done_generating:
         gen_opc_jump_pc[0] = dc.jump_pc[0];
         gen_opc_jump_pc[1] = dc.jump_pc[1];
     }
+
     tb->disas_flags = get_disas_flags(env, &dc);
 }
 

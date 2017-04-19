@@ -40,6 +40,7 @@ typedef ram_addr_t tb_page_addr_t;
 struct TranslationBlock;
 typedef struct TranslationBlock TranslationBlock;
 
+CPUBreakpoint *process_breakpoints(CPUState *env, target_ulong pc);
 void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb);
 void restore_state_to_opc(CPUState *env, struct TranslationBlock *tb,
                           int pc_pos);

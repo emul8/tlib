@@ -7728,12 +7728,9 @@ void gen_intermediate_code(CPUState *env,
 
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc) {
-                    if (gen_breakpoint(&dc, bp)) {
-                        goto done_generating;
-                    }
-                }
+	    bp = process_breakpoints(env, dc.pc);
+	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
+                        break;
             }
         }
         if (tb->search_pc) {
@@ -7744,6 +7741,11 @@ void gen_intermediate_code(CPUState *env,
 
         tb->size += disas_insn(env, &dc);
         tb->icount++;
+
+        if (tcg_check_temp_count()) {
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
+        }
+
         /* if single step mode, we generate only one instruction and
            generate an exception */
         /* if irq were inhibited with HF_INHIBIT_IRQ_MASK, we clear
@@ -7751,23 +7753,21 @@ void gen_intermediate_code(CPUState *env,
            change to be happen */
         if (dc.tf || dc.singlestep_enabled ||
             (dc.flags & HF_INHIBIT_IRQ_MASK)) {
-            gen_jmp_im(dc.pc - dc.cs_base);
-            gen_eob(&dc);
             break;
         }
         /* if too long translation, stop generation too */
         if (((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) ||
             (tb->size >= (TARGET_PAGE_SIZE - 32)) ||
             tb->icount >= max_insns) {
-            gen_jmp_im(dc.pc - dc.cs_base);
-            gen_eob(&dc);
             break;
         }
         if (dc.is_jmp) {
             break;
         }
     }
-done_generating:
+    gen_jmp_im(dc.pc - dc.cs_base);
+    gen_eob(&dc);
+
     tb->disas_flags = get_disas_flags(env, &dc);
 }
 

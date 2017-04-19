@@ -36,6 +36,16 @@ static TCGArg *icount_arg, *event_size_arg;
 
 static int stopflag_label;
 
+CPUBreakpoint *process_breakpoints(CPUState *env, target_ulong pc) {
+    CPUBreakpoint *bp;
+    QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
+        if (bp->pc == pc) {
+            return bp;
+        }
+    }
+    return NULL;
+}
+
 static inline void gen_block_header(TranslationBlock *tb)
 {
     TCGv_i32 flag;
