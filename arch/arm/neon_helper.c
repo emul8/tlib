@@ -1102,13 +1102,13 @@ static int32_t shl_s8(int8_t a, int8_t b)
     }
 
     if(b >= 0) {
-	return a32 << bu;
+        return a32 << bu;
     }
     else if(a >= 0) {
-	return a32 >> -b;
+        return a32 >> -b;
     }
     else { // sign extend when right-shifting negative
-	return (a32 >> -b) | (0xffffffffu << ((8 * sizeof a) + b));
+        return (a32 >> -b) | (0xffffffffu << ((8 * sizeof a) + b));
     }
 }
 
@@ -1151,13 +1151,13 @@ static int32_t shl_s16(int16_t a, int8_t b)
     }
 
     if(b >= 0) {
-	return a32 << bu;
+        return a32 << bu;
     }
     else if(a >= 0) {
-	return a32 >> -b;
+        return a32 >> -b;
     }
     else { // sign extend when right-shifting negative
-	return (a32 >> -b) | (0xffffffffu << ((8 * ((int)sizeof a)) + b));
+        return (a32 >> -b) | (0xffffffffu << ((8 * ((int)sizeof a)) + b));
     }
 }
 
@@ -1251,7 +1251,7 @@ static uint64_t shl_u64(uint64_t a, int8_t b)
 {
     // Shifting by the word size or more is undefined in C.
     if(abs(b) >= 8 * ((int)sizeof a)) {
-	return 0;
+        return 0;
     }
     return b >= 0 ? a << b : a >> -b;
 }
@@ -1267,7 +1267,7 @@ static int8_t rshl_s8(int8_t a, int8_t b)
     uint8_t ret = shl_s8(a, b);
 
     if(b < 0 && -b <= 8 * ((int)sizeof a)) {
-	ret += au >> (-b - 1) & 1;
+        ret += au >> (-b - 1) & 1;
     }
 
     return ret;
@@ -1288,7 +1288,7 @@ static uint8_t rshl_u8(uint8_t a, int8_t b)
     uint8_t ret = shl_u8(a, b);
 
     if(b < 0 && -b <= 8 * ((int)sizeof a)) {
-	ret += a >> (-b - 1) & 1;
+        ret += a >> (-b - 1) & 1;
     }
 
     return ret;

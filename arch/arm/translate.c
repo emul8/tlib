@@ -2539,7 +2539,7 @@ static int disas_cp15_insn(CPUState *env, DisasContext *s, uint32_t insn)
 
     /* M profile cores use memory mapped registers instead of cp15.  */
 #ifdef TARGET_PROTO_ARM_M
-	return 1;
+        return 1;
 #endif
 
     if ((insn & (1 << 4)) == 0) {
@@ -2660,9 +2660,9 @@ static int disas_cp15_insn(CPUState *env, DisasContext *s, uint32_t insn)
              * an MMU enable to execute from cache.  Imitate this behaviour.  */
             if (!arm_feature(env, ARM_FEATURE_XSCALE) ||
                 (insn & 0x0fff0fff) != 0x0e010f10)
-	        {
+                {
                     gen_lookup_tb(s);
-	        }
+                }
         }
         tcg_temp_free_i32(tmp2);
         return 0;
@@ -6529,21 +6529,21 @@ static int disas_coproc_insn(CPUState * env, DisasContext *s, uint32_t insn)
 
     cpnum = (insn >> 8) & 0xf;
     if (arm_feature(env, ARM_FEATURE_XSCALE)
-	    && ((env->cp15.c15_cpar ^ 0x3fff) & (1 << cpnum)))
-	return 1;
+            && ((env->cp15.c15_cpar ^ 0x3fff) & (1 << cpnum)))
+        return 1;
 
     switch (cpnum) {
       case 0:
       case 1:
-	if (arm_feature(env, ARM_FEATURE_IWMMXT)) {
-	    return disas_iwmmxt_insn(env, s, insn);
-	} else if (arm_feature(env, ARM_FEATURE_XSCALE)) {
-	    return disas_dsp_insn(env, s, insn);
-	}
-	return 1;
+        if (arm_feature(env, ARM_FEATURE_IWMMXT)) {
+            return disas_iwmmxt_insn(env, s, insn);
+        } else if (arm_feature(env, ARM_FEATURE_XSCALE)) {
+            return disas_dsp_insn(env, s, insn);
+        }
+        return 1;
     case 10:
     case 11:
-	return disas_vfp_insn (env, s, insn);
+        return disas_vfp_insn (env, s, insn);
     case 14:
         /* Coprocessors 7-15 are architecturally reserved by ARM.
            Unfortunately Intel decided to ignore this.  */
@@ -6554,11 +6554,11 @@ static int disas_coproc_insn(CPUState * env, DisasContext *s, uint32_t insn)
         else
             return disas_cp14_write(env, s, insn);
     case 15:
-	return disas_cp15_insn (env, s, insn);
+        return disas_cp15_insn (env, s, insn);
     default:
     board:
-	/* Unknown coprocessor.  See if the board has hooked it.  */
-	return disas_cp_insn (env, s, insn);
+        /* Unknown coprocessor.  See if the board has hooked it.  */
+        return disas_cp_insn (env, s, insn);
     }
 }
 
@@ -8140,7 +8140,7 @@ static int disas_thumb2_insn(CPUState *env, DisasContext *s, uint16_t insn_hw1)
     {
         /* Thumb-1 cores may need to treat bl and blx as a pair of
            16-bit instructions to get correct prefetch abort behavior.  */
-	insn = insn_hw1;
+        insn = insn_hw1;
         if ((insn & (1 << 12)) == 0) {
             ARCH(5);
             /* Second half of blx.  */
@@ -8844,7 +8844,7 @@ static int disas_thumb2_insn(CPUState *env, DisasContext *s, uint16_t insn_hw1)
                         gen_exception_return(s, tmp);
                         break;
                     case 6: /* mrs cpsr.  */
-			tmp = tcg_temp_new_i32();
+                        tmp = tcg_temp_new_i32();
 #ifdef TARGET_PROTO_ARM_M
                         addr = tcg_const_i32(insn & 0xff);
                         gen_helper_v7m_mrs(tmp, cpu_env, addr);
@@ -9751,7 +9751,7 @@ static void disas_thumb_insn(CPUState *env, DisasContext *s)
             break;
 
         case 6: /* cps */
-	    ARCH(6);
+            ARCH(6);
             if (s->user)
                 break;
 #ifdef TARGET_PROTO_ARM_M
@@ -9992,9 +9992,9 @@ void gen_intermediate_code(CPUState *env,
 
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-	    bp = process_breakpoints(env, dc.pc);
-	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
-                        break;
+            bp = process_breakpoints(env, dc.pc);
+            if (bp != NULL && gen_breakpoint(&dc, bp)) {
+                break;
             }
         }
         if (tb->search_pc) {
@@ -10003,7 +10003,7 @@ void gen_intermediate_code(CPUState *env,
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-	tb->size += disas_insn(env, &dc);
+        tb->size += disas_insn(env, &dc);
         tb->icount++;
 
         if (tcg_check_temp_count()) {
@@ -10155,7 +10155,7 @@ int process_interrupt(int interrupt_request, CPUState *env)
             env->interrupt_request &= ~CPU_INTERRUPT_M_IRQ_EXIT;
             do_v7m_exception_exit(env);
             return 1;
-	}
+        }
     }
 #endif
     return 0;

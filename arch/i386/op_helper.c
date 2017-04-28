@@ -658,7 +658,7 @@ static int exeption_has_error_code(int intno)
         case 17:
             return 1;
         }
-	return 0;
+        return 0;
 }
 
 #ifdef TARGET_X86_64
@@ -1183,21 +1183,21 @@ static void do_interrupt_real(int intno, int is_int, int error_code,
 }
 
 static void handle_even_inj(int intno, int is_int, int error_code,
-		int is_hw, int rm)
+            int is_hw, int rm)
 {
     uint32_t event_inj = ldl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj));
     if (!(event_inj & SVM_EVTINJ_VALID)) {
-	    int type;
-	    if (is_int)
-		    type = SVM_EVTINJ_TYPE_SOFT;
-	    else
-		    type = SVM_EVTINJ_TYPE_EXEPT;
-	    event_inj = intno | type | SVM_EVTINJ_VALID;
-	    if (!rm && exeption_has_error_code(intno)) {
-		    event_inj |= SVM_EVTINJ_VALID_ERR;
-		    stl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj_err), error_code);
-	    }
-	    stl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj), event_inj);
+        int type;
+        if (is_int)
+                type = SVM_EVTINJ_TYPE_SOFT;
+        else
+                type = SVM_EVTINJ_TYPE_EXEPT;
+        event_inj = intno | type | SVM_EVTINJ_VALID;
+        if (!rm && exeption_has_error_code(intno)) {
+                event_inj |= SVM_EVTINJ_VALID_ERR;
+                stl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj_err), error_code);
+        }
+        stl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj), event_inj);
     }
 }
 
@@ -1227,8 +1227,8 @@ static void do_interrupt_all(int intno, int is_int, int error_code,
     }
 
     if (env->hflags & HF_SVMI_MASK) {
-	    uint32_t event_inj = ldl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj));
-	    stl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj), event_inj & ~SVM_EVTINJ_VALID);
+        uint32_t event_inj = ldl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj));
+        stl_phys(env->vm_vmcb + offsetof(struct vmcb, control.event_inj), event_inj & ~SVM_EVTINJ_VALID);
     }
 }
 
@@ -4210,17 +4210,17 @@ void helper_fstenv(target_ulong ptr, int data32)
     fpus = (env->fpus & ~0x3800) | (env->fpstt & 0x7) << 11;
     fptag = 0;
     for (i=7; i>=0; i--) {
-	fptag <<= 2;
-	if (env->fptags[i]) {
+    fptag <<= 2;
+    if (env->fptags[i]) {
             fptag |= 3;
-	} else {
+    } else {
             tmp.d = env->fpregs[i].d;
             exp = EXPD(tmp);
             mant = MANTD(tmp);
             if (exp == 0 && mant == 0) {
                 /* zero */
-	        fptag |= 1;
-	    } else if (exp == 0 || exp == MAXEXPD
+            fptag |= 1;
+        } else if (exp == 0 || exp == MAXEXPD
                        || (mant & (1LL << 63)) == 0
                        ) {
                 /* NaNs, infinity, denormal */
@@ -4254,12 +4254,12 @@ void helper_fldenv(target_ulong ptr, int data32)
     int i, fpus, fptag;
 
     if (data32) {
-	env->fpuc = lduw(ptr);
+        env->fpuc = lduw(ptr);
         fpus = lduw(ptr + 4);
         fptag = lduw(ptr + 8);
     }
     else {
-	env->fpuc = lduw(ptr);
+        env->fpuc = lduw(ptr);
         fpus = lduw(ptr + 2);
         fptag = lduw(ptr + 4);
     }
@@ -5320,7 +5320,7 @@ target_ulong helper_lzcnt(target_ulong t0, int wordsize)
 
 target_ulong helper_bsr(target_ulong t0)
 {
-	return helper_lzcnt(t0, 0);
+    return helper_lzcnt(t0, 0);
 }
 
 static int compute_all_eflags(void)

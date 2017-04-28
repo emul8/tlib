@@ -7936,24 +7936,24 @@ static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t 
     switch(o1)
     {
     case 0x00:
-	    op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
-	    op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
-	    op3_len = 4;
-	    op3_shift = 16;
-	    break;
+        op2_len = 6; //however, se_mfar, se_mtar and se_mr use 2bit long op2
+        op2_shift = 20; // (if two MSBs are zero, op2 is 6bits long, otherwise it's 2)
+        op3_len = 4;
+        op3_shift = 16;
+        break;
     case 0x01:
     case 0x03:
     case 0x10:
     case 0x11:
-	    op2_len = 2;
-	    op2_shift = 24;
-	    break;
+        op2_len = 2;
+        op2_shift = 24;
+        break;
     case 0x06:
-	    op2_len = 4; //this will allow more sensible grouping than 6-2
-	    op2_shift = 12;
-	    op3_len = 4;
-	    op3_shift = 8;
-	    break;
+        op2_len = 4; //this will allow more sensible grouping than 6-2
+        op2_shift = 12;
+        op3_len = 4;
+        op3_shift = 8;
+        break;
     case 0x08:
     case 0x0A:
     case 0x0B:
@@ -7963,25 +7963,25 @@ static void decode_vle_instruction(DisasContext * ctxp, uint32_t *op1, uint32_t 
     case 0x1B:
     case 0x1E: //this might cause problems, as the docs suggest op2_len = 4 for e_bc.
                //For this table it does not matter though.
-	    op2_len = 1;
-	    op2_shift = 25;
+        op2_len = 1;
+        op2_shift = 25;
         break;
-	case 0x1C:
-	    op2_len = 1;
-	    op2_shift = 15;
-	    op3_len = 4;
-	    op3_shift = 11;
-	    break;
+    case 0x1C:
+        op2_len = 1;
+        op2_shift = 15;
+        op3_len = 4;
+        op3_shift = 11;
+        break;
     case 0x1D:
         op2_len = 1;
         op2_shift = 0;
         break;
-	case 0x1F:
-	    op2_len = 6;
-	    op2_shift = 5;
-	    op3_len = 4;
-	    op3_shift = 1;
-	    break;
+    case 0x1F:
+        op2_len = 6;
+        op2_shift = 5;
+        op3_len = 4;
+        op3_shift = 1;
+        break;
     default: //other instructions are verified to have no other opodes.
         break;
     }
@@ -8103,9 +8103,9 @@ void gen_intermediate_code(CPUState *env,
     /* Set env in case of segfault during code fetch */
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-	    bp = process_breakpoints(env, dc.pc);
-	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
-                        break;
+            bp = process_breakpoints(env, dc.pc);
+            if (bp != NULL && gen_breakpoint(&dc, bp)) {
+                break;
             }
         }
         if (tb->search_pc) {

@@ -382,16 +382,16 @@ static void spr_write_excp_vector (void *opaque, int sprn, int gprn)
     DisasContext *ctx = opaque;
     int sprn_offs;
     if (sprn >= SPR_BOOKE_IVOR0 && sprn <= SPR_BOOKE_IVOR15) {
-	sprn_offs = sprn - SPR_BOOKE_IVOR0;
+        sprn_offs = sprn - SPR_BOOKE_IVOR0;
     } else if (sprn >= SPR_BOOKE_IVOR32 && sprn <= SPR_BOOKE_IVOR37) {
-	sprn_offs = sprn - SPR_BOOKE_IVOR32 + 32;
+        sprn_offs = sprn - SPR_BOOKE_IVOR32 + 32;
     } else if (sprn >= SPR_BOOKE_IVOR38 && sprn <= SPR_BOOKE_IVOR42) {
         sprn_offs = sprn - SPR_BOOKE_IVOR38 + 38;
     } else {
         tlib_printf(LOG_LEVEL_WARNING, "Trying to write an unknown exception vector %d %03x\n",
                sprn, sprn);
         gen_inval_exception(ctx, POWERPC_EXCP_PRIV_REG);
-	return;
+        return;
     }
     TCGv t0 = tcg_temp_new();
     tcg_gen_ld_tl(t0, cpu_env, offsetof(CPUState, ivor_mask));
@@ -1393,7 +1393,7 @@ static void gen_spr_BookE206(CPUState *env, uint32_t mas_mask,
     int mas_sprn[9] = {
         SPR_BOOKE_MAS0, SPR_BOOKE_MAS1, SPR_BOOKE_MAS2, SPR_BOOKE_MAS3,
         SPR_BOOKE_MAS4, SPR_BOOKE_MAS5, SPR_BOOKE_MAS6, SPR_BOOKE_MAS7,
-	SPR_BOOKE_MAS8
+        SPR_BOOKE_MAS8
     };
     int i;
 

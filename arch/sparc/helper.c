@@ -220,13 +220,13 @@ int cpu_sparc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
         return 0;
     } else {
         if (rw & 2)
-	{
+        {
             env->exception_index = TT_TFAULT;
-	}
+        }
         else
-	{
+        {
             env->exception_index = TT_DFAULT;
-	}
+        }
         return 1;
     }
 }
@@ -334,9 +334,9 @@ void do_interrupt(CPUState *env)
             env->def->features & CPU_FEATURE_TA0_SHUTDOWN) {
             tlib_on_cpu_power_down();
         } else {
-	  cpu_abort(env, "Trap 0x%02x while interrupts disabled, Error state",
-		    env->exception_index);
-	}
+          cpu_abort(env, "Trap 0x%02x while interrupts disabled, Error state",
+          env->exception_index);
+        }
         return;
     }
     env->psret = 0;
@@ -353,7 +353,7 @@ void do_interrupt(CPUState *env)
     env->wfi = 0;
     /* IRQ acknowledgment */
     if ((intno & ~15) == TT_EXTINT ) {
-	    tlib_acknowledge_interrupt(intno);
+        tlib_acknowledge_interrupt(intno);
     }
 }
 
@@ -421,8 +421,8 @@ static const sparc_def_t sparc_defs[] = {
         .mmu_bm = 0x00004000,
         //.mmu_ctpr_mask = 0x007ffff0,
         //.mmu_cxr_mask = 0x0000003f,
-	.mmu_ctpr_mask = 0xfffffffc,
-	.mmu_cxr_mask = 0x000000ff,
+        .mmu_ctpr_mask = 0xfffffffc,
+        .mmu_cxr_mask = 0x000000ff,
         .mmu_sfsr_mask = 0xffffffff,
         .mmu_trcr_mask = 0xffffffff,
         .nwindows = 7,
@@ -436,7 +436,7 @@ static const sparc_def_t sparc_defs[] = {
         .mmu_bm = 0x00004000,
 //        .mmu_ctpr_mask = 0x00ffffc0,
 //        .mmu_cxr_mask = 0x000000ff,
-	.mmu_ctpr_mask = 0xfffffffc,
+        .mmu_ctpr_mask = 0xfffffffc,
         .mmu_cxr_mask = 0x000000ff,
         .mmu_sfsr_mask = 0x00016fff,
         .mmu_trcr_mask = 0x00ffffff,
@@ -451,7 +451,7 @@ static const sparc_def_t sparc_defs[] = {
         .mmu_bm = 0x00004000,
 //        .mmu_ctpr_mask = 0xffffffc0,
 //        .mmu_cxr_mask = 0x000000ff,
-	.mmu_ctpr_mask = 0xfffffffc,
+        .mmu_ctpr_mask = 0xfffffffc,
         .mmu_cxr_mask = 0x000000ff,
         .mmu_sfsr_mask = 0x00016fff,
         .mmu_trcr_mask = 0xffffffff,
@@ -695,10 +695,10 @@ static const sparc_def_t sparc_defs[] = {
         .fpu_version = 4 << 17, /* FPU version 4 (Meiko) */
         .mmu_version = 0xf2000000,
         .mmu_bm = 0x00004000,
-	//.mmu_ctpr_mask = 0x007ffff0,
+        //.mmu_ctpr_mask = 0x007ffff0,
        // .mmu_cxr_mask = 0x0000003f,
-	.mmu_ctpr_mask = 0xfffffffc,
-	.mmu_cxr_mask = 0x000000ff,
+        .mmu_ctpr_mask = 0xfffffffc,
+        .mmu_cxr_mask = 0x000000ff,
         .mmu_sfsr_mask = 0xffffffff,
         .mmu_trcr_mask = 0xffffffff,
         .nwindows = 8,
@@ -712,8 +712,8 @@ static const sparc_def_t sparc_defs[] = {
         .mmu_bm = 0x00000000,
         //.mmu_ctpr_mask = 0x007ffff0,
         //.mmu_cxr_mask = 0x0000003f,
-	.mmu_ctpr_mask = 0xfffffffc,
-	.mmu_cxr_mask = 0x000000ff,
+        .mmu_ctpr_mask = 0xfffffffc,
+        .mmu_cxr_mask = 0x000000ff,
         .mmu_sfsr_mask = 0xffffffff,
         .mmu_trcr_mask = 0xffffffff,
         .nwindows = 8,

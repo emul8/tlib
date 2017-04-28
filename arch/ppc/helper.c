@@ -1195,9 +1195,9 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
                      mmu_idx, TARGET_PAGE_SIZE);
         ret = 0;
     } else if (ret < 0) {
-	tlib_printf(LOG_LEVEL_WARNING, "we got mmu fail @ %X on %s\n",address,(access_type == ACCESS_CODE) ? "CODE" : "DATA");
+        tlib_printf(LOG_LEVEL_WARNING, "we got mmu fail @ %X on %s\n",address,(access_type == ACCESS_CODE) ? "CODE" : "DATA");
         if (access_type == ACCESS_CODE) {
-	tlib_printf(LOG_LEVEL_WARNING, "ret is %d\n",ret);
+            tlib_printf(LOG_LEVEL_WARNING, "ret is %d\n",ret);
             switch (ret) {
             case -1:
                 /* No matches in page tables or TLB */
@@ -1269,7 +1269,7 @@ int cpu_ppc_handle_mmu_fault (CPUState *env, target_ulong address, int rw,
             switch (ret) {
             case -1:
                 /* No matches in page tables or TLB */
-		switch (env->mmu_model) {
+                switch (env->mmu_model) {
                 case POWERPC_MMU_SOFT_6xx:
                     if (rw == 1) {
                         env->exception_index = POWERPC_EXCP_DSTLB;

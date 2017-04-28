@@ -2702,7 +2702,7 @@ static void gen_eob(DisasContext *s)
     if (s->singlestep_enabled) {
         gen_helper_debug();
     } else if (s->tf) {
-	gen_helper_single_step();
+        gen_helper_single_step();
     } else {
         tcg_gen_exit_tb(0);
     }
@@ -3460,7 +3460,7 @@ static void gen_sse(DisasContext *s, int b, target_ulong pc_start, int rex_r)
         case 0x172:
         case 0x173:
             if (b1 >= 2) {
-	        goto illegal_op;
+                goto illegal_op;
             }
             val = ldub_code(s->pc++);
             if (is_xmm) {
@@ -7728,9 +7728,9 @@ void gen_intermediate_code(CPUState *env,
 
     while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-	    bp = process_breakpoints(env, dc.pc);
-	    if (bp != NULL) if (gen_breakpoint(&dc, bp)) {
-                        break;
+            bp = process_breakpoints(env, dc.pc);
+            if (bp != NULL && gen_breakpoint(&dc, bp)) {
+                break;
             }
         }
         if (tb->search_pc) {

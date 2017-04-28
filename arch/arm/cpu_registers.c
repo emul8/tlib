@@ -29,20 +29,20 @@ uint32_t* get_reg_pointer_32(int reg)
         case R_0_32 ... R_15_32:
             return &(cpu->regs[reg]);
         case CPSR_32:
-			return &(cpu->uncached_cpsr);
-		case SPSR_32:
-			return &(cpu->spsr);
+            return &(cpu->uncached_cpsr);
+        case SPSR_32:
+            return &(cpu->spsr);
 #ifdef TARGET_PROTO_ARM_M
-		case Control_32:
-			return &(cpu->v7m.control);
-		case BasePri_32:
-			return &(cpu->v7m.basepri);
-		case VecBase_32:
-			return &(cpu->v7m.vecbase);
-		case CurrentSP_32:
-			return &(cpu->v7m.current_sp);
-		case OtherSP_32:
-			return &(cpu->v7m.other_sp);
+        case Control_32:
+            return &(cpu->v7m.control);
+        case BasePri_32:
+            return &(cpu->v7m.basepri);
+        case VecBase_32:
+            return &(cpu->v7m.vecbase);
+        case CurrentSP_32:
+            return &(cpu->v7m.current_sp);
+        case OtherSP_32:
+            return &(cpu->v7m.other_sp);
 #endif
         default:
             return NULL;

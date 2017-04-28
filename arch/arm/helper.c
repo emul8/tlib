@@ -204,8 +204,8 @@ static void cpu_reset_model_id(CPUState *env, uint32_t id)
         set_feature(env, ARM_FEATURE_VFP4);
         set_feature(env, ARM_FEATURE_VFP_FP16);
         set_feature(env, ARM_FEATURE_NEON);
-	set_feature(env, ARM_FEATURE_AUXCR);
-	set_feature(env, ARM_FEATURE_GENERIC_TIMER);
+        set_feature(env, ARM_FEATURE_AUXCR);
+        set_feature(env, ARM_FEATURE_GENERIC_TIMER);
         set_feature(env, ARM_FEATURE_THUMB2EE);
         set_feature(env, ARM_FEATURE_ARM_DIV);
         set_feature(env, ARM_FEATURE_V7MP);
@@ -893,7 +893,7 @@ static uint32_t get_level1_table_address(CPUState *env, uint32_t address)
 }
 
 static int get_phys_addr_v5(CPUState *env, uint32_t address, int access_type,
-			    int is_user, uint32_t *phys_ptr, int *prot,
+                            int is_user, uint32_t *phys_ptr, int *prot,
                             target_ulong *page_size)
 {
     int code;
@@ -930,13 +930,13 @@ static int get_phys_addr_v5(CPUState *env, uint32_t address, int access_type,
         *page_size = 1024 * 1024;
     } else {
         /* Lookup l2 entry.  */
-	if (type == 1) {
-	    /* Coarse pagetable.  */
-	    table = (desc & 0xfffffc00) | ((address >> 10) & 0x3fc);
-	} else {
-	    /* Fine pagetable.  */
-	    table = (desc & 0xfffff000) | ((address >> 8) & 0xffc);
-	}
+        if (type == 1) {
+            /* Coarse pagetable.  */
+            table = (desc & 0xfffffc00) | ((address >> 10) & 0x3fc);
+        } else {
+            /* Fine pagetable.  */
+            table = (desc & 0xfffff000) | ((address >> 8) & 0xffc);
+        }
         desc = ldl_phys(table);
         switch (desc & 3) {
         case 0: /* Page translation fault.  */
@@ -953,17 +953,17 @@ static int get_phys_addr_v5(CPUState *env, uint32_t address, int access_type,
             *page_size = 0x1000;
             break;
         case 3: /* 1k page.  */
-	    if (type == 1) {
-		if (arm_feature(env, ARM_FEATURE_XSCALE)) {
-		    phys_addr = (desc & 0xfffff000) | (address & 0xfff);
-		} else {
-		    /* Page translation fault.  */
-		    code = 7;
-		    goto do_fault;
-		}
-	    } else {
-		phys_addr = (desc & 0xfffffc00) | (address & 0x3ff);
-	    }
+            if (type == 1) {
+                if (arm_feature(env, ARM_FEATURE_XSCALE)) {
+                    phys_addr = (desc & 0xfffff000) | (address & 0xfff);
+                } else {
+                    /* Page translation fault.  */
+                    code = 7;
+                    goto do_fault;
+                }
+            } else {
+                phys_addr = (desc & 0xfffffc00) | (address & 0x3ff);
+            }
             ap = (desc >> 4) & 3;
             *page_size = 0x400;
             break;
@@ -986,7 +986,7 @@ do_fault:
 }
 
 static int get_phys_addr_v6(CPUState *env, uint32_t address, int access_type,
-			    int is_user, uint32_t *phys_ptr, int *prot,
+                            int is_user, uint32_t *phys_ptr, int *prot,
                             target_ulong *page_size)
 {
     int code;
@@ -1089,7 +1089,7 @@ do_fault:
 }
 
 static int get_phys_addr_mpu(CPUState *env, uint32_t address, int access_type,
-			     int is_user, uint32_t *phys_ptr, int *prot)
+                 int is_user, uint32_t *phys_ptr, int *prot)
 {
     int n;
     uint32_t mask;
@@ -1097,52 +1097,52 @@ static int get_phys_addr_mpu(CPUState *env, uint32_t address, int access_type,
 
     *phys_ptr = address;
     for (n = 7; n >= 0; n--) {
-	base = env->cp15.c6_region[n];
-	if ((base & 1) == 0)
-	    continue;
-	mask = 1 << ((base >> 1) & 0x1f);
-	/* Keep this shift separate from the above to avoid an
-	   (undefined) << 32.  */
-	mask = (mask << 1) - 1;
-	if (((base ^ address) & ~mask) == 0)
-	    break;
+        base = env->cp15.c6_region[n];
+        if ((base & 1) == 0)
+            continue;
+        mask = 1 << ((base >> 1) & 0x1f);
+        /* Keep this shift separate from the above to avoid an
+           (undefined) << 32.  */
+        mask = (mask << 1) - 1;
+        if (((base ^ address) & ~mask) == 0)
+            break;
     }
     if (n < 0)
-	return 2;
+        return 2;
 
     if (access_type == 2) {
-	mask = env->cp15.c5_insn;
+        mask = env->cp15.c5_insn;
     } else {
-	mask = env->cp15.c5_data;
+        mask = env->cp15.c5_data;
     }
     mask = (mask >> (n * 4)) & 0xf;
     switch (mask) {
     case 0:
-	return 1;
+        return 1;
     case 1:
-	if (is_user)
-	  return 1;
-	*prot = PAGE_READ | PAGE_WRITE;
-	break;
+        if (is_user)
+          return 1;
+        *prot = PAGE_READ | PAGE_WRITE;
+        break;
     case 2:
-	*prot = PAGE_READ;
-	if (!is_user)
-	    *prot |= PAGE_WRITE;
-	break;
+        *prot = PAGE_READ;
+        if (!is_user)
+            *prot |= PAGE_WRITE;
+        break;
     case 3:
-	*prot = PAGE_READ | PAGE_WRITE;
-	break;
+        *prot = PAGE_READ | PAGE_WRITE;
+        break;
     case 5:
-	if (is_user)
-	    return 1;
-	*prot = PAGE_READ;
-	break;
+        if (is_user)
+            return 1;
+        *prot = PAGE_READ;
+        break;
     case 6:
-	*prot = PAGE_READ;
-	break;
+        *prot = PAGE_READ;
+        break;
     default:
-	/* Bad permission.  */
-	return 1;
+        /* Bad permission.  */
+        return 1;
     }
     *prot |= PAGE_EXEC;
     return 0;
@@ -1165,8 +1165,8 @@ static inline int get_phys_addr(CPUState *env, uint32_t address,
         return 0;
     } else if (arm_feature(env, ARM_FEATURE_MPU)) {
         *page_size = TARGET_PAGE_SIZE;
-	return get_phys_addr_mpu(env, address, access_type, is_user, phys_ptr,
-				 prot);
+        return get_phys_addr_mpu(env, address, access_type, is_user, phys_ptr,
+                                prot);
     } else if (env->cp15.c1_sys & (1 << 23)) {
         return get_phys_addr_v6(env, address, access_type, is_user, phys_ptr,
                                 prot, page_size);
@@ -1346,22 +1346,22 @@ void HELPER(set_cp15)(CPUState *env, uint32_t insn, uint32_t val)
                 goto bad_reg;
             }
         } else {
-	    switch (op2) {
-	    case 0:
-		env->cp15.c2_base0 = val;
-		break;
-	    case 1:
-		env->cp15.c2_base1 = val;
-		break;
-	    case 2:
+            switch (op2) {
+            case 0:
+                env->cp15.c2_base0 = val;
+                break;
+            case 1:
+                env->cp15.c2_base1 = val;
+                break;
+            case 2:
                 val &= 7;
                 env->cp15.c2_control = val;
-		env->cp15.c2_mask = ~(((uint32_t)0xffffffffu) >> val);
+                env->cp15.c2_mask = ~(((uint32_t)0xffffffffu) >> val);
                 env->cp15.c2_base_mask = ~((uint32_t)0x3fffu >> val);
-		break;
-	    default:
-		goto bad_reg;
-	    }
+                break;
+            default:
+                goto bad_reg;
+            }
         }
         break;
     case 3: /* MMU Domain access control / MPU write buffer control.  */
@@ -1492,26 +1492,26 @@ void HELPER(set_cp15)(CPUState *env, uint32_t insn, uint32_t val)
             break; /* Ignore ReadBuffer access */
         switch (crm) {
         case 0: /* Cache lockdown.  */
-	    switch (op1) {
-	    case 0: /* L1 cache.  */
-		switch (op2) {
-		case 0:
-		    env->cp15.c9_data = val;
-		    break;
-		case 1:
-		    env->cp15.c9_insn = val;
-		    break;
-		default:
-		    goto bad_reg;
-		}
-		break;
-	    case 1: /* L2 cache.  */
-		/* Ignore writes to L2 lockdown/auxiliary registers.  */
-		break;
-	    default:
-		goto bad_reg;
-	    }
-	    break;
+            switch (op1) {
+            case 0: /* L1 cache.  */
+                switch (op2) {
+                case 0:
+                    env->cp15.c9_data = val;
+                    break;
+                case 1:
+                    env->cp15.c9_insn = val;
+                    break;
+                default:
+                    goto bad_reg;
+                }
+                break;
+            case 1: /* L2 cache.  */
+                /* Ignore writes to L2 lockdown/auxiliary registers.  */
+                break;
+            default:
+                goto bad_reg;
+            }
+        break;
         case 1: /* TCM memory region registers.  */
             tlib_write_cp15_32(insn, val);
             break;
@@ -1623,10 +1623,10 @@ void HELPER(set_cp15)(CPUState *env, uint32_t insn, uint32_t val)
         }
         break;
     case 14: /* Generic timer */
-	if (arm_feature(env, ARM_FEATURE_GENERIC_TIMER)) {
-		 /* Dummy implementation: RAZ/WI for all */
-		break;
-	}
+        if (arm_feature(env, ARM_FEATURE_GENERIC_TIMER)) {
+             /* Dummy implementation: RAZ/WI for all */
+            break;
+        }
         goto bad_reg;
     case 15: /* Implementation specific.  */
         if (arm_feature(env, ARM_FEATURE_XSCALE)) {
