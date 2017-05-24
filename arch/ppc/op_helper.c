@@ -672,7 +672,9 @@ void helper_fpscr_setbit (uint32_t bit)
             env->fpscr |= 1 << FPSCR_FX;
             if (fpscr_ve)
                 goto raise_ve;
+            goto case_FPSCR_OH;
         case FPSCR_OX:
+        case_FPSCR_OH:
             env->fpscr |= 1 << FPSCR_FX;
             if (fpscr_oe)
                 goto raise_oe;

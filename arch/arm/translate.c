@@ -3122,7 +3122,9 @@ static int disas_vfp_insn(CPUState * env, DisasContext *s, uint32_t insn)
                         return 1;
                     }
                     /* Otherwise fall through */
+                    goto case_default;
                 default:
+                case_default:
                     /* One source operand.  */
                     gen_mov_F0_vreg(dp, rm);
                     break;
@@ -8195,6 +8197,7 @@ static int disas_thumb2_insn(CPUState *env, DisasContext *s, uint16_t insn_hw1)
     case 0: case 1: case 2: case 3:
         /* 16-bit instructions.  Should never happen.  */
         abort();
+        break;
     case 4:
         if (insn & (1 << 22)) {
             /* Other load/store, table branch.  */

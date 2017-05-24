@@ -770,8 +770,10 @@ void do_interrupt(CPUState *env)
             return;
         }
         env->cp15.c5_insn = 2;
-        /* Fall through to prefetch abort.  */
+        /* Go to prefetch abort.  */
+        goto case_EXCP_PREFETCH_ABORT; 
     case EXCP_PREFETCH_ABORT:
+    case_EXCP_PREFETCH_ABORT:
         new_mode = ARM_CPU_MODE_ABT;
         addr = 0x0c;
         mask = CPSR_A | CPSR_I;
@@ -1729,7 +1731,9 @@ uint32_t HELPER(get_cp15)(CPUState *env, uint32_t insn)
                         return mpidr;
                     }
                     /* otherwise fall through to the unimplemented-reg case */
+                    goto case_6;
                 case 6:
+                case_6:
                     return tlib_read_cp15_32(insn);
                 default:
                     goto bad_reg;

@@ -63,8 +63,10 @@ static inline int pp_check(int key, int pp, int nx)
         case 0x2:
             access |= PAGE_WRITE;
             /* No break here */
+            goto case_0x6;
         case 0x3:
         case 0x6:
+        case_0x6:
             access |= PAGE_READ;
             break;
         }
@@ -682,7 +684,9 @@ static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *mmu_ctx,
             if (pr != 0)
                 goto check_perms;
             /* No break here */
+            goto case_0x3;
         case 0x3:
+        case_0x3:
             /* All accesses granted */
             mmu_ctx->prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
             ret = 0;
@@ -696,6 +700,7 @@ static int mmu40x_get_physical_address (CPUState *env, mmu_ctx_t *mmu_ctx,
                 break;
             }
             /* No break here */
+            goto check_perms;
         case 0x1:
         check_perms:
             /* Check from TLB entry */

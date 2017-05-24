@@ -3669,7 +3669,9 @@ static void gen_sse(DisasContext *s, int b, target_ulong pc_start, int rex_r)
         case 0x138:
             if (s->prefix & PREFIX_REPNZ)
                 goto crc32;
+            goto case_0x038; //todo: is it fine?
         case 0x038:
+        case_0x038:
             b = modrm;
             modrm = ldub_code(s->pc++);
             rm = modrm & 7;
@@ -4267,9 +4269,11 @@ static int disas_insn(CPUState *env, DisasContext *s)
     case 0x82:
         if (CODE64(s))
             goto illegal_op;
+        goto case_0x83;
     case 0x80: /* GRP1 */
     case 0x81:
     case 0x83:
+    case_0x83:
         {
             int val;
 
@@ -7541,6 +7545,7 @@ static int disas_insn(CPUState *env, DisasContext *s)
     case 0x10e ... 0x10f:
         /* 3DNow! instructions, ignore prefixes */
         s->prefix &= ~(PREFIX_REPZ | PREFIX_REPNZ | PREFIX_DATA);
+        goto case_0x1d0_0x1fe;
     case 0x110 ... 0x117:
     case 0x128 ... 0x12f:
     case 0x138 ... 0x13a:
@@ -7549,6 +7554,7 @@ static int disas_insn(CPUState *env, DisasContext *s)
     case 0x1c2:
     case 0x1c4 ... 0x1c6:
     case 0x1d0 ... 0x1fe:
+    case_0x1d0_0x1fe:
         gen_sse(s, b, pc_start, rex_r);
         break;
     default:
