@@ -1456,7 +1456,7 @@ static inline TCGv get_src2(unsigned int insn, TCGv def)
         goto nfpu_insn;
 
 /* before an instruction, dc->pc must be static */
-static void disas_sparc_insn(DisasContext * dc)
+static int disas_insn(CPUState *env, DisasContext *dc)
 {
     unsigned int insn, opc, rs1, rs2, rd;
     TCGv cpu_src1, cpu_src2, cpu_tmp1, cpu_tmp2;
@@ -1558,7 +1558,7 @@ static void disas_sparc_insn(DisasContext * dc)
                     tcg_gen_addi_tl(cpu_dst, cpu_dst, TT_TRAP);
                     tcg_gen_trunc_tl_i32(cpu_tmp32, cpu_dst);
 
-		    gen_helper_raise_exception(cpu_tmp32);
+                    gen_helper_raise_exception(cpu_tmp32);
 
                 } else if (cond != 0) {
                     TCGv r_cond = tcg_temp_new();
@@ -1596,13 +1596,13 @@ static void disas_sparc_insn(DisasContext * dc)
                 case 0x10 ... 0x1f: /* implementation-dependent in the
                                        SPARCv8 manual, rdy on the
                                        microSPARC II */
-		    /* RDASR %asr16-31 for a Leon3 processor */
-		    /* Gaisler Research is assigned number 15 (0xF) */
-		    /* as SPARC implementor’s identification. */
-		    /* This value is hard-coded into bits 31:28 */
-		    /* in the %psr register. */
-		    /* The version number for LEON3 is 3, which */
-		    /* is hardcoded in to bits 27:24 of the %psr. */
+                    /* RDASR %asr16-31 for a Leon3 processor */
+                    /* Gaisler Research is assigned number 15 (0xF) */
+                    /* as SPARC implementor’s identification. */
+                    /* This value is hard-coded into bits 31:28 */
+                    /* in the %psr register. */
+                    /* The version number for LEON3 is 3, which */
+                    /* is hardcoded in to bits 27:24 of the %psr. */
 
                     /* For an RDASR instruction with rs1 in the */
                     /* range 16...31, the following are */
@@ -1619,7 +1619,7 @@ static void disas_sparc_insn(DisasContext * dc)
                             break;
                         }
                     }
-		    /* rs1 == 0 is RDY */
+                    /* rs1 == 0 is RDY */
                     gen_movl_TN_reg(rd, cpu_y);
                     break;
                 default:
@@ -2198,28 +2198,28 @@ static void disas_sparc_insn(DisasContext * dc)
                                                    II */
 
                             case 0x10 ... 0x1f:
-				/* implementation-dependent
-				   in the SPARCv8
-				   manual, nop on the
-				   microSPARC II */
-			        /* WRASR %asr16-31 for a Leon3 processor */
-			        /* Gaisler Research is assigned number 15 (0xF) */
-			        /* as SPARC implementor’s identification. */
-			        /* This value is hard-coded into bits 31:28 */
-			        /* in the %psr register. */
-			        /* The version number for LEON3 is 3, which */
-			        /* is hardcoded in to bits 27:24 of the %psr. */
-			        if(dc->def->iu_version == 0xf3000000 &&
-				   dc->def->features & CPU_FEATURE_ASR){
-					rs1 = GET_FIELD(insn, 13, 17);
-				        gen_movl_reg_TN(rs1, cpu_asr[rd - 16]);
-					/* WRASR to ASR19 */
-					/* Power-down instruction for Leon3 */
-					if(rd == 0x13){
-					  save_state(dc, cpu_cond);
-					  gen_helper_power_down();
-					}
-			        }
+                                /* implementation-dependent
+                                   in the SPARCv8
+                                   manual, nop on the
+                                   microSPARC II */
+                                /* WRASR %asr16-31 for a Leon3 processor */
+                                /* Gaisler Research is assigned number 15 (0xF) */
+                                /* as SPARC implementor’s identification. */
+                                /* This value is hard-coded into bits 31:28 */
+                                /* in the %psr register. */
+                                /* The version number for LEON3 is 3, which */
+                                /* is hardcoded in to bits 27:24 of the %psr. */
+                                if(dc->def->iu_version == 0xf3000000 &&
+                                   dc->def->features & CPU_FEATURE_ASR){
+                                    rs1 = GET_FIELD(insn, 13, 17);
+                                    gen_movl_reg_TN(rs1, cpu_asr[rd - 16]);
+                                    /* WRASR to ASR19 */
+                                    /* Power-down instruction for Leon3 */
+                                    if(rd == 0x13){
+                                      save_state(dc, cpu_cond);
+                                      gen_helper_power_down();
+                                    }
+                                }
                                 break;
                             default:
                                 goto illegal_insn;
@@ -2401,14 +2401,14 @@ static void disas_sparc_insn(DisasContext * dc)
                 case 0xd:       /* ldstub -- XXX: should be atomically */
                     {
                         tcg_gen_qemu_ld8s(cpu_val, cpu_addr, dc->mem_idx);
-			gen_helper_ldstub(cpu_val, cpu_addr);
+                        gen_helper_ldstub(cpu_val, cpu_addr);
                     }
                     break;
                 case 0x0f:      /* swap, swap register with memory. Also
                                    atomically */
                     CHECK_IU_FEATURE(dc, SWAP);
                     gen_movl_reg_TN(rd, cpu_val);
-		    gen_helper_swap(cpu_val, cpu_val, cpu_addr);
+                    gen_helper_swap(cpu_val, cpu_val, cpu_addr);
 
                     break;
                 case 0x10:      /* lda, load word alternate */
@@ -2467,7 +2467,7 @@ static void disas_sparc_insn(DisasContext * dc)
                     if (!supervisor(dc))
                         goto priv_insn;
                     save_state(dc, cpu_cond);
-		    /* Generate an ldstub if ASI 1 */
+                    /* Generate an ldstub if ASI 1 */
                     if (GET_FIELD(insn, 19, 26) == 1)
                         gen_helper_ldstub(cpu_val, cpu_addr);
                     else
@@ -2483,11 +2483,11 @@ static void disas_sparc_insn(DisasContext * dc)
                     save_state(dc, cpu_cond);
                     gen_movl_reg_TN(rd, cpu_val);
 
-		    /* Generate an swapa if ASI 1 */
+                    /* Generate an swapa if ASI 1 */
                     if (GET_FIELD(insn, 19, 26) == 1)
-			    gen_helper_swap(cpu_val, cpu_val, cpu_addr);
+                        gen_helper_swap(cpu_val, cpu_val, cpu_addr);
                     else
-			    gen_swap_asi(cpu_val, cpu_addr, insn);
+                        gen_swap_asi(cpu_val, cpu_addr, insn);
                     break;
 
                 case 0x30: /* ldc */
@@ -2728,28 +2728,24 @@ static void disas_sparc_insn(DisasContext * dc)
  egress:
     tcg_temp_free(cpu_tmp1);
     tcg_temp_free(cpu_tmp2);
+    return 4;
 }
 
-void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb,
-                           int search_pc)
-{
-    target_ulong last_pc;
-    DisasContext dc;
-    CPUBreakpoint *bp;
-    int max_insns;
+uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
+    return 0;
+}
 
-    dc.tb = tb;
-    dc.is_jmp = DISAS_NEXT;
-    dc.pc = tb->pc;
-    last_pc = dc.pc;
-    dc.npc = (target_ulong) tb->cs_base;
-    dc.cc_op = CC_OP_DYNAMIC;
-    dc.mem_idx = cpu_mmu_index(env);
-    dc.def = env->def;
-    dc.fpu_enabled = tb_fpu_enabled(tb->flags);
-    dc.address_mask_32bit = tb_am_enabled(tb->flags);
-    dc.singlestep_enabled = (env->singlestep_enabled);
+void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb) {
+    dc->tb = tb;
+    dc->is_jmp = DISAS_NEXT;
+    dc->pc = tb->pc;
+    dc->npc = (target_ulong) tb->cs_base;
+    dc->cc_op = CC_OP_DYNAMIC;
+    dc->mem_idx = cpu_mmu_index(env);
+    dc->def = env->def;
+    dc->fpu_enabled = tb_fpu_enabled(tb->flags);
+    dc->address_mask_32bit = tb_am_enabled(tb->flags);
+    dc->singlestep_enabled = (env->singlestep_enabled);
 
     cpu_tmp0 = tcg_temp_new();
     cpu_tmp32 = tcg_temp_new_i32();
@@ -2760,38 +2756,60 @@ void gen_intermediate_code(CPUState *env,
     // loads and stores
     cpu_val = tcg_temp_local_new();
     cpu_addr = tcg_temp_local_new();
+}
+
+int gen_breakpoint(DisasContext *dc, CPUBreakpoint *bp) {
+    if (dc->pc != dc->tb->pc) {
+        save_state(dc, cpu_cond);
+    }
+    gen_helper_debug();
+    tcg_gen_exit_tb(0);
+    dc->is_jmp = DISAS_JUMP;
+    return 1;
+}
+
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb)
+{
+    DisasContext dc;
+    CPUBreakpoint *bp;
+    int max_insns;
+
+    create_disas_context(&dc, env, tb);
 
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0)
         max_insns = maximum_block_size;
-    while (!dc.is_jmp) {
+
+    tcg_clear_temp_count();
+
+    while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc) {
-                    if (dc.pc != tb->pc)
-                        save_state(&dc, cpu_cond);
-                    gen_helper_debug();
-                    tcg_gen_exit_tb(0);
-                    dc.is_jmp = DISAS_JUMP;
-                    goto done_generating;
-                }
+            bp = process_breakpoints(env, dc.pc);
+            if (bp != NULL && gen_breakpoint(&dc, bp)) {
+                break;
             }
         }
-        if (search_pc) {
-	    tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
-	    gen_opc_npc[gen_opc_ptr - tcg->gen_opc_buf] = dc.npc;
-	    tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
+        if (tb->search_pc) {
+            tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
+            gen_opc_npc[gen_opc_ptr - tcg->gen_opc_buf] = dc.npc;
+            tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        last_pc = dc.pc;
-        disas_sparc_insn(&dc);
+        tb->size += disas_insn(env, &dc);
         tb->icount++;
 
-        if (dc.is_jmp)
+        if (tcg_check_temp_count()) {
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
+        }
+
+        if (dc.is_jmp) {
             break;
+        }
         /* if the next PC is different, we abort now */
-        if (dc.pc != (last_pc + 4))
+        if ((dc.pc - tb->pc) != tb->size) {
             break;
+        }
         /* if we reach a page boundary, we stop generation so that the
            PC of a TT_TFAULT exception is always in the right page */
         if ((dc.pc & (TARGET_PAGE_SIZE - 1)) == 0)
@@ -2807,12 +2825,11 @@ void gen_intermediate_code(CPUState *env,
         if (tb->icount >= max_insns) {
             break;
         }
-        if ((dc.pc - tb->pc) >= (TARGET_PAGE_SIZE - 32)) {
+        if (tb->size >= (TARGET_PAGE_SIZE - 32)) {
             break;
         }
     }
 
-done_generating:
     tcg_temp_free(cpu_addr);
     tcg_temp_free(cpu_val);
     tcg_temp_free(cpu_dst);
@@ -2831,12 +2848,12 @@ done_generating:
             tcg_gen_exit_tb(0);
         }
     }
-    if (search_pc) {
+    if (tb->search_pc) {
         gen_opc_jump_pc[0] = dc.jump_pc[0];
         gen_opc_jump_pc[1] = dc.jump_pc[1];
     }
-    tb->size = last_pc + 4 - tb->pc;
-    tb->disas_flags = 0;
+
+    tb->disas_flags = get_disas_flags(env, &dc);
 }
 
 void translate_init()

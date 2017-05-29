@@ -877,9 +877,9 @@ uint64_t helper_ld_asi(target_ulong addr, int asi, int size, int sign)
     helper_check_align(addr, size - 1);
     switch (asi) {
     case 1:
-	/* XXX: hack
-	   copied from case 20
-	*/
+        /* XXX: hack
+           copied from case 20
+        */
         {
             switch (size) {
             case 1:

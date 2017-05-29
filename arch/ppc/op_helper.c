@@ -208,7 +208,7 @@ void helper_lmw (target_ulong addr, uint32_t reg)
             env->gpr[reg] = bswap32(ldl(addr));
         else
             env->gpr[reg] = ldl(addr);
-	addr = addr + 4;
+            addr = addr + 4;
     }
 }
 
@@ -219,7 +219,7 @@ void helper_stmw (target_ulong addr, uint32_t reg)
             stl(addr, bswap32((uint32_t)env->gpr[reg]));
         else
             stl(addr, (uint32_t)env->gpr[reg]);
-	addr = addr + 4;
+            addr = addr + 4;
     }
 }
 
@@ -229,13 +229,13 @@ void helper_lsw(target_ulong addr, uint32_t nb, uint32_t reg)
     for (; nb > 3; nb -= 4) {
         env->gpr[reg] = ldl(addr);
         reg = (reg + 1) % 32;
-	addr = addr + 4;
+        addr = addr + 4;
     }
     if (unlikely(nb > 0)) {
         env->gpr[reg] = 0;
         for (sh = 24; nb > 0; nb--, sh -= 8) {
             env->gpr[reg] |= ldub(addr) << sh;
-	    addr = addr + 1;
+            addr = addr + 1;
         }
     }
 }
@@ -264,7 +264,7 @@ void helper_stsw(target_ulong addr, uint32_t nb, uint32_t reg)
     for (; nb > 3; nb -= 4) {
         stl(addr, env->gpr[reg]);
         reg = (reg + 1) % 32;
-	addr = addr + 4;
+        addr = addr + 4;
     }
     if (unlikely(nb > 0)) {
         for (sh = 24; nb > 0; nb--, sh -= 8) {
@@ -316,7 +316,7 @@ target_ulong helper_lscbx (target_ulong addr, uint32_t reg, uint32_t ra, uint32_
     d = 24;
     for (i = 0; i < xer_bc; i++) {
         c = ldub(addr);
-	addr = addr + 1;
+        addr = addr + 1;
         /* ra (if not 0) and rb are never modified */
         if (likely(reg != rb && (ra == 0 || reg != ra))) {
             env->gpr[reg] = (env->gpr[reg] & ~(0xFF << d)) | (c << d);
@@ -480,10 +480,10 @@ static inline uint64_t fload_invalid_op_excp(int op)
     switch (op) {
     case POWERPC_EXCP_FP_VXSNAN:
         env->fpscr |= 1 << FPSCR_VXSNAN;
-	break;
+        break;
     case POWERPC_EXCP_FP_VXSOFT:
         env->fpscr |= 1 << FPSCR_VXSOFT;
-	break;
+        break;
     case POWERPC_EXCP_FP_VXISI:
         /* Magnitude subtraction of infinities */
         env->fpscr |= 1 << FPSCR_VXISI;
@@ -1476,7 +1476,7 @@ target_ulong helper_divo (target_ulong arg1, target_ulong arg2)
     } else {
         env->spr[SPR_MQ] = tmp % arg2;
         tmp /= (int32_t)arg2;
-	if ((int32_t)tmp != tmp) {
+        if ((int32_t)tmp != tmp) {
             env->xer |= (1 << XER_OV) | (1 << XER_SO);
         } else {
             env->xer &= ~(1 << XER_OV);

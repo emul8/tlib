@@ -36,6 +36,16 @@ static TCGArg *icount_arg, *event_size_arg;
 
 static int stopflag_label;
 
+CPUBreakpoint *process_breakpoints(CPUState *env, target_ulong pc) {
+    CPUBreakpoint *bp;
+    QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
+        if (bp->pc == pc) {
+            return bp;
+        }
+    }
+    return NULL;
+}
+
 static inline void gen_block_header(TranslationBlock *tb)
 {
     TCGv_i32 flag;
@@ -101,16 +111,19 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
     int gen_code_size;
 
     tcg_func_start(s);
-
+    memset((void*)tcg->gen_opc_instr_start, 0, OPC_BUF_SIZE);;
     tb->icount = 0;
+    tb->size = 0;
+    tb->search_pc = 0;
     gen_block_header(tb);
-    gen_intermediate_code(env, tb, 0);
+    gen_intermediate_code(env, tb);
     gen_block_footer(tb);
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;
     tb->tb_next_offset[0] = 0xffff;
     tb->tb_next_offset[1] = 0xffff;
+
     s->tb_next_offset = tb->tb_next_offset;
     s->tb_jmp_offset = tb->tb_jmp_offset;
     s->tb_next = NULL;
@@ -122,7 +135,7 @@ void cpu_gen_code(CPUState *env, TranslationBlock *tb, int *gen_code_size_ptr)
 /* The cpu state corresponding to 'searched_pc' is restored.
  */
 int cpu_restore_state(CPUState *env,
-		TranslationBlock *tb, unsigned long searched_pc)
+                TranslationBlock *tb, unsigned long searched_pc)
 {
     TCGContext *s = tcg->ctx;
     int j, k;
@@ -132,8 +145,10 @@ int cpu_restore_state(CPUState *env,
     tcg_func_start(s);
     memset((void*)tcg->gen_opc_instr_start, 0, OPC_BUF_SIZE);
     tb->icount = 0;
+    tb->size = 0;
+    tb->search_pc = 1;
     gen_block_header(tb);
-    gen_intermediate_code(env, tb, 1);
+    gen_intermediate_code(env, tb);
     gen_block_footer(tb);
 
     /* find opc index corresponding to search_pc */

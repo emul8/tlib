@@ -2539,7 +2539,7 @@ static int disas_cp15_insn(CPUState *env, DisasContext *s, uint32_t insn)
 
     /* M profile cores use memory mapped registers instead of cp15.  */
 #ifdef TARGET_PROTO_ARM_M
-	return 1;
+        return 1;
 #endif
 
     if ((insn & (1 << 4)) == 0) {
@@ -2660,9 +2660,9 @@ static int disas_cp15_insn(CPUState *env, DisasContext *s, uint32_t insn)
              * an MMU enable to execute from cache.  Imitate this behaviour.  */
             if (!arm_feature(env, ARM_FEATURE_XSCALE) ||
                 (insn & 0x0fff0fff) != 0x0e010f10)
-	        {
+                {
                     gen_lookup_tb(s);
-	        }
+                }
         }
         tcg_temp_free_i32(tmp2);
         return 0;
@@ -6529,21 +6529,21 @@ static int disas_coproc_insn(CPUState * env, DisasContext *s, uint32_t insn)
 
     cpnum = (insn >> 8) & 0xf;
     if (arm_feature(env, ARM_FEATURE_XSCALE)
-	    && ((env->cp15.c15_cpar ^ 0x3fff) & (1 << cpnum)))
-	return 1;
+            && ((env->cp15.c15_cpar ^ 0x3fff) & (1 << cpnum)))
+        return 1;
 
     switch (cpnum) {
       case 0:
       case 1:
-	if (arm_feature(env, ARM_FEATURE_IWMMXT)) {
-	    return disas_iwmmxt_insn(env, s, insn);
-	} else if (arm_feature(env, ARM_FEATURE_XSCALE)) {
-	    return disas_dsp_insn(env, s, insn);
-	}
-	return 1;
+        if (arm_feature(env, ARM_FEATURE_IWMMXT)) {
+            return disas_iwmmxt_insn(env, s, insn);
+        } else if (arm_feature(env, ARM_FEATURE_XSCALE)) {
+            return disas_dsp_insn(env, s, insn);
+        }
+        return 1;
     case 10:
     case 11:
-	return disas_vfp_insn (env, s, insn);
+        return disas_vfp_insn (env, s, insn);
     case 14:
         /* Coprocessors 7-15 are architecturally reserved by ARM.
            Unfortunately Intel decided to ignore this.  */
@@ -6554,11 +6554,11 @@ static int disas_coproc_insn(CPUState * env, DisasContext *s, uint32_t insn)
         else
             return disas_cp14_write(env, s, insn);
     case 15:
-	return disas_cp15_insn (env, s, insn);
+        return disas_cp15_insn (env, s, insn);
     default:
     board:
-	/* Unknown coprocessor.  See if the board has hooked it.  */
-	return disas_cp_insn (env, s, insn);
+        /* Unknown coprocessor.  See if the board has hooked it.  */
+        return disas_cp_insn (env, s, insn);
     }
 }
 
@@ -8140,7 +8140,7 @@ static int disas_thumb2_insn(CPUState *env, DisasContext *s, uint16_t insn_hw1)
     {
         /* Thumb-1 cores may need to treat bl and blx as a pair of
            16-bit instructions to get correct prefetch abort behavior.  */
-	insn = insn_hw1;
+        insn = insn_hw1;
         if ((insn & (1 << 12)) == 0) {
             ARCH(5);
             /* Second half of blx.  */
@@ -8844,7 +8844,7 @@ static int disas_thumb2_insn(CPUState *env, DisasContext *s, uint16_t insn_hw1)
                         gen_exception_return(s, tmp);
                         break;
                     case 6: /* mrs cpsr.  */
-			tmp = tcg_temp_new_i32();
+                        tmp = tcg_temp_new_i32();
 #ifdef TARGET_PROTO_ARM_M
                         addr = tcg_const_i32(insn & 0xff);
                         gen_helper_v7m_mrs(tmp, cpu_env, addr);
@@ -9751,7 +9751,7 @@ static void disas_thumb_insn(CPUState *env, DisasContext *s)
             break;
 
         case 6: /* cps */
-	    ARCH(6);
+            ARCH(6);
             if (s->user)
                 break;
 #ifdef TARGET_PROTO_ARM_M
@@ -9877,32 +9877,41 @@ undef:
     gen_exception_insn(s, 2, EXCP_UDEF);
 }
 
-/* generate intermediate code in gen_opc_buf and gen_opparam_buf for
-   basic block 'tb'. If search_pc is TRUE, also generate PC
-   information for each intermediate instruction. */
+int disas_insn(CPUState *env, DisasContext *dc) {
+    if (dc->thumb) {
+        disas_thumb_insn(env, dc);
+        if (dc->condexec_mask) {
+            dc->condexec_cond = (dc->condexec_cond & 0xe)
+                               | ((dc->condexec_mask >> 4) & 1);
+            dc->condexec_mask = (dc->condexec_mask << 1) & 0x1f;
+            if (dc->condexec_mask == 0) {
+                dc->condexec_cond = 0;
+            }
+        }
+        return 2;
+    } else {
+        disas_arm_insn(env, dc);
+        return 4;
+    }
+}
 
+uint32_t get_disas_flags(CPUState *env, DisasContext *dc) {
+    return dc->thumb;
+}
 
-void gen_intermediate_code(CPUState *env,
-                           TranslationBlock *tb,
-                           int search_pc)
-{
-    DisasContext dc;
-    CPUBreakpoint *bp;
-    uint32_t next_page_start;
-    int max_insns;
-
-    dc.tb = tb;
-    dc.is_jmp = DISAS_NEXT;
-    dc.pc = tb->pc;
-    dc.singlestep_enabled = env->singlestep_enabled;
-    dc.condjmp = 0;
-    dc.thumb = ARM_TBFLAG_THUMB(tb->flags);
-    dc.condexec_mask = (ARM_TBFLAG_CONDEXEC(tb->flags) & 0xf) << 1;
-    dc.condexec_cond = ARM_TBFLAG_CONDEXEC(tb->flags) >> 4;
-    dc.user = (ARM_TBFLAG_PRIV(tb->flags) == 0);
-    dc.vfp_enabled = ARM_TBFLAG_VFPEN(tb->flags);
-    dc.vec_len = ARM_TBFLAG_VECLEN(tb->flags);
-    dc.vec_stride = ARM_TBFLAG_VECSTRIDE(tb->flags);
+void create_disas_context(DisasContext *dc, CPUState *env, TranslationBlock *tb) {
+    dc->tb = tb;
+    dc->is_jmp = DISAS_NEXT;
+    dc->pc = tb->pc;
+    dc->singlestep_enabled = env->singlestep_enabled;
+    dc->condjmp = 0;
+    dc->thumb = ARM_TBFLAG_THUMB(tb->flags);
+    dc->condexec_mask = (ARM_TBFLAG_CONDEXEC(tb->flags) & 0xf) << 1;
+    dc->condexec_cond = ARM_TBFLAG_CONDEXEC(tb->flags) >> 4;
+    dc->user = (ARM_TBFLAG_PRIV(tb->flags) == 0);
+    dc->vfp_enabled = ARM_TBFLAG_VFPEN(tb->flags);
+    dc->vec_len = ARM_TBFLAG_VECLEN(tb->flags);
+    dc->vec_stride = ARM_TBFLAG_VECSTRIDE(tb->flags);
     cpu_F0s = tcg_temp_new_i32();
     cpu_F1s = tcg_temp_new_i32();
     cpu_F0d = tcg_temp_new_i64();
@@ -9911,12 +9920,6 @@ void gen_intermediate_code(CPUState *env,
     cpu_V1 = cpu_F1d;
     /* FIXME: cpu_M0 can probably be the same as cpu_V0.  */
     cpu_M0 = tcg_temp_new_i64();
-    next_page_start = (tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE;
-    max_insns = tb->cflags & CF_COUNT_MASK;
-    if (max_insns == 0)
-        max_insns = maximum_block_size;
-
-    tcg_clear_temp_count();
 
     /* A note on handling of the condexec (IT) bits:
      *
@@ -9951,42 +9954,60 @@ void gen_intermediate_code(CPUState *env,
 
     /* Reset the conditional execution bits immediately. This avoids
        complications trying to do it at the end of the block.  */
-    if (dc.condexec_mask || dc.condexec_cond)
+    if (dc->condexec_mask || dc->condexec_cond)
       {
         TCGv tmp = tcg_temp_new_i32();
         tcg_gen_movi_i32(tmp, 0);
         store_cpu_field(tmp, condexec_bits);
       }
-    while (!dc.is_jmp) {
+}
+
+int gen_breakpoint(DisasContext *dc, CPUBreakpoint *bp) {
+    gen_exception_insn(dc, 0, EXCP_DEBUG);
+    /* Advance PC so that clearing the breakpoint will
+      invalidate this TB.  */
+    dc->pc += 2;
+    return 1;
+}
+
+/* generate intermediate code in gen_opc_buf and gen_opparam_buf for
+   basic block 'tb'. If search_pc is TRUE, also generate PC
+   information for each intermediate instruction. */
+
+
+void gen_intermediate_code(CPUState *env,
+                           TranslationBlock *tb)
+{
+    DisasContext dc;
+    CPUBreakpoint *bp;
+    int max_insns;
+
+    create_disas_context(&dc, env, tb);
+
+    max_insns = tb->cflags & CF_COUNT_MASK;
+    if (max_insns == 0)
+        max_insns = maximum_block_size;
+
+    tcg_clear_temp_count();
+
+    while (1) {
         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
-                if (bp->pc == dc.pc) {
-                    gen_exception_insn(&dc, 0, EXCP_DEBUG);
-                    /* Advance PC so that clearing the breakpoint will
-                       invalidate this TB.  */
-                    dc.pc += 2;
-                    goto done_generating;
-                }
+            bp = process_breakpoints(env, dc.pc);
+            if (bp != NULL && gen_breakpoint(&dc, bp)) {
+                break;
             }
         }
-        if (search_pc) {
+        if (tb->search_pc) {
             tcg->gen_opc_pc[gen_opc_ptr - tcg->gen_opc_buf] = dc.pc;
             gen_opc_condexec_bits[gen_opc_ptr - tcg->gen_opc_buf] = (dc.condexec_cond << 4) | (dc.condexec_mask >> 1);
             tcg->gen_opc_instr_start[gen_opc_ptr - tcg->gen_opc_buf] = 1;
         }
 
-        if (dc.thumb) {
-            disas_thumb_insn(env, &dc);
-            if (dc.condexec_mask) {
-                dc.condexec_cond = (dc.condexec_cond & 0xe)
-                                   | ((dc.condexec_mask >> 4) & 1);
-                dc.condexec_mask = (dc.condexec_mask << 1) & 0x1f;
-                if (dc.condexec_mask == 0) {
-                    dc.condexec_cond = 0;
-                }
-            }
-        } else {
-            disas_arm_insn(env, &dc);
+        tb->size += disas_insn(env, &dc);
+        tb->icount++;
+
+        if (tcg_check_temp_count()) {
+            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
         }
 
         if (dc.condjmp && !dc.is_jmp) {
@@ -9994,15 +10015,10 @@ void gen_intermediate_code(CPUState *env,
             dc.condjmp = 0;
         }
 
-        if (tcg_check_temp_count()) {
-            tlib_printf(LOG_LEVEL_ERROR, "TCG temporary leak before %08x\n", dc.pc);
-        }
-
         /* Translation stops when a conditional branch is encountered.
          * Otherwise the subsequent code could get translated several times.
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
-        tb->icount++;
 
         if (dc.is_jmp) {
             break;
@@ -10013,7 +10029,7 @@ void gen_intermediate_code(CPUState *env,
         if ((gen_opc_ptr - tcg->gen_opc_buf) >= OPC_MAX_SIZE) {
             break;
         }
-        if (dc.pc >= next_page_start) {
+        if (dc.pc >= ((tb->pc & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE)) {
             break;
         }
         if (tb->icount >= max_insns) {
@@ -10085,9 +10101,7 @@ void gen_intermediate_code(CPUState *env,
         }
     }
 
-done_generating:
-    tb->size = dc.pc - tb->pc;
-    tb->disas_flags = dc.thumb;
+    tb->disas_flags = get_disas_flags(env, &dc);
 }
 
 void restore_state_to_opc(CPUState *env, TranslationBlock *tb, int pc_pos)
@@ -10141,7 +10155,7 @@ int process_interrupt(int interrupt_request, CPUState *env)
             env->interrupt_request &= ~CPU_INTERRUPT_M_IRQ_EXIT;
             do_v7m_exception_exit(env);
             return 1;
-	}
+        }
     }
 #endif
     return 0;

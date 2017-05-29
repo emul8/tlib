@@ -40,14 +40,15 @@ typedef ram_addr_t tb_page_addr_t;
 struct TranslationBlock;
 typedef struct TranslationBlock TranslationBlock;
 
-void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb, int search_pc);
+CPUBreakpoint *process_breakpoints(CPUState *env, target_ulong pc);
+void gen_intermediate_code(CPUState *env, struct TranslationBlock *tb);
 void restore_state_to_opc(CPUState *env, struct TranslationBlock *tb,
                           int pc_pos);
 
 void cpu_gen_code(CPUState *env, struct TranslationBlock *tb,
                  int *gen_code_size_ptr);
 int cpu_restore_state(CPUState *env, struct TranslationBlock *tb,
-		unsigned long searched_pc);
+                unsigned long searched_pc);
 TranslationBlock *tb_gen_code(CPUState *env,
                               target_ulong pc, target_ulong cs_base, int flags,
                               int cflags);
@@ -106,6 +107,7 @@ struct TranslationBlock {
     struct TranslationBlock *jmp_next[2];
     struct TranslationBlock *jmp_first;
     uint32_t icount;
+    int search_pc;
 };
 
 static inline unsigned int tb_jmp_cache_hash_page(target_ulong pc)
