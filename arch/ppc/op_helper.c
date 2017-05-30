@@ -208,7 +208,7 @@ void helper_lmw (target_ulong addr, uint32_t reg)
             env->gpr[reg] = bswap32(ldl(addr));
         else
             env->gpr[reg] = ldl(addr);
-            addr = addr + 4;
+        addr = addr + 4;
     }
 }
 
@@ -219,7 +219,7 @@ void helper_stmw (target_ulong addr, uint32_t reg)
             stl(addr, bswap32((uint32_t)env->gpr[reg]));
         else
             stl(addr, (uint32_t)env->gpr[reg]);
-            addr = addr + 4;
+        addr = addr + 4;
     }
 }
 
