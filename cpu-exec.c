@@ -220,6 +220,15 @@ int cpu_exec(CPUState *env)
                     env->tb_restart_request = 0;
                     cpu_loop_exit(env);
                 }
+
+#ifdef TARGET_PROTO_ARM_M
+                if(env->regs[15] >= 0xfffffff0)
+                {
+                    do_v7m_exception_exit(env);
+                    next_tb = 0;
+                }
+#endif
+
                 tb = tb_find_fast(env);
                 /* Note: we do it here to avoid a gcc bug on Mac OS X when
                    doing it in tb_find_slow */

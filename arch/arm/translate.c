@@ -10152,15 +10152,6 @@ int process_interrupt(int interrupt_request, CPUState *env)
         do_interrupt(env);
         return 1;
     }
-#ifdef TARGET_PROTO_ARM_M
-    if (interrupt_request & CPU_INTERRUPT_M_IRQ_EXIT) {
-        if(env->regs[15] >= 0xfffffff0) {
-            env->interrupt_request &= ~CPU_INTERRUPT_M_IRQ_EXIT;
-            do_v7m_exception_exit(env);
-            return 1;
-        }
-    }
-#endif
     return 0;
 }
 
