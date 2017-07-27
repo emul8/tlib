@@ -2169,7 +2169,7 @@ void HELPER(v7m_msr)(CPUState *env, uint32_t reg, uint32_t val)
     case 20: /* CONTROL */
         env->v7m.control = val & 3;
         // only switch the stack if in thread mode (handler mode always uses MSP stack)
-        if (env->uncached_cpsr & CPSR_T)
+        if (env->v7m.exception == 0)
         {
             switch_v7m_sp(env, (val & 2) != 0);
         }
