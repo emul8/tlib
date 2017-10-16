@@ -54,9 +54,9 @@ static void init_tcg()
 int32_t tlib_init(char *cpu_name)
 {
   init_tcg();
-  cpu_exec_init_all();
   CPUState *env = tlib_mallocz(sizeof(CPUState));
   cpu_exec_init(env);
+  cpu_exec_init_all();
   translate_init();
   if (cpu_init(cpu_name) != 0) {
       tlib_free(env);
